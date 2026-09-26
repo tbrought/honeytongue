@@ -235,6 +235,40 @@ test("the mock only rewards secrets the player has learned", async () => {
   assert.ok(await score(false) < 2);
 });
 
+test("the mock credits an offer to help only alongside a secret the player knows", async () => {
+  const mock = createMockClient();
+  const score = async (text, knows = true) => (await mock.ask({
+    player_input: text,
+    character: { persona: "A miller.", secrets: [{ fact: "His mill wheel is broken.", player_knows: knows }] },
+  }, { s: { type: "score", criteria: ["0", "1", "2", "3", "4"] } })).s.score;
+  const pairs = [
+    ["I can help mend your mill wheel.", "I can mend your mill wheel."],
+    ["I'll bring a new wheel for your mill.", "I'll find a new wheel for your mill."],
+    ["I will take your broken wheel to the smith.", "I will show your broken wheel, smith."],
+  ];
+  for (const [offer, plain] of pairs) assert.ok(await score(offer) - await score(plain) > 0.79, offer);
+  assert.equal(await score("I'll give you a silver coin."), await score("You look busy tonight."));
+  assert.equal(await score("I can help mend your mill wheel.", false), await score("Your mill wheel is broken.", false));
+});
+
+test("the mock leans toward persuading when the player pleads or speaks to the character by name", async () => {
+  const mock = createMockClient();
+  const criteria = {
+    persuade: "Try to convince or plead with the miller so he lends the player his cart",
+    read_note: "Read or look at the note the player carries",
+  };
+  const choose = async (text) => (await mock.ask(
+    { player_input: text, character: { name: "Oswin Tallow" } }, { a: { type: "choice", criteria } })).a;
+  for (const text of ["Oswin, I need the cart because my note is urgent.", "My note is urgent, Oswin.", "If you let me borrow it, I'll return the note tonight. Please."]) {
+    const a = await choose(text);
+    assert.equal(a.choice, "persuade", text);
+    assert.ok(a.confidence >= 0.6, `${text}: ${a.confidence}`);
+  }
+  // Naming him in passing isn't speaking to him, and naming him without making a case isn't persuasion.
+  assert.equal((await choose("Show Oswin the note because it's urgent")).probabilities.persuade, 2 / 3);
+  assert.equal((await choose("Oswin, read the note")).choice, "read_note");
+});
+
 test("the proxy's model comes from the option, then the Worker's TYPESAFE_MODEL, then the process's, then the default", async () => {
   const realFetch = globalThis.fetch;
   const modelSent = async (options, workerEnv, body = valid) => {
