@@ -13,6 +13,10 @@ export {
 export type {
   Character,
   DefinedCharacter,
+  Tell,
+  Difficulty,
+  DecideHook,
+  DecideContext,
   Secret,
   Verdict,
   PersuasionResult,

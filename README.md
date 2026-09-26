@@ -46,10 +46,10 @@ Only `name`, `persona`, and `goal` are required.
 |---|---|---|
 | `convinced` | The score reached the character's threshold | 0 |
 | `unconvinced` | Not persuasive enough to this character | `failCost` (1) |
-| `offended` | Threatening or insulting, including repeating an earlier insult | `offendedCost` (2) |
+| `offended` | A triggered tell in the character's `offendedBy` (threats and insults by default), including repeating an earlier offence | `offendedCost` (2) |
 | `repeated` | Too similar to an argument that already failed (checked locally, no API call) | `failCost` (1) |
 
-When `patienceLeft` reaches 0, `outOfPatience` is `true`. What happens next is up to your game. Patience never drops below 0. `reaction` is only set for `unconvinced` and `repeated`, so show your own line for `offended`. Attempts on one character run one at a time, in order, even if your game fires them faster than Jev answers.
+When `patienceLeft` reaches 0, `outOfPatience` is `true`. What happens next is up to your game. Patience never drops below 0. `reaction` is only set for `unconvinced` and `repeated`, so show your own line for `offended`. Every result also has `tells` and `triggered` (see [Intimidation](#intimidation)). Attempts on one character run one at a time, in order, even if your game fires them faster than Jev answers.
 
 ## Browser games (Twine, itch.io, web)
 
@@ -69,21 +69,62 @@ The proxy keeps your key server-side, accepts browser requests only from its own
 
 See `examples/browser.html` for a complete page and `examples/twine-sugarcube.md` for a Twine recipe.
 
-## Characters in depth
+## Characters
 
-| Field | Default | Purpose |
+### Out of the box
+
+`name`, `persona`, and `goal` are all a character needs. The persona does most of the work: Jev judges each attempt by the values it describes, so "values honesty, despises flattery" makes flattery fail and plain speaking land. With nothing else set, a character:
+
+- is convinced at `"normal"` difficulty (a score of 3.2 on the default 0 to 4 rubric)
+- takes offence at threats and insults
+- never runs out of patience
+
+### Shaping a character
+
+| Field | Default | What it does |
 |---|---|---|
-| `name`, `persona`, `goal` | required | Who they are and what the player wants from them |
-| `levels` | 5-level rubric | Your own ordered rubric, 2 to 10 descriptions from weakest to strongest |
-| `threshold` | 80% of top level | Score needed to convince (3.2 on the default 0 to 4 scale) |
-| `patience` | Infinity | Patience before they give up (above 0) |
-| `reactions` | generic line | `[{ min, text }]` flavor text for unconvinced attempts |
-| `repeatReaction` | generic line | What they say when the player repeats themselves |
+| `difficulty` | `"normal"` | How hard they are to convince (see below) |
+| `offendedBy` | `["threats", "insults"]` | Which tells offend them. `[]` means nothing does |
+| `patience` | Infinity | Attempts before they give up (above 0) |
 | `secrets` | none | `[{ id, fact }]` facts that only help once learned |
-| `failCost`, `offendedCost` | 1, 2 | Patience lost per failed or offensive attempt |
-| `hostileAt`, `repeatSimilarity`, `memory`, `maxInputLength` | 0.7, 0.8, 4, 500 | Fine tuning |
+| `reactions` | generic line | `[{ min, text }]` lines for unconvinced attempts, by the highest `min` reached |
+| `repeatReaction` | generic line | What they say when the player repeats themselves |
 
-Mistakes throw a `HoneytongueError` with a readable message, such as a threshold higher than your rubric allows or a patience of 0. Fields you set to `undefined` keep their defaults.
+Each difficulty word sets the score needed as a share of the top rubric level, so it still works if you write your own rubric:
+
+| `difficulty` | Share of the top level | Threshold on the default 0 to 4 rubric |
+|---|---|---|
+| `"easy"` | 60% | 2.4 |
+| `"normal"` | 80% | 3.2 |
+| `"hard"` | 90% | 3.6 |
+| `"very hard"` | 95% | 3.8 |
+
+Case and surrounding spaces don't matter, and `"very-hard"` or `"very_hard"` work too. `defineCharacter()` and `character` on a `Persuadable` keep the word, in the spelling above, next to the `threshold` it works out to. So a copy like `{ ...guard.character, patience: 5 }` works; if a copy changes `difficulty` or `levels`, leave out its `threshold`. These shares are first guesses and may change once they've been calibrated against live Jev.
+
+### Intimidation
+
+Every attempt is checked for two tells, `threats` and `insults`, each asked as its own yes/no question in the same Jev request. Every result reports both: `tells` holds each probability, and `triggered` lists the ones at or above `hostileAt` (0.7), whether or not they caused offence.
+
+A triggered tell in `offendedBy` makes the verdict `offended`, whatever the score. A tell left out of `offendedBy` doesn't offend, and the persona alone decides whether it helps or hurts. A cowardly guard who can be bullied but hates being laughed at:
+
+```js
+const snag = new Persuadable(
+  {
+    name: "Snag",
+    persona: "A cowardly goblin guard, jumpy and easily frightened. Hates being laughed at.",
+    goal: "Unlock the prisoner's cage",
+    difficulty: "easy",
+    offendedBy: ["insults"],
+  },
+  { client },
+);
+
+const result = await snag.attempt("Open this cage, or I'll feed you to the wolves.");
+result.verdict;   // "convinced", if Jev judges that the threat works on Snag
+result.triggered; // ["threats"], so your game can narrate it as intimidation
+```
+
+Mocking Snag is still `offended`.
 
 ### Secrets
 
@@ -94,6 +135,39 @@ secrets: [{ id: "sick_daughter", fact: "His daughter has a fever and the apothec
 ```
 
 Call `guard.learn("sick_daughter")` when the player discovers it. Before that, arguments leaning on it won't help.
+
+### Full control
+
+| Field | Default | What it does |
+|---|---|---|
+| `threshold` | set by `difficulty` | An exact score to convince, above 0 and at most the top level. Use it instead of `difficulty`; if you set both, they must agree |
+| `levels` | 5-level rubric | Your own ordered rubric, 2 to 10 descriptions from weakest to strongest |
+| `hostileAt` | 0.7 | Probability at which a tell counts as triggered |
+| `decide` | none | `(result, context) => verdict`, your own rule for the final verdict |
+| `failCost`, `offendedCost` | 1, 2 | Patience lost per failed or offensive attempt |
+| `repeatSimilarity`, `memory`, `maxInputLength` | 0.8, 4, 500 | Word overlap that counts as a repeat, previous attempts sent as context, input cap |
+
+`decide` runs after the verdict is computed (repeats included) and before anything changes. It gets a frozen copy of the result and `{ input, character, previousAttempts, patienceLeft }`, and returns a verdict, or nothing to keep the original. Patience, the reaction, and the character's memory follow the verdict it returns:
+
+```js
+const guard = new Persuadable(
+  {
+    name: "Harry Goatleaf",
+    persona: "A tired night guard who values honesty.",
+    goal: "Open the gate after curfew",
+    // Harry never gives in to the very first attempt, however good it is.
+    decide: (result, { previousAttempts }) =>
+      result.verdict === "convinced" && previousAttempts.length === 0 ? "unconvinced" : undefined,
+  },
+  { client },
+);
+```
+
+- It must be synchronous. Returning anything other than a verdict or `undefined`, including a Promise, throws a `HoneytongueError` and leaves the character unchanged.
+- It runs in `attempt()`, `record()`, and `judgePersuasion()`. It isn't applied when you call `readPersuasion()` directly, which stays a plain reading of Jev's answers.
+- JSON stories can't hold functions, so `decide` isn't available in them. Stories built in code can set it in an NPC's `persuasion` block.
+
+Mistakes throw a `HoneytongueError` with a readable message, such as a threshold higher than your rubric allows, an unknown difficulty word, or a `threshold` that disagrees with `difficulty`. Fields you set to `undefined` keep their defaults.
 
 ## Choosing a model
 
@@ -115,7 +189,7 @@ After switching, rerun `npm run eval` or playtest your characters. Scores may sh
 | Export | Use it when |
 |---|---|
 | `judgePersuasion(client, character, input, options)` | You want a one-off judgement with no memory or patience |
-| `persuasionQuestions`, `persuasionState`, `readPersuasion` | You're already calling Jev and want persuasion merged into the same request |
+| `persuasionQuestions`, `persuasionState`, `readPersuasion` | You're already calling Jev and want persuasion merged into the same request. `readPersuasion` doesn't apply `decide`; pass the answers to `record()` if you want it |
 | `createMockClient()` | Tests and offline development (keyword-based, much dumber than Jev) |
 | `createProxyHandler(options)` | Your own server: Cloudflare, Vercel, Deno, Bun, or Node 18+ |
 
@@ -132,17 +206,17 @@ npm run play:mock   # offline, no key needed
 
 There's also a browser version in `docs/play/`, styled like an old Infocom screen, that runs on the offline mock until it's pointed at a proxy. It uses copies of the engine; run `npm run build:demo` after changing `src/` or `stories/`.
 
-Stories are validated when loaded, so mistakes like a `goto` to a missing scene or two different characters sharing an id are all reported up front. Scenes can have a `name` (like "East Gate") for interfaces with a status line. See `stories/gatehouse.json` to write your own, and `src/index.d.ts` for the full story format.
+Stories are validated when loaded, so mistakes like a `goto` to a missing scene or two different characters sharing an id are all reported up front. Scenes can have a `name` (like "East Gate") for interfaces with a status line. An NPC's `persuasion` block takes the same settings as a character, such as `difficulty`, `offendedBy`, and `threshold`, and `hostileReaction` is only needed when something can offend them. See `stories/gatehouse.json` to write your own, and `src/index.d.ts` for the full story format.
 
 ## Testing and tuning
 
 ```bash
 npm test                 # unit tests, no API key needed
 npm run eval             # scores the phrasing test set against Jev
-npm run eval -- --mock   # keyword baseline (currently action 15/17, score 7/7, hostile 1/1)
+npm run eval -- --mock   # keyword baseline (currently action 15/17, score 7/7, tells 2/2)
 ```
 
-`evals/gatehouse.json` covers parsing, persuasion score ranges, hostility, prompt-injection attempts, and arguments using secrets the player hasn't learned. Run it after changing a persona or rubric. You can pass another suite: `npm run eval -- path/to/suite.json`.
+`evals/gatehouse.json` covers parsing, persuasion score ranges, threats and insults, prompt-injection attempts, and arguments using secrets the player hasn't learned. Run it after changing a persona or rubric. You can pass another suite: `npm run eval -- path/to/suite.json`.
 
 ## Cost
 

@@ -156,9 +156,16 @@ table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
 th, td { text-align: left; vertical-align: top; padding: 0.5rem 1rem 0.5rem 0; border-bottom: 1px dashed var(--line); }
 th { color: var(--dim); font-weight: 500; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; }
 td code { white-space: nowrap; }
+/* Keep three-column tables readable on phones: they scroll sideways instead of crushing the last column. */
+table:has(th:nth-child(3)) { min-width: 32rem; }
 
 .note { border: 1px dashed var(--dim); padding: 0.6rem 0.9rem; margin: 1.25rem 0; }
 .note::before { content: "[!] "; color: var(--bright); font-weight: 600; }
+
+/* Bulleted points as * lines */
+.points { list-style: none; padding: 0; margin: 1rem 0; }
+.points > li { position: relative; padding-left: 2ch; margin-bottom: 0.6rem; }
+.points > li::before { content: "*"; position: absolute; left: 0; color: var(--dim); }
 
 /* Numbered steps as [1] [2] [3] */
 .steps { counter-reset: step; list-style: none; padding: 0; margin: 0; }

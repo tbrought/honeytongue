@@ -42,16 +42,47 @@ export interface Secret {
   fact: string;
 }
 
+/** Signs of hostility Jev checks every attempt for, each as its own yes/no question. */
+export type Tell = "threats" | "insults";
+
+/**
+ * A threshold as a share of the top rubric level: easy 60%, normal 80%, hard 90%, very hard 95%.
+ * At runtime case and surrounding spaces are ignored, and "very-hard" or "very_hard" also work.
+ */
+export type Difficulty = "easy" | "normal" | "hard" | "very hard";
+
+export interface DecideContext {
+  /** The attempt, cleaned and capped. */
+  input: string;
+  character: DefinedCharacter;
+  /** Earlier attempts, oldest first. Empty for judgePersuasion() unless you passed previousAttempts. */
+  previousAttempts: readonly Attempt[];
+  /** Before this attempt's cost. The full patience for judgePersuasion(). */
+  patienceLeft: number;
+}
+
+/**
+ * Overrule a verdict. Return a verdict, or nothing to keep the original. Must be synchronous.
+ * Patience and other state follow the returned verdict. Not applied by readPersuasion().
+ */
+export type DecideHook = (result: Readonly<PersuasionResult>, context: DecideContext) => Verdict | undefined | void;
+
 export interface Character {
   name: string;
   persona: string;
   goal: string;
+  /** How hard they are to convince. Default "normal". */
+  difficulty?: Difficulty;
+  /** An exact score to convince, above 0 and at most the top level. If you also set difficulty, the two must agree. */
+  threshold?: number;
+  /** Tells that offend: an offensive attempt fails, whatever its score. Default ["threats", "insults"]. [] means nothing offends. */
+  offendedBy?: Tell[];
   /** Ordered rubric, weakest to strongest, 2 to 10 entries. Defaults to DEFAULT_LEVELS. */
   levels?: string[];
-  /** Score needed to convince. Defaults to 80% of the top level (3.2 on the default 0-4 scale). */
-  threshold?: number;
-  /** Hostility probability that counts as offensive, above 0 and at most 1. Default 0.7. */
+  /** Probability at which a tell counts as present, above 0 and at most 1. Default 0.7. */
   hostileAt?: number;
+  /** Your own rule for the final verdict. Not available in JSON stories. */
+  decide?: DecideHook;
   /** Failed attempts allowed before running out of patience, above 0. Default Infinity. */
   patience?: number;
   /** Patience lost per unconvinced or repeated attempt. Default 1. */
@@ -72,8 +103,18 @@ export interface Character {
   secrets?: Secret[];
 }
 
-/** A character with every default filled in, as returned by defineCharacter(). */
-export type DefinedCharacter = Required<Omit<Character, "repeatReaction">> & { repeatReaction?: string; maxScore: number };
+/**
+ * A character with every default filled in, as returned by defineCharacter(). `threshold` is always set; `difficulty`
+ * is kept (in its canonical spelling) when a word was given. A copy with other changes, like
+ * { ...npc.character, patience: 5 }, can be passed back in; if you change its difficulty or levels, leave out `threshold`.
+ */
+export type DefinedCharacter = Required<Omit<Character, "repeatReaction" | "decide" | "difficulty">> & {
+  threshold: number;
+  difficulty?: Difficulty;
+  repeatReaction?: string;
+  decide?: DecideHook;
+  maxScore: number;
+};
 
 export type Verdict = "convinced" | "unconvinced" | "offended" | "repeated";
 
@@ -82,8 +123,10 @@ export interface PersuasionResult {
   /** null when the attempt was a repeat and wasn't sent to Jev. */
   score: number | null;
   maxScore: number;
-  /** null when the attempt was a repeat and wasn't sent to Jev. */
-  hostility: number | null;
+  /** Each tell's probability. null when the attempt was a repeat and wasn't sent to Jev. */
+  tells: Record<Tell, number> | null;
+  /** Tells at or above hostileAt, whether or not they offend. A repeated offence keeps the original's. */
+  triggered: Tell[];
   confidence: number | null;
   /** Text for unconvinced and repeated verdicts; null otherwise. */
   reaction: string | null;
@@ -172,10 +215,12 @@ export interface StoryNpc {
   persona: string;
   patience?: number;
   secrets?: Secret[];
+  /** Required unless offendedBy is []. */
   hostileReaction?: string;
   repeatReaction?: string;
   /** Required when patience is finite. Plays once, when patience first runs out. */
   outOfPatience?: Effect & { text: string };
+  /** Settings such as difficulty, offendedBy, and threshold go here. decide is only available in stories built in code. */
   persuasion?: Omit<Character, "name" | "persona" | "patience" | "secrets" | "repeatReaction"> & {
     success: Effect & { text: string };
   };
@@ -203,7 +248,8 @@ export interface TurnDebug {
   /** The top options with their probabilities, most likely first. */
   ranked: [string, number][];
   persuasion?: ScoreAnswer;
-  hostile?: NoulAnswer;
+  threats?: NoulAnswer;
+  insults?: NoulAnswer;
   maxScore?: number;
 }
 
@@ -263,6 +309,7 @@ export interface ProxyHandlerOptions {
   client?: JevClient;
   /** Cross-origin pages allowed to call the proxy. Same-origin requests are always allowed. */
   allowedOrigins?: string[];
+  /** Questions allowed per request. Default 6; the engine sends 4. */
   maxQuestions?: number;
   /** Limit on the whole request body, in bytes. Default 16000. */
   maxStateBytes?: number;

@@ -1,14 +1,44 @@
 # Changelog
 
-## Unreleased
+## Unreleased (0.1.0-alpha.1)
 
-Everything below was built and tested without access to live Jev. It still needs a first live run (see "Known unknowns" in CLAUDE.md) before release.
+Character settings a designer can use without touching the rubric. Like 0.1.0-alpha.0, this was built and tested with the offline mock only; the new questions and the difficulty shares still need a live Jev run.
+
+### Breaking
+
+- Results no longer have `hostility`. Use `tells` (`{ threats, insults }`, each a probability) and `triggered` (the tells at or above `hostileAt`).
+- The single `hostile` question is now two, `threats` and `insults`. If you merge `persuasionQuestions()` into your own request, or fake Jev's answers in tests, answer those ids instead.
+- The engine's debug output (`TurnDebug`) has `threats` and `insults` instead of `hostile`.
+- Eval suites use `"threats": true/false` and `"insults": true/false` instead of `"hostile"`.
+
+### Added
+
+- `difficulty`: `"easy"`, `"normal"`, `"hard"`, or `"very hard"`, a threshold of 60%, 80%, 90%, or 95% of the top rubric level. `"normal"` matches the old default. Case and surrounding spaces are ignored, and `"very-hard"` or `"very_hard"` also work. A defined character keeps the word (in its standard spelling) next to the threshold it resolves to. Setting a `threshold` that disagrees with `difficulty` is an error; values that agree, as in a copy like `{ ...npc.character, patience: 5 }`, are fine.
+- `offendedBy`: which tells offend a character, default `["threats", "insults"]`. A tell left out doesn't offend, and the persona decides whether it persuades, so a cowardly character can be intimidated.
+- `tells` and `triggered` on every result. A repeated offence reports the tells the original triggered.
+- `decide(result, context)`: an optional, synchronous character function that can overrule the verdict. Patience and memory follow what it returns. It isn't applied by `readPersuasion()` and isn't available in JSON stories.
+- Story NPCs accept `difficulty` and `offendedBy` in their `persuasion` block, and stories built in code can use `decide`.
+
+### Changed
+
+- The proxy's `maxQuestions` default is now 6. The engine sends 4 questions per turn (action, persuasion, threats, insults), exactly the old limit.
+- `hostileReaction` is only required for NPCs that something can offend.
+- The keyword mock answers threats and insults separately, recognizes basic profanity as an insult, and lets a timid persona give in to threats when threats don't offend.
+- The README and docs site split character settings into "Out of the box", "Shaping a character", and "Full control", with a new Intimidation section.
+
+### Fixed
+
+- Three-column tables on the docs site squeezed their last column to a sliver on narrow phones. They now scroll sideways.
+
+## 0.1.0-alpha.0 (2026-09-26)
+
+First published alpha, to hold the name. Built and tested with the offline mock only.
 
 ### Added
 
 - `model` option for `createProxyHandler()`, and a `TYPESAFE_MODEL` environment variable for both `createJevClient()` and the proxy (the Worker's env first, then the process environment). Precedence: the option, then `TYPESAFE_MODEL`, then the pinned `jev-1.13.0`. Players can't choose the model through the proxy.
 - `clientIp` option for `createProxyHandler()`, and `rateLimit: false` to turn rate limiting off.
-- A playable browser version of The Gatehouse in `docs/play/`, and a restyled documentation site with a classic text adventure look (amber screen or paper teletype).
+- A playable browser version of The Gatehouse in `docs/play/`, and a restyled documentation site with a classic text adventure look (amber screen or paper teletype). (Repository only, not in the npm package.)
 - `examples/node-proxy.js` and `npm run proxy`: the proxy on plain Node, using the offline mock until a key is set.
 - Optional scene `name` in stories, for status lines.
 - Types for the story format, Jev answers, `Game` state, and per-entry type files for `honeytongue/persuasion` and `honeytongue/proxy`.
@@ -42,7 +72,7 @@ Everything below was built and tested without access to live Jev. It still needs
 - Unknown or missing options in Jev's answer crashed the game.
 - "Did you mean" only accepted exactly `1` or `2`. It now also takes `1.`, `one`, `first`, and similar.
 - An API key containing whitespace or control characters could be echoed in fetch's error message. Keys are validated up front and redacted from all errors.
-- `npm run eval` failed with an absolute path to a suite.
+- `npm run eval` failed with an absolute path to a suite. (Repository only, not in the npm package.)
 - The mock called "white" and "skill" hostile.
 - `examples/browser.html` told you to serve on a port the example proxy didn't allow.
 - The Twine recipe showed nothing when the player was offensive, swallowed network errors, and double clicks cost patience twice.
