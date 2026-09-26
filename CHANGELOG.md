@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (0.1.0-alpha.1)
+## 0.1.0-alpha.1 (2026-09-26)
 
 Character settings a designer can use without touching the rubric. Like 0.1.0-alpha.0, this was built and tested with the offline mock only; the new questions and the difficulty shares still need a live Jev run.
 

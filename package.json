@@ -1,6 +1,6 @@
 {
   "name": "honeytongue",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "description": "Characters players can actually argue with: a persuasion mechanic for games, powered by Jev typed decisions",
   "repository": {
     "type": "git",
