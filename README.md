@@ -195,6 +195,20 @@ After switching, rerun `npm run eval` or playtest your characters. Scores may sh
 
 Client errors are `HoneytongueError`s that say what probably went wrong (a rejected key, a proxy that doesn't allow your page's origin, an unexpected response shape) and carry the HTTP `status` when there is one. Your API key is never included in an error message.
 
+## Character playground
+
+Design a character and tune it by trying lines against it, without writing code:
+
+```bash
+npx honeytongue playground   # opens http://127.0.0.1:4747/playground/
+```
+
+Each line shows the verdict, the score against the threshold, the tells it triggered, the patience left, and the rubric level it landed on (with the probability of each level, when Jev gives them). Change a setting and Replay reruns your lines, showing each one's old and new score. Copy the result as a `new Persuadable({...})` snippet or as a story's `npc` block, or share it as a link. Presets include Harry from The Gatehouse and three more characters, in `stories/characters.json`.
+
+The server listens on 127.0.0.1 only and judges with your `TYPESAFE_API_KEY`, which never reaches the page. Without a key it uses the offline mock. Options: `--port <number>`, `--mock`, and `--no-open`.
+
+There's also a [hosted preview](https://tbrought.github.io/honeytongue/playground/) for designing and sharing characters in the browser. It always judges with the keyword mock.
+
 ## Flagship example: The Gatehouse
 
 A complete text adventure built on Honeytongue, with a free-text parser and a JSON story format. You must get into the city after curfew, and Harry Goatleaf, the gatekeeper, is in the way.
@@ -216,7 +230,7 @@ npm run eval             # scores the phrasing test set against Jev
 npm run eval -- --mock   # keyword baseline (currently action 15/17, score 7/7, tells 2/2)
 ```
 
-`evals/gatehouse.json` covers parsing, persuasion score ranges, threats and insults, prompt-injection attempts, and arguments using secrets the player hasn't learned. Run it after changing a persona or rubric. You can pass another suite: `npm run eval -- path/to/suite.json`.
+For a single character, the [playground](#character-playground) is quicker: try lines, change a setting, and replay them. `evals/gatehouse.json` covers parsing, persuasion score ranges, threats and insults, prompt-injection attempts, and arguments using secrets the player hasn't learned. Run it after changing a persona or rubric. You can pass another suite: `npm run eval -- path/to/suite.json`.
 
 ## Cost
 
