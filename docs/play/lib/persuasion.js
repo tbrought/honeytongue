@@ -20,8 +20,11 @@ export const DEFAULT_LEVELS = [
   "Genuinely compelling to them: speaks directly to what they care about most",
 ];
 
+// Signs of hostility Jev looks for in every attempt, each asked as its own yes/no question.
+const TELLS = ["threats", "insults"];
+
 const DEFAULTS = {
-  hostileAt: 0.7,         // hostility probability that counts as offensive
+  hostileAt: 0.7,         // probability at which a tell counts as present
   patience: Infinity,     // attempts allowed before the character gives up
   failCost: 1,            // patience lost per unconvinced or repeated attempt
   offendedCost: 2,        // patience lost per offensive attempt
@@ -128,9 +131,13 @@ export function persuasionQuestions(character) {
       },
       criteria: c.levels,
     },
-    hostile: {
+    threats: {
       type: "noul",
-      instructions: `Is \`player_input\` threatening, insulting, or violent toward ${c.name}?`,
+      instructions: `Does \`player_input\` threaten, coerce, or intimidate ${c.name}, or threaten violence?`,
+    },
+    insults: {
+      type: "noul",
+      instructions: `Does \`player_input\` insult, mock, or show contempt for ${c.name}?`,
     },
   };
 }
@@ -157,8 +164,9 @@ export function persuasionState(character, input, { previousAttempts = [], conte
 export function readPersuasion(character, answers) {
   const c = defineCharacter(character);
   const score = Number.isFinite(answers?.persuasion?.score) ? answers.persuasion.score : 0;
-  const hostility = Number.isFinite(answers?.hostile?.noul) ? answers.hostile.noul : 0;
-  const verdict = hostility >= c.hostileAt ? "offended" : score >= c.threshold ? "convinced" : "unconvinced";
+  const tells = Object.fromEntries(TELLS.map((t) => [t, Number.isFinite(answers?.[t]?.noul) ? answers[t].noul : 0]));
+  const triggered = TELLS.filter((t) => tells[t] >= c.hostileAt);
+  const verdict = triggered.length ? "offended" : score >= c.threshold ? "convinced" : "unconvinced";
   const reaction = verdict === "unconvinced"
     ? [...c.reactions].sort((a, b) => b.min - a.min).find((r) => score >= r.min)?.text ?? `${c.name} isn't convinced.`
     : null;
@@ -166,7 +174,8 @@ export function readPersuasion(character, answers) {
     verdict,
     score,
     maxScore: c.maxScore,
-    hostility,
+    tells,
+    triggered,
     confidence: answers?.persuasion?.confidence ?? null,
     reaction,
   };
@@ -181,6 +190,8 @@ export async function judgePersuasion(client, character, input, options = {}) {
 
 /** A character that remembers past attempts, notices repeats, and runs out of patience. */
 export class Persuadable {
+  #triggered; // attempt -> the tells it triggered, kept out of the history sent to Jev
+
   constructor(character, { client } = {}) {
     this.character = defineCharacter(character);
     this.client = client;
@@ -189,6 +200,7 @@ export class Persuadable {
 
   reset() {
     this.attempts = [];
+    this.#triggered = new WeakMap();
     this.knows = new Set();
     this.patienceLeft = this.character.patience;
     this.convinced = false;
@@ -244,16 +256,19 @@ export class Persuadable {
     const earlier = result.verdict !== "offended" && this.findRepeat(said);
     if (earlier) {
       // Nothing new was judged. Repeating an insult is still an insult; anything else is just a repeat.
+      const unjudged = { score: null, tells: null, confidence: null };
       result = earlier.outcome === "offended"
-        ? { ...result, verdict: "offended", score: null, hostility: null, confidence: null, reaction: null }
-        : { ...result, verdict: "repeated", score: null, hostility: null, confidence: null,
+        ? { ...result, ...unjudged, verdict: "offended", triggered: this.#triggered.get(earlier) ?? [], reaction: null }
+        : { ...result, ...unjudged, verdict: "repeated", triggered: [],
             reaction: c.repeatReaction ?? `${c.name} has heard that already.` };
     }
 
     if (result.verdict === "convinced") this.convinced = true;
     const cost = { offended: c.offendedCost, unconvinced: c.failCost, repeated: c.failCost }[result.verdict] ?? 0;
     this.losePatience(cost);
-    this.attempts.push({ said, outcome: result.verdict });
+    const attempt = { said, outcome: result.verdict };
+    this.attempts.push(attempt);
+    this.#triggered.set(attempt, result.triggered);
     return { ...result, patienceLeft: this.patienceLeft, outOfPatience: this.outOfPatience };
   }
 

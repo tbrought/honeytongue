@@ -53,7 +53,8 @@ function printDebug(d) {
     const max = d.maxScore ?? Math.max(1, Object.keys(d.persuasion.legend ?? {}).length - 1);
     console.log(`  [jev] persuasion ${bar(d.persuasion.score, max)} ${d.persuasion.score.toFixed(2)} / ${max}`);
   }
-  if (d.hostile) console.log(`  [jev] hostile: ${d.hostile.noul.toFixed(2)}`);
+  const tells = ["threats", "insults"].filter((t) => d[t]).map((t) => `${t} ${d[t].noul.toFixed(2)}`);
+  if (tells.length) console.log(`  [jev] ${tells.join(" · ")}`);
 }
 
 console.log(wrap(game.intro()));

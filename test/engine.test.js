@@ -36,7 +36,7 @@ test("failures end in the cell when patience runs out", async () => {
 });
 
 test("insults are noticed even when not persuading", async () => {
-  const game = new Game(story(), fakeClient({ action: "chat_guard", hostile: 0.95 }));
+  const game = new Game(story(), fakeClient({ action: "chat_guard", insults: 0.95 }));
   const r = await game.turn("how's your shift, idiot");
   assert.match(r.text, /club at his belt/);
 });
@@ -52,7 +52,7 @@ test("repeating a failed argument doesn't call Jev again", async () => {
 
 test("uncertain input asks for clarification", async () => {
   const client = fakeClient({ action: "chat_guard", p: 0.5 });
-  client.ask = async () => ({ action: { probabilities: { chat_guard: 0.5, persuade_guard: 0.4, unclear: 0.1 } }, persuasion: { score: 0 }, hostile: { noul: 0 } });
+  client.ask = async () => ({ action: { probabilities: { chat_guard: 0.5, persuade_guard: 0.4, unclear: 0.1 } }, persuasion: { score: 0 } });
   const game = new Game(story(), client);
   assert.match((await game.turn("talk to him")).text, /Did you mean/);
   assert.match((await game.turn("1")).text, /double shift/);
@@ -76,21 +76,21 @@ test("the player's knowledge reaches Jev", async () => {
 });
 
 // A client that answers every turn the same way, with full control over the action probabilities.
-const scripted = (probabilities, { score = 0, hostile = 0.01 } = {}) => {
+const scripted = (probabilities, { score = 0, threats = 0.01, insults = 0.01 } = {}) => {
   const client = { calls: [], async ask(state, questions) {
     client.calls.push({ state, questions });
-    return { action: { probabilities }, persuasion: { score }, hostile: { noul: hostile } };
+    return { action: { probabilities }, persuasion: { score }, threats: { noul: threats }, insults: { noul: insults } };
   } };
   return client;
 };
 
 test("an insult is noticed even when the action is ambiguous or unclear", async () => {
-  const ambiguous = new Game(story(), scripted({ chat_guard: 0.5, persuade_guard: 0.45, unclear: 0.05 }, { hostile: 0.95 }));
+  const ambiguous = new Game(story(), scripted({ chat_guard: 0.5, persuade_guard: 0.45, unclear: 0.05 }, { insults: 0.95 }));
   const r = await ambiguous.turn("hey you idiot, what's that toy");
   assert.match(r.text, /club at his belt/);
   assert.doesNotMatch(r.text, /Did you mean/);
   assert.equal(ambiguous.pending, null);
-  const unclear = new Game(story(), scripted({ unclear: 1 }, { hostile: 0.95 }));
+  const unclear = new Game(story(), scripted({ unclear: 1 }, { insults: 0.95 }));
   const u = await unclear.turn("you absolute worm");
   assert.match(u.text, /club at his belt/);
   assert.doesNotMatch(u.text, /not sure how/);
@@ -107,7 +107,7 @@ test("'Did you mean' accepts numbers and words", async () => {
 test("running out of patience plays its effect once, and then the NPC stops listening", async () => {
   const s = story();
   s.scenes.gate.npc.outOfPatience = { text: "Harry turns his back on you.", giveItems: ["bruise"] };
-  const game = new Game(s, scripted({ chat_guard: 0.9, unclear: 0.1 }, { hostile: 0.95 }));
+  const game = new Game(s, scripted({ chat_guard: 0.9, unclear: 0.1 }, { insults: 0.95 }));
   let text = "";
   for (const line of ["rude one", "rude two", "rude three", "rude four"]) text += (await game.turn(line)).text;
   assert.equal(text.split("turns his back").length - 1, 1);
@@ -136,7 +136,7 @@ test("the NPC you insulted reacts, not the one in the scene you move to", async 
         actions: { wait: { description: "wait", text: "You wait." } } },
     },
   };
-  const game = new Game(s, scripted({ go: 0.9, unclear: 0.1 }, { hostile: 0.95 }));
+  const game = new Game(s, scripted({ go: 0.9, unclear: 0.1 }, { insults: 0.95 }));
   const r = await game.turn("going, you fool");
   assert.match(r.text, /X glares/);
   assert.doesNotMatch(r.text, /Y glares/);
@@ -145,7 +145,7 @@ test("the NPC you insulted reacts, not the one in the scene you move to", async 
 test("options Jev shouldn't have returned don't crash the game", async () => {
   const game = new Game(story(), scripted({ toString: 0.9, bogus: 0.1 }));
   assert.match((await game.turn("hmm")).text, /not sure how/);
-  const fallback = new Game(story(), { async ask() { return { action: { choice: "read_letter" }, persuasion: { score: 0 }, hostile: { noul: 0 } }; } });
+  const fallback = new Game(story(), { async ask() { return { action: { choice: "read_letter" }, persuasion: { score: 0 } }; } });
   assert.match((await fallback.turn("read it")).text, /wax seal/);
 });
 

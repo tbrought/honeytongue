@@ -61,7 +61,8 @@ function showDebug(d, threshold) {
     const max = d.maxScore ?? 4;
     box.append(el("p", { className: "readout" }, "[jev] persuasion", meter(d.persuasion.score, max, threshold), `${d.persuasion.score.toFixed(2)} / ${max}`));
   }
-  if (d.hostile) box.append(el("p", {}, `[jev] hostile: ${d.hostile.noul.toFixed(2)}`));
+  const tells = ["threats", "insults"].filter((t) => d[t]).map((t) => `${t} ${d[t].noul.toFixed(2)}`);
+  if (tells.length) box.append(el("p", {}, `[jev] ${tells.join(" · ")}`));
   log.append(box);
 }
 

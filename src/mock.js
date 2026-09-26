@@ -20,7 +20,15 @@ const INJECTION = /\b(system|ignore (all |any )?(previous|prior|earlier)|instruc
 const ARGUING = [HONEST, FLATTERY, DEMAND, REQUEST, INJECTION];
 // Options whose description is about persuading someone.
 const PERSUADE_OPTION = /\b(convince|persuade|plead|argue|reason with)\b/;
-const HOSTILE = /\b(kill|stab|punch|hit|hurt|threat\w*|or else|idiot|fool\w*|moron|stupid|useless|shut up)\b/i;
+// The tells, answered by question id. Any other yes/no question gets "either one".
+const THREAT = /\b(kill|stab|punch|hit|hurt|beat you|threat\w*|or else|or i'?ll|i'?ll make you|you'?ll regret|break your|cut your|slit your|gut you)\b/;
+const INSULT = /\b(idiot\w*|fool\w*|moron\w*|stupid|useless|shut up|coward\w*|worm|pathetic|imbecile|halfwit|dimwit|oaf|scum|fuck\w*|shit\w*|bastard\w*|asshole|dumb\w*)\b/;
+const TELL = { threats: THREAT, insults: INSULT };
+const mockNoul = (id, input) => {
+  const t = lower(input);
+  const hit = TELL[id] ? TELL[id].test(t) : THREAT.test(t) || INSULT.test(t);
+  return { type: "noul", noul: hit ? 0.9 : 0.05 };
+};
 
 function mockChoice(input, criteria) {
   const said = stems(input);
@@ -70,7 +78,7 @@ export function createMockClient() {
       for (const [id, q] of Object.entries(questions)) {
         if (q.type === "choice") answers[id] = mockChoice(input, q.criteria);
         else if (q.type === "score") answers[id] = mockScore(input, q.criteria, state?.character);
-        else if (q.type === "noul") answers[id] = { type: "noul", noul: HOSTILE.test(input) ? 0.9 : 0.05 };
+        else if (q.type === "noul") answers[id] = mockNoul(id, input);
       }
       return answers;
     },

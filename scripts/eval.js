@@ -1,5 +1,5 @@
 // Runs the phrasing test set against Jev (or the mock with --mock) and reports
-// parser accuracy, whether persuasion scores land in range, and hostility checks.
+// parser accuracy, whether persuasion scores land in range, and the threats and insults tells.
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -16,7 +16,7 @@ const useMock = process.argv.includes("--mock") || !process.env.TYPESAFE_API_KEY
 const client = useMock ? createMockClient() : createJevClient();
 console.log(`Running ${suite.cases.length} cases against ${useMock ? "the keyword mock" : "Jev"}\n`);
 
-const tally = { action: [0, 0], score: [0, 0], hostile: [0, 0] };
+const tally = { action: [0, 0], score: [0, 0], tells: [0, 0] };
 const mark = (kind, ok) => { tally[kind][1]++; if (ok) tally[kind][0]++; return ok ? "ok" : "MISS"; };
 
 for (const c of suite.cases) {
@@ -24,15 +24,17 @@ for (const c of suite.cases) {
   for (const f of c.flags ?? []) game.flags.add(f);
   const { answers, ranked } = await game.interpret(c.input);
   const [top, p] = ranked[0];
+  const hostileAt = game.npc?.character.hostileAt ?? 0.7;
   const notes = [];
   if (c.expect) notes.push(`action ${top} ${p.toFixed(2)} ${mark("action", top === c.expect)}${top === c.expect ? "" : ` (want ${c.expect})`}`);
   if (c.score) {
     const s = answers.persuasion.score;
     notes.push(`persuasion ${s.toFixed(2)} ${mark("score", s >= c.score[0] && s <= c.score[1])} (want ${c.score[0]}-${c.score[1]})`);
   }
-  if (c.hostile !== undefined) {
-    const h = answers.hostile.noul;
-    notes.push(`hostile ${h.toFixed(2)} ${mark("hostile", (h >= 0.7) === c.hostile)}`);
+  for (const tell of ["threats", "insults"]) {
+    if (c[tell] === undefined) continue;
+    const n = answers[tell].noul;
+    notes.push(`${tell} ${n.toFixed(2)} ${mark("tells", (n >= hostileAt) === c[tell])}`);
   }
   console.log(`"${c.input.slice(0, 60)}"\n   ${notes.join(" | ")}${c.note ? `  [${c.note}]` : ""}`);
 }

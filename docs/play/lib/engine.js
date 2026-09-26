@@ -3,7 +3,7 @@
 // persuasion.js, how convincing they were (a Score). All state changes
 // and narration come from the author's story file.
 
-import { Persuadable, persuasionQuestions, cleanInput, defineCharacter, HoneytongueError } from "./persuasion.js";
+import { Persuadable, persuasionQuestions, readPersuasion, cleanInput, defineCharacter, HoneytongueError } from "./persuasion.js";
 
 const ACT_AT = 0.6;      // top option probability needed to act immediately
 const CLARIFY_AT = 0.3;  // between CLARIFY_AT and ACT_AT, ask "did you mean..."
@@ -234,7 +234,7 @@ export class Game {
     if (this.npc?.findRepeat(input)) return this.perform("__repeat", input, null, null);
 
     const { answers, ranked } = await this.interpret(input);
-    const debug = { ranked: ranked.slice(0, 3), persuasion: answers.persuasion, hostile: answers.hostile, maxScore: this.npc?.character.maxScore };
+    const debug = { ranked: ranked.slice(0, 3), persuasion: answers.persuasion, threats: answers.threats, insults: answers.insults, maxScore: this.npc?.character.maxScore };
     const [top, p] = ranked[0];
     const second = ranked[1]?.[0];
     const unclear = top === "unclear" || p < CLARIFY_AT;
@@ -293,11 +293,12 @@ export class Game {
     return { text, debug };
   }
 
+  /** Whether this turn's tells would offend the NPC: the same rule persuasion uses. */
   isHostile(answers) {
-    return Boolean(this.npc) && (answers?.hostile?.noul ?? 0) >= this.npc.character.hostileAt;
+    return Boolean(this.npc) && readPersuasion(this.npc.character, answers).verdict === "offended";
   }
 
-  /** NPCs react to insults whatever the player was doing, not just when persuading. */
+  /** NPCs react to threats and insults whatever the player was doing, not just when persuading. */
   react(lines, answers) {
     if (this.over || !this.isHostile(answers)) return;
     lines.push(this.scene.npc.hostileReaction);
