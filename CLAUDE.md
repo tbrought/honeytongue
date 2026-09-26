@@ -52,6 +52,7 @@ Jev is TypeSafe AI's "System One" decision model, released September 2026. It do
 4. **API keys never reach the browser, the repo, or logs.** The key comes from the `TYPESAFE_API_KEY` environment variable. Never write it to a file, never print it.
 5. **Keep types, README, and docs in sync** with any API change, and run `npm run build:demo` after changing `src/` or `stories/`.
 6. **Readable errors.** Developer mistakes throw `HoneytongueError` (or `StoryError`, which lists every problem) with a message that says how to fix it.
+7. **Published versions are permanent.** A version on npm can never be reused or edited, so a mistake means publishing a new version, not fixing the old one.
 
 ## Commands
 
@@ -66,6 +67,28 @@ npm run build:demo   # refresh docs/play/lib after changing src/ or stories/
 ```
 
 The human develops on Windows in VS Code with PowerShell. Set the key with `$env:TYPESAFE_API_KEY="..."`. Keep npm scripts cross-platform (no Bash-only syntax).
+
+## Releasing
+
+The agent prepares a release on the feature branch; the human ships it. **The agent never pushes, merges, publishes, or tags.**
+
+Agent (preparing a release):
+
+1. Confirm `npm test` passes, plus `npm run typecheck` once it exists.
+2. Run `npm run build:demo` and commit any changes to `docs/`.
+3. Bump the version in `package.json` and everywhere else it appears (README, docs site, CDN links). Prereleases follow the pattern `0.1.0-alpha.1`, `alpha.2`, and so on; stable releases drop the suffix.
+4. Move the CHANGELOG's Unreleased entries under a heading with the version and today's UTC date, keeping a "Breaking" heading where needed.
+5. Run `npm pack --dry-run` and check the version and file list (no tests, evals, secrets, or stray files).
+6. Hand over with a summary and the exact commands for the human's steps.
+
+Human (shipping it):
+
+1. Review: `npm test`, `npm run play:mock`, and `npx serve docs`.
+2. `git push -u origin <branch>`, open a pull request on GitHub, and wait for the checks to pass.
+3. Merge on GitHub, delete the branch, then `git checkout main` and `git pull`.
+4. `npm whoami`, then `npm publish --tag alpha` for prereleases, or plain `npm publish` for stable releases.
+5. `npm view honeytongue dist-tags` to confirm. npm pointed `latest` at alpha.0 on the first publish, so while there's no stable release, point `latest` at the newest alpha with `npm dist-tag add honeytongue@<version> latest`.
+6. `git tag v<version>` and `git push origin v<version>`, then optionally create a GitHub Release from the tag using the CHANGELOG section, marked as a pre-release for alphas.
 
 ## Current status and known unknowns
 
@@ -93,8 +116,8 @@ Work through these phases in order. At the end of each phase, stop, summarize wh
 
 **Phase 5: Proxy and playable demo.** Help the human deploy `examples/cloudflare-worker.js`. Build a browser version of The Gatehouse (it can reuse `Game` from `src/engine.js` with `createProxyClient`) and link it from the docs site.
 
-**Phase 6: Release.** Confirm the npm name is free (`npm view honeytongue`), bump the version, check `npm pack --dry-run` contents, and prepare release notes. The human runs `npm login` and `npm publish` themselves.
+**Phase 6: Release.** Follow "Releasing" above. The human runs `npm login` and `npm publish` themselves.
 
 ## Things only the human can do
 
-Get the TypeSafe API key, create GitHub, npm, and Cloudflare accounts, approve spending, run `npm publish`, and make naming and licensing decisions. Ask rather than guess on any of these.
+Get the TypeSafe API key, create GitHub, npm, and Cloudflare accounts, approve spending, push, merge, publish, and tag (see "Releasing"), and make naming and licensing decisions. Ask rather than guess on any of these.
