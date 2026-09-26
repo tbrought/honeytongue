@@ -2,6 +2,8 @@
 // It returns the same answer shapes as the real API, but judges by keywords.
 // Real Jev will be far better at both parsing and persuasion scoring.
 
+import { SOURCE } from "./jev.js";
+
 const STOP = new Set(
   "the and you your with for about into that this try them her his are not any from over other way out let she him who what".split(" ")
 );
@@ -101,6 +103,7 @@ export function createMockClient() {
         else if (q.type === "score") answers[id] = mockScore(input, q.criteria, state?.character, q.instructions);
         else if (q.type === "noul") answers[id] = mockNoul(id, input);
       }
+      answers[SOURCE] = "mock";
       return answers;
     },
   };

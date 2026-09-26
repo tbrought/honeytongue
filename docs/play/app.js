@@ -55,14 +55,15 @@ function showText(text) {
 /** The same view as the terminal player's --debug. */
 function showDebug(d, threshold) {
   if (!debug || !d) return;
+  const tag = `[${d.source ?? "unknown"}]`; // who answered this turn: jev, mock, or unknown if the proxy didn't say
   const box = el("div", { className: "debug" });
-  box.append(el("p", {}, `[jev] action: ${d.ranked.map(([id, p]) => `${id} ${p.toFixed(2)}`).join(" · ")}`));
+  box.append(el("p", {}, `${tag} action: ${d.ranked.map(([id, p]) => `${id} ${p.toFixed(2)}`).join(" · ")}`));
   if (d.persuasion) {
     const max = d.maxScore ?? 4;
-    box.append(el("p", { className: "readout" }, "[jev] persuasion", meter(d.persuasion.score, max, threshold), `${d.persuasion.score.toFixed(2)} / ${max}`));
+    box.append(el("p", { className: "readout" }, `${tag} persuasion`, meter(d.persuasion.score, max, threshold), `${d.persuasion.score.toFixed(2)} / ${max}`));
   }
   const tells = ["threats", "insults"].filter((t) => d[t]).map((t) => `${t} ${d[t].noul.toFixed(2)}`);
-  if (tells.length) box.append(el("p", {}, `[jev] ${tells.join(" · ")}`));
+  if (tells.length) box.append(el("p", {}, `${tag} ${tells.join(" · ")}`));
   log.append(box);
 }
 
@@ -125,7 +126,7 @@ async function submit(raw) {
   if (said === "debug") {
     debug = !debug;
     $("debug-key").setAttribute("aria-pressed", String(debug));
-    line(`Debug view ${debug ? "on: you'll see what Jev decided each turn" : "off"}.`, "dim");
+    line(`Debug view ${debug ? "on: you'll see how each turn was judged" : "off"}.`, "dim");
     return settle();
   }
   if (/^(quit|exit|q)$/.test(said)) { line("There's no quitting in a browser. Type RESTART to begin again, or just close the tab."); return settle(); }
@@ -138,6 +139,7 @@ async function submit(raw) {
     const result = await game.turn(text);
     moves++;
     thinking.remove();
+    showMode(result.debug?.source);
     showDebug(result.debug, threshold);
     showText(result.text);
     if (game.over) line("Type RESTART to play again.", "dim");
@@ -175,11 +177,18 @@ for (const button of document.querySelectorAll("[data-say]")) {
 
 // ---- Boot ------------------------------------------------------------------------
 
-const mode = $("mode");
-mode.hidden = false;
-mode.append(proxyUrl
-  ? el("span", {}, el("strong", {}, "Live: "), "Jev judges everything you type, through the Honeytongue proxy.")
-  : el("span", {}, el("strong", {}, "Offline preview: "), "a simple keyword matcher stands in for Jev, so it understands far less than the real thing. Plain, direct sentences work best."));
+/** The banner above the game: live Jev, or the offline mock (directly, or behind a local proxy). */
+let shownSource;
+function showMode(source) {
+  if (!source || source === shownSource) return;
+  shownSource = source;
+  const mode = $("mode");
+  mode.hidden = false;
+  mode.replaceChildren(source === "jev"
+    ? el("span", {}, el("strong", {}, "Live: "), "Jev judges everything you type, through the Honeytongue proxy.")
+    : el("span", {}, el("strong", {}, "Offline preview. "), "Characters here are judged by simple keyword matching, a stand-in for Jev that understands far less. Plain, direct sentences work best."));
+}
+showMode(proxyUrl ? "jev" : "mock");
 
 try {
   const res = await fetch("lib/gatehouse.json");

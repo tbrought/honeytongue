@@ -5,6 +5,7 @@ import { createJevClient, createProxyClient, createProxyHandler, createMockClien
 import { fakeClient } from "./helpers.js";
 
 const ok = (body) => new Response(JSON.stringify(body), { status: 200 });
+const SOURCE = Symbol.for("honeytongue.source");
 const reply = (status, body = "", headers = {}) =>
   new Response(typeof body === "string" ? body : JSON.stringify(body), { status, headers });
 
@@ -12,7 +13,7 @@ test("sends the documented request shape", async () => {
   let sent;
   const answer = { type: "noul", noul: 0.2 };
   const client = createJevClient({ apiKey: "k", fetch: async (url, init) => { sent = { url, ...init }; return ok({ answers: { q: answer } }); } });
-  assert.deepEqual(await client.ask({ s: 1 }, { q: { type: "noul" } }), { q: answer });
+  assert.deepEqual(await client.ask({ s: 1 }, { q: { type: "noul" } }), { q: answer, [SOURCE]: "jev" });
   assert.equal(sent.url, "https://api.typesafe.ai/v1/systemone");
   assert.equal(sent.headers.Authorization, "Bearer k");
   assert.deepEqual(JSON.parse(sent.body), { model: "jev-1.13.0", state: { s: 1 }, questions: { q: { type: "noul" } } });
@@ -51,7 +52,7 @@ test("retries rate limits and network errors, then succeeds", async () => {
     if (n === 2) return new Response("slow down", { status: 429 });
     return ok({ answers: { done: true } });
   } });
-  assert.deepEqual(await client.ask({}, {}), { done: true });
+  assert.deepEqual(await client.ask({}, {}), { done: true, [SOURCE]: "jev" });
   assert.equal(n, 3);
 });
 
@@ -191,6 +192,57 @@ test("the proxy tells players when Jev is busy", async () => {
   } finally {
     console.error = original;
   }
+});
+
+test("proxy replies say whether Jev or the mock answered, beside the answers", async () => {
+  const tell = { state: { player_input: "hi" }, questions: { threats: { type: "noul" } } };
+  const mock = await (await createProxyHandler({ client: createMockClient() })(post(tell))).json();
+  assert.equal(mock.source, "mock");
+  assert.equal("source" in mock.answers, false);
+
+  const jev = createJevClient({ apiKey: "k", fetch: async () => ok({ answers: { persuasion: { type: "score", score: 1 } } }) });
+  assert.equal((await (await createProxyHandler({ client: jev })(post(valid))).json()).source, "jev");
+  // A client that doesn't say where its answers came from gets no label, not a guess.
+  assert.equal((await (await createProxyHandler({ client: fakeClient() })(post(valid))).json()).source, undefined);
+});
+
+test("the proxy client reads the source from each reply", async () => {
+  const sources = ["mock", "jev", undefined, "something else"];
+  let n = 0;
+  const client = createProxyClient({ url: "https://proxy.test/", fetch: async () => ok({ answers: {}, source: sources[n++] }) });
+  const seen = [];
+  for (let i = 0; i < sources.length; i++) seen.push((await client.ask({}, {}))[SOURCE]);
+  assert.deepEqual(seen, ["mock", "jev", undefined, undefined]);
+});
+
+test("a proxy with no key and no client returns an error, never the mock", async () => {
+  const saved = process.env.TYPESAFE_API_KEY;
+  delete process.env.TYPESAFE_API_KEY;
+  const realFetch = globalThis.fetch;
+  let fetched = 0;
+  globalThis.fetch = async () => { fetched++; return ok({ answers: {} }); };
+  const logged = [];
+  const original = console.error;
+  console.error = (...args) => logged.push(args.join(" "));
+  try {
+    const res = await createProxyHandler()(post(valid), {});
+    const body = await res.json();
+    assert.equal(res.status, 502);
+    assert.equal(body.answers, undefined);
+    assert.equal(body.source, undefined);
+    assert.equal(fetched, 0);
+    assert.match(logged.join("\n"), /Missing TypeSafe API key/);
+  } finally {
+    console.error = original;
+    globalThis.fetch = realFetch;
+    if (saved !== undefined) process.env.TYPESAFE_API_KEY = saved;
+  }
+});
+
+test("the engine's debug output says which client answered", async () => {
+  const story = JSON.parse(readFileSync(new URL("../stories/gatehouse.json", import.meta.url), "utf8"));
+  assert.equal((await new Game(story, createMockClient()).turn("Chat with Harry")).debug.source, "mock");
+  assert.equal((await new Game(story, fakeClient()).turn("Chat with Harry")).debug.source, undefined);
 });
 
 test("a worst-case Gatehouse turn fits the proxy's default size limit", () => {

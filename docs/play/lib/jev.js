@@ -71,6 +71,16 @@ async function postWithRetry(url, { headers, body, timeoutMs, maxRetries, retryO
   }
 }
 
+/**
+ * Where a set of answers came from, "jev" or "mock", so debug views can say which one judged.
+ * Kept under a symbol so it can't clash with a question id and never ends up in JSON.
+ */
+export const SOURCE = Symbol.for("honeytongue.source");
+const from = (answers, source) => {
+  if (source === "jev" || source === "mock") answers[SOURCE] = source;
+  return answers;
+};
+
 const FIELD = { choice: "choice", score: "score", noul: "noul" };
 
 /** Check the response has a well-formed answer for every question, so shape surprises fail loudly here. */
@@ -136,7 +146,7 @@ export function createJevClient({
           retryOn: (status) => status === 429 || status >= 500,
           hints: JEV_HINTS,
         });
-        return readAnswers(data, questions, url);
+        return from(readAnswers(data, questions, url), "jev");
       } catch (err) {
         throw redact(err);
       }
@@ -165,7 +175,8 @@ export function createProxyClient({ url, headers = {}, timeoutMs = 20000, maxRet
         retryOn: (status) => status === 429 || status === 503,
         hints: proxyHints(),
       });
-      return readAnswers(data, questions, url);
+      // The proxy says which one answered, per reply: what's behind it can change between calls.
+      return from(readAnswers(data, questions, url), data.source);
     },
   };
 }

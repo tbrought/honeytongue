@@ -245,6 +245,8 @@ export interface Story {
 }
 
 export interface TurnDebug {
+  /** Who answered this turn, when the client says: Jev, or the offline mock (directly or behind a proxy). */
+  source?: "jev" | "mock";
   /** The top options with their probabilities, most likely first. */
   ranked: [string, number][];
   persuasion?: ScoreAnswer;

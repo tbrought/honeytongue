@@ -65,7 +65,7 @@ The proxy keeps your key server-side, accepts browser requests only from its own
 
 - **Not sure of your game's origin?** itch.io games, for example, run in a frame on itch's own domain. Try the game once: the error message names the exact origin to add.
 - **Other hosts.** On Cloudflare the proxy trusts `CF-Connecting-IP`; elsewhere it uses the last `X-Forwarded-For` entry, which is right for Vercel and most platforms. If your server is reachable directly, pass `clientIp: (request, env) => ...` so the rate limit can't be dodged with a forged header.
-- **Local development.** `npm run proxy` runs the proxy on Node at `http://localhost:8787`, using the offline mock until you set a key. See `examples/node-proxy.js`.
+- **Local development.** `npm run proxy` runs the proxy on Node at `http://localhost:8787`, using the offline mock until you set a key. See `examples/node-proxy.js`. The proxy only uses the mock when it is passed in as `client`, as that example does; a deployed proxy with no key returns an error rather than falling back. Every reply says which one answered, `"source": "jev"` or `"mock"` beside `answers`, and the engine passes it on as `debug.source`.
 
 See `examples/browser.html` for a complete page and `examples/twine-sugarcube.md` for a Twine recipe.
 
