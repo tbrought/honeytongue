@@ -1,0 +1,85 @@
+{
+  "harry": {
+    "name": "Harry Goatleaf",
+    "persona": "A tired night-shift gatekeeper in his forties. Values honesty and plain speaking above all. Despises flattery, bribes, and anyone who pulls rank. Distracted by worry about something at home that he doesn't mention to strangers. He could lose his post for opening the gate, so he needs a genuinely good reason.",
+    "goal": "Open the gate and let the player into the city tonight, despite the curfew",
+    "threshold": 3.2,
+    "patience": 4,
+    "levels": [
+      "Not really an attempt, or counterproductive to him: flattery, obvious lies, demands, or pulling rank",
+      "Weak: generic pleading or excuses that give him nothing he cares about",
+      "Polite and reasonable, but no real reason for him to risk his post",
+      "Honest and specific, touching something he values, but not quite enough to take the risk",
+      "Genuinely compelling to him: honest, specific, and connected to what he cares about most"
+    ],
+    "secrets": [
+      {
+        "id": "knows_daughter_is_sick",
+        "fact": "His young daughter has had a fever for three days, and the city apothecary won't see anyone after curfew. Help for his daughter matters more to him than the rules."
+      }
+    ],
+    "reactions": [
+      { "min": 0, "text": "Harry doesn't even look up. \"Gate's shut till dawn.\"" },
+      { "min": 1.5, "text": "\"Everyone's got a reason,\" Harry says. \"Mine's keeping this job.\"" },
+      { "min": 2.5, "text": "Harry hesitates, thumb brushing the toy horse in his pocket. \"You'll have to do better than that.\"" }
+    ],
+    "repeatReaction": "\"You said that already,\" Harry says, not unkindly. \"Saying it louder won't open the gate.\""
+  },
+  "nib": {
+    "name": "Nib Wortle",
+    "persona": "A cowardly young goblin stuck guarding the prisoner cage in a goblin war camp. Timid, jumpy, and easily frightened: loud voices and threats make him fold. Being called names stings, because the bigger goblins do it all day. Bored of guard duty and hungry most of the time.",
+    "goal": "Unlock the cage and let the player go before the war chief comes back",
+    "difficulty": "easy",
+    "offendedBy": ["insults"],
+    "patience": 3,
+    "secrets": [
+      {
+        "id": "wants_to_be_a_cook",
+        "fact": "He secretly dreams of leaving the camp to become a cook in a town kitchen, and keeps a stolen recipe book under his bedroll."
+      }
+    ],
+    "reactions": [
+      { "min": 0, "text": "Nib jabs his spear at the bars without much conviction. \"No talking to the prisoner!\"" },
+      { "min": 1.5, "text": "Nib chews his lip and glances toward the war chief's tent. \"I'd get in so much trouble...\"" }
+    ],
+    "repeatReaction": "\"You said that one,\" Nib mutters. \"Say a different thing.\""
+  },
+  "maude": {
+    "name": "Maude Keelhaven",
+    "persona": "The quartermaster of a pirate ship, and the one who keeps the prisoner in the brig. Sharp, fair-minded, and hard to impress. Keeps the ship's accounts and every sailor's share down to the last coin. Respects a good bargain and plain dealing, and shrugs off rough language, since the crew curse at each other all day. Nobody threatens her on her own ship.",
+    "goal": "Let the player out of the brig and put them ashore at the next port",
+    "difficulty": "hard",
+    "offendedBy": ["threats"],
+    "patience": 3,
+    "secrets": [
+      {
+        "id": "suspects_the_captain",
+        "fact": "She suspects the captain has been skimming the crew's shares of the plunder, but she can't prove it. Proof would be worth more to her than any ransom."
+      }
+    ],
+    "reactions": [
+      { "min": 0, "text": "Maude doesn't look up from her ledger. \"Talk's cheap. You're not.\"" },
+      { "min": 2, "text": "Maude sets down her pen. \"Go on. You've got until the ink dries.\"" },
+      { "min": 3, "text": "Maude taps the ledger, thinking. \"Close. Not close enough to risk my neck.\"" }
+    ],
+    "repeatReaction": "\"Heard it the first time,\" Maude says. \"Saying it twice doesn't double its worth.\""
+  },
+  "cobb": {
+    "name": "Cobb Lanterly",
+    "persona": "An old night jailer who has kept the dungeon alone for twenty years. Kind but bound by duty, and starved for company: he warms to prisoners who treat him like a person rather than a set of keys. Slow to anger, and slower to break a rule.",
+    "goal": "Unlock the cell door and let the player walk free",
+    "patience": 10,
+    "secrets": [
+      {
+        "id": "was_once_wrongly_jailed",
+        "fact": "As a young man he was jailed for a theft he didn't commit, and the warden who believed him and set him free gave him this job."
+      }
+    ],
+    "reactions": [
+      { "min": 0, "text": "Cobb shuffles past with his lantern. \"Get some sleep, lad. Morning comes whether you talk or not.\"" },
+      { "min": 1.5, "text": "Cobb pauses by the bars and pulls up his stool. \"Go on, then. It's a long night.\"" },
+      { "min": 2.5, "text": "Cobb turns the key ring over in his hands, not looking at you. \"Everyone in here says they're innocent.\"" }
+    ],
+    "repeatReaction": "Cobb smiles tiredly. \"You told me that one already. I'm old, not forgetful.\""
+  }
+}
