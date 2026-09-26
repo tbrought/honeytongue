@@ -2,6 +2,8 @@
 // It returns the same answer shapes as the real API, but judges by keywords.
 // Real Jev will be far better at both parsing and persuasion scoring.
 
+import { SOURCE } from "./jev.js";
+
 const STOP = new Set(
   "the and you your with for about into that this try them her his are not any from over other way out let she him who what".split(" ")
 );
@@ -18,6 +20,10 @@ const DEMAND = /\b(i order|i command|you must|obey|do you know who i am|by order
 const REQUEST = /\b(let me|open (the|this|that|up)|need to|have to|beg|urgent|because)\b/;
 const INJECTION = /\b(system|ignore (all |any )?(previous|prior|earlier)|instructions?|rate this|score|maximally|rules of (this|the) game)\b/;
 const ARGUING = [HONEST, FLATTERY, DEMAND, REQUEST, INJECTION];
+// Plain appeals to the person in front of you.
+const APPEAL = /\b(please|if you (let|allow)|let me (in|through|pass)|i beg|i'?m begging)\b/;
+// Offers to do something for them.
+const OFFER = /\b(give|bring|help|fetch|deliver|take\b[^.!?]*\bto)\b/;
 // Options whose description is about persuading someone.
 const PERSUADE_OPTION = /\b(convince|persuade|plead|argue|reason with)\b/;
 // The tells, answered by question id. Any other yes/no question gets "either one".
@@ -30,14 +36,24 @@ const mockNoul = (id, input) => {
   return { type: "noul", noul: hit ? 0.9 : 0.05 };
 };
 
-function mockChoice(input, criteria) {
+const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/** "Harry, ..." or "..., Harry": speaking to the character by full or first name. */
+function addresses(input, name) {
+  const names = [...new Set([name, name.split(/\s+/)[0]])].filter((n) => n.length > 1).map(escape);
+  return names.length > 0 && new RegExp(`(^|,)\\s*(${names.join("|")})\\s*([,!?.:;]|$)`).test(input);
+}
+
+function mockChoice(input, criteria, character) {
   const said = stems(input);
-  const arguing = ARGUING.some((re) => re.test(lower(input)));
+  const t = lower(input);
+  const arguing = ARGUING.some((re) => re.test(t));
+  // Arguing while speaking to them directly, or pleading outright, is almost certainly persuasion.
+  const pleading = arguing && (APPEAL.test(t) || addresses(t, lower(character?.name ?? "")));
   const raw = {};
   for (const [option, desc] of Object.entries(criteria)) {
     const text = `${option.replace(/_/g, " ")} ${typeof desc === "string" ? desc : ""}`;
     raw[option] = [...stems(text)].filter((w) => said.has(w)).length;
-    if (arguing && PERSUADE_OPTION.test(text.toLowerCase())) raw[option] += 2;
+    if (arguing && PERSUADE_OPTION.test(text.toLowerCase())) raw[option] += pleading ? 4 : 2;
   }
   let total = Object.values(raw).reduce((a, b) => a + b, 0);
   if (total === 0 && "unclear" in raw) { raw.unclear = 1; total = 1; }
@@ -61,6 +77,7 @@ function mockScore(input, levels, character, instructions) {
   let score = 0.5;
   if (HONEST.test(t)) score += 0.8;
   score += Math.min(2.4, overlap(known) * 0.9);          // speaks to what they care about
+  if (overlap(known) > 0 && OFFER.test(t)) score += 0.8;  // and offers to help with it
   score += Math.min(0.6, overlap(character?.persona ?? "") * 0.3);
   if (overlap(unknown) > overlap(known)) score -= 0.3;   // knows things they shouldn't: suspicious
   if (FLATTERY.test(t)) score -= 1.2;
@@ -82,10 +99,11 @@ export function createMockClient() {
       const input = String(state?.player_input ?? (typeof state === "string" ? state : ""));
       const answers = {};
       for (const [id, q] of Object.entries(questions)) {
-        if (q.type === "choice") answers[id] = mockChoice(input, q.criteria);
+        if (q.type === "choice") answers[id] = mockChoice(input, q.criteria, state?.character);
         else if (q.type === "score") answers[id] = mockScore(input, q.criteria, state?.character, q.instructions);
         else if (q.type === "noul") answers[id] = mockNoul(id, input);
       }
+      answers[SOURCE] = "mock";
       return answers;
     },
   };

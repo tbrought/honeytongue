@@ -6,7 +6,7 @@
 //
 // On Cloudflare Workers the key is read from the TYPESAFE_API_KEY secret automatically.
 
-import { createJevClient } from "./jev.js";
+import { createJevClient, SOURCE } from "./jev.js";
 import { HoneytongueError } from "./persuasion.js";
 
 const ALLOWED_TYPES = new Set(["choice", "score", "noul"]);
@@ -108,7 +108,9 @@ export function createProxyHandler({
         timeoutMs: 10_000,
         maxRetries: 2,
       });
-      return reply(200, { answers: await jev.ask(state, questions) }, origin);
+      // Only a client passed in can be the mock: without one, a missing key is an error, never a quiet fallback.
+      const answers = await jev.ask(state, questions);
+      return reply(200, { answers, source: answers?.[SOURCE] }, origin);
     } catch (err) {
       console.error("honeytongue proxy:", err);
       const busy = err?.status === 429 || err?.status === 529;

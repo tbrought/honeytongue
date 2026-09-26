@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Proxy replies say which one answered, with `"source": "jev"` or `"mock"` beside `answers`. The engine passes it on per turn as `debug.source`. The proxy only uses the mock when one is passed in as `client` (as `npm run proxy` does without a key); a deployed proxy with no key still returns an error.
+- Debug output in the terminal player and the web demo is labelled `[jev]` or `[mock]` by who actually answered, or `[unknown]` when the client doesn't say, instead of always `[jev]`.
+- The web demo's offline banner now says that characters are judged by simple keyword matching. It also switches to that banner if a proxy turns out to be running the mock.
+
+### Fixed
+
+- The offline mock can now win The Gatehouse the way the story intends. It credits an offer to help ("give", "bring", "help", "take … to") when the argument also uses a secret the player has learned. It also leans toward the persuade action when the player pleads or speaks to the character by name, so an obvious plea no longer triggers "Did you mean".
+
 ## 0.1.0-alpha.1 (2026-09-26)
 
 Character settings a designer can use without touching the rubric. Like 0.1.0-alpha.0, this was built and tested with the offline mock only; the new questions and the difficulty shares still need a live Jev run.

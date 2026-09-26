@@ -4,6 +4,7 @@
 // and narration come from the author's story file.
 
 import { Persuadable, persuasionQuestions, readPersuasion, cleanInput, defineCharacter, HoneytongueError } from "./persuasion.js";
+import { SOURCE } from "./jev.js";
 
 const ACT_AT = 0.6;      // top option probability needed to act immediately
 const CLARIFY_AT = 0.3;  // between CLARIFY_AT and ACT_AT, ask "did you mean..."
@@ -239,7 +240,7 @@ export class Game {
     if (this.npc?.findRepeat(input)) return this.perform("__repeat", input, null, null);
 
     const { answers, ranked } = await this.interpret(input);
-    const debug = { ranked: ranked.slice(0, 3), persuasion: answers.persuasion, threats: answers.threats, insults: answers.insults, maxScore: this.npc?.character.maxScore };
+    const debug = { source: answers[SOURCE], ranked: ranked.slice(0, 3), persuasion: answers.persuasion, threats: answers.threats, insults: answers.insults, maxScore: this.npc?.character.maxScore };
     const [top, p] = ranked[0];
     const second = ranked[1]?.[0];
     const unclear = top === "unclear" || p < CLARIFY_AT;

@@ -47,14 +47,15 @@ const bar = (value, max, width = 20) => {
 };
 
 function printDebug(d) {
+  const tag = `[${d.source ?? "unknown"}]`; // who answered this turn: jev, mock, or unknown if the client didn't say
   const top = d.ranked.map(([k, p]) => `${k} ${p.toFixed(2)}`).join(" · ");
-  console.log(`\n  [jev] action: ${top}`);
+  console.log(`\n  ${tag} action: ${top}`);
   if (d.persuasion) {
     const max = d.maxScore ?? Math.max(1, Object.keys(d.persuasion.legend ?? {}).length - 1);
-    console.log(`  [jev] persuasion ${bar(d.persuasion.score, max)} ${d.persuasion.score.toFixed(2)} / ${max}`);
+    console.log(`  ${tag} persuasion ${bar(d.persuasion.score, max)} ${d.persuasion.score.toFixed(2)} / ${max}`);
   }
   const tells = ["threats", "insults"].filter((t) => d[t]).map((t) => `${t} ${d[t].noul.toFixed(2)}`);
-  if (tells.length) console.log(`  [jev] ${tells.join(" · ")}`);
+  if (tells.length) console.log(`  ${tag} ${tells.join(" · ")}`);
 }
 
 console.log(wrap(game.intro()));

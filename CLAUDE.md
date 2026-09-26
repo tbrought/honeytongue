@@ -31,8 +31,8 @@ Jev is TypeSafe AI's "System One" decision model, released September 2026. It do
 |---|---|
 | `src/persuasion.js` | Core mechanic. `Persuadable`, `judgePersuasion`, building blocks, validation. Each attempt asks three questions: a `persuasion` Score and two Noul "tells", `threats` and `insults` |
 | `src/engine.js` | Text adventure engine and `validateStory`. One Jev call per turn: an action Choice merged with the persuasion questions (4 questions; the proxy allows 6 by default) |
-| `src/jev.js` | `createJevClient` (server only, refuses browsers) and `createProxyClient` (browser safe) |
-| `src/proxy.js` | `createProxyHandler`: Request to Response proxy for Cloudflare, Vercel, Deno, Bun, Node |
+| `src/jev.js` | `createJevClient` (server only, refuses browsers) and `createProxyClient` (browser safe). Clients tag answers with `SOURCE` (`"jev"` or `"mock"`), which the engine exposes as `debug.source` |
+| `src/proxy.js` | `createProxyHandler`: Request to Response proxy for Cloudflare, Vercel, Deno, Bun, Node. Replies carry `answers` and `source`; it uses the mock only when one is passed in as `client` |
 | `src/mock.js` | Keyword mock with the same answer shapes, for tests and offline play |
 | `src/cli.js` | Terminal player (the only file allowed to use Node built-ins) |
 | `src/index.d.ts` | Hand-written TypeScript types for every export and the story format. `persuasion.d.ts` and `proxy.d.ts` re-export the subsets for those entry points |
@@ -92,31 +92,58 @@ Human (shipping it):
 
 ## Current status and known unknowns
 
-- Phase 1 is done (2026-09-25). Unit tests pass (57, which includes `test/helpers.js`: `node --test` counts every file under `test/`) on Node 18, 20, 22, and 24. Keyword mock baseline on the eval set: action 15/17, score 7/7, tells 2/2.
-- **TypeSafe paused new signups on 2026-09-24, so there is no API key yet.** While waiting, the work that doesn't need Jev was done ahead of order: a bug and edge-case pass over every module (see `CHANGELOG.md`), the docs site restyle and mobile/dark-mode check from Phase 4, and the browser demo from Phase 5 (it runs on the offline mock, and the docs hero links it as an "offline preview").
+- Local verification and CI are done (2026-09-25): unit tests pass on Node 18, 20, 22, and 24 (`node --test` counts every file under `test/`, including `test/helpers.js`). Keyword mock baseline on the eval set: action 15/17, score 7/7, tells 2/2.
+- **TypeSafe paused new signups on 2026-09-24, so there is no API key yet.** While waiting, the work that doesn't need Jev was done: a bug and edge-case pass over every module (see `CHANGELOG.md`), the docs site restyle and mobile/dark-mode check, and the browser demo (it runs on the offline mock, and the docs hero links it as an "offline preview"). See "Roadmap" for what's next.
+- The public web demo runs on the mock, so the mock must be able to win each scene the way the story intends. `test/engine.test.js` plays The Gatehouse's golden path on the mock; keep mock changes generic, never tuned to one story's wording or the eval set.
 - **Nothing has been run against live Jev yet.** The client was written from the API docs, and now checks every response's shape so a mismatch fails with a clear message. Thresholds, rubric wording, and the default levels are guesses until real evals run.
 - The Twine recipe (`examples/twine-sugarcube.md`) is untested inside Twine.
 - Scores shown in the docs site hero are illustrative placeholders, labeled as such.
-- The repository is github.com/tbrought/honeytongue (the site will be tbrought.github.io/honeytongue). The version is `0.1.0-alpha.1` (prepared 2026-09-26; see "Releasing" for publishing); the stable `0.1.0` comes after live Jev validation.
+- The repository is github.com/tbrought/honeytongue (the site will be tbrought.github.io/honeytongue). The latest release is `0.1.0-alpha.1` (published 2026-09-26); the stable `0.1.0` comes after live Jev validation.
 - Character settings (0.1.0-alpha.1): `difficulty` maps a word to a share of the top rubric level (easy 0.6, normal 0.8, hard 0.9, very hard 0.95, in `DIFFICULTY` in `persuasion.js`). **These shares are guesses and need calibrating against live Jev.** `offendedBy` picks which tells offend; tells not in it are left to the persona, via an extra sentence in the persuasion question (also unverified live). Results carry `tells` and `triggered`; `hostility` is gone. `decide(result, context)` is a synchronous character hook applied in `record()` and `judgePersuasion()`, not `readPersuasion()`. Don't add stages, extra or custom tells, or closeness labels until there are live results.
-- The npm name `honeytongue` was available on 2026-09-25 (`npm view` returned 404). Check again before release.
-- The folder isn't a git repository yet, so the CI workflow hasn't run.
+## Roadmap
 
-## Plan
+Work through the phases in order. At the start of each phase, send a short plan and wait for approval; at the end, summarize what changed and what you found, and stop.
 
-Work through these phases in order. At the end of each phase, stop, summarize what changed and what you found, and wait for approval before starting the next.
+**Done: Phase A, character settings** (released as `0.1.0-alpha.1`).
 
-**Phase 1: Verify locally.** Run `npm test`, `npm run play:mock`, `npm run example`, and `npm run eval -- --mock` on this machine. Fix anything that fails on Windows. Add a `.github/workflows/test.yml` that runs `npm test` on current Node LTS versions.
+**Phase B: Character playground** (release as `0.1.0-alpha.2`). A page at `docs/playground/` with:
+- a form for name, persona, goal, difficulty, patience, `offendedBy`, secrets (each with a "player knows this" checkbox), and reactions;
+- a chat box showing each attempt's verdict, its score against the threshold, the triggered tells, the patience left, and the rubric level reached as the "why";
+- a history of attempts, a reset button, and "copy as code";
+- preset characters from Phase C, a mock banner, and a setting for a proxy URL.
 
-**Phase 2: Live Jev validation.** Ask the human to set `TYPESAFE_API_KEY` in the terminal (never ask them to paste it into chat or a file). Make one small live request first and confirm the response shape matches `src/jev.js`. Then run `npm run eval` and report every miss. Tune Harry's persona, the rubric levels, and thresholds in the story file (not in code) until results are sensible, rerunning evals after each change. Record final eval results in the README. Also note typical latency and token usage per call.
+Link it prominently from the docs site.
 
-**Phase 3: Hardening from real results.** Based on Phase 2, decide with the human whether the defaults in `persuasion.js` (levels, difficulty shares, hostileAt, repeatSimilarity) need to change. Add eval cases for any failure you discover.
+**Phase C: New scenes** (release as `0.1.0-alpha.3`):
+- The Goblin Camp: a cowardly guard, `offendedBy: ["insults"]`, easy.
+- The Brig: a pirate quartermaster, `offendedBy: ["threats"]`, hard.
+- The Dungeon Cell: a lonely jailer, default settings, generous patience.
 
-**Phase 4: Docs site.** Replace the hero's illustrative scores with real ones from Phase 2, fix the GitHub link, and check the page on a narrow mobile width and in dark mode. The human will enable GitHub Pages from `/docs`.
+Each scene takes 5 to 10 minutes and has one main character, one secret, one non-talking route, two to four endings, and original names. Also:
+- Rename Harry Goatleaf, and keep The Gatehouse as the intro scene.
+- Add a scene picker.
+- Add an eval suite for each scene, and a golden-path test for each scene on the mock.
 
-**Phase 5: Proxy and playable demo.** Help the human deploy `examples/cloudflare-worker.js`. Build a browser version of The Gatehouse (it can reuse `Game` from `src/engine.js` with `createProxyClient`) and link it from the docs site.
+**Phase D: Quality.**
+- A type test using `tsc --noEmit` in CI.
+- A CI check that `npm run build:demo` leaves `docs/` unchanged.
+- CI on Node 22 and 24, with `engines` raised to `>=20`.
 
-**Phase 6: Release.** Follow "Releasing" above. The human runs `npm login` and `npm publish` themselves.
+**Phase E: Twine.** The human builds a small SugarCube story using the local mock proxy (`npm run proxy`); you fix what they find.
+
+**Waiting on Jev keys:**
+- Live evals. Ask the human to set `TYPESAFE_API_KEY` in the terminal; never ask them to paste it into chat or a file. Make one small live request first and confirm the response shape matches `src/jev.js`. Then run `npm run eval` and report every miss. Tune personas, rubric levels, and thresholds in the story files (not in code), and note typical latency and token usage per call.
+- A score-consistency check: the same input, repeated.
+- Calibrating the difficulty shares and the other defaults in `persuasion.js`, with the human.
+- Replacing the illustrative scores on the docs site with real ones.
+- Publishing `0.1.0`.
+
+**Deferred until there are real results and user requests:** stages, extra tells, custom tells, closeness labels, rapport.
+
+**Standing rules:**
+- Jev only: don't add support for other AI models. The offline mock stays for tests and offline play.
+- One branch per phase, started from `main` after the previous phase is merged.
+- Follow "Releasing" for each release.
 
 ## Things only the human can do
 

@@ -286,7 +286,7 @@ const client = createProxyClient({ url: "https://your-proxy.workers.dev" });</co
         </li>
       </ol>
       <p>The proxy accepts browser requests only from its own origin and the ones you list, caps input and request size, and rate-limits each player's address. If you're not sure of your game's origin (itch.io games, for example, run in a frame on itch's own domain), try it once: the error names the exact origin to add. As a safety net, <code>createJevClient()</code> refuses to run in a browser.</p>
-      <p>To develop without deploying anything, run <code>npm run proxy</code> in a clone of the repository. It serves the proxy on <code>http://localhost:8787</code>, using the offline mock until you set a key. On hosts other than Cloudflare and Vercel, check how your host reports visitors' addresses and pass a <code>clientIp</code> function if needed, so the rate limit can't be dodged with a forged header.</p>
+      <p>To develop without deploying anything, run <code>npm run proxy</code> in a clone of the repository. It serves the proxy on <code>http://localhost:8787</code>, using the offline mock until you set a key. The proxy only uses the mock when it is passed in as <code>client</code>, as that script does; a deployed proxy with no key returns an error rather than falling back. Every reply says which one answered, <code>"source": "jev"</code> or <code>"mock"</code> beside <code>answers</code>. On hosts other than Cloudflare and Vercel, check how your host reports visitors' addresses and pass a <code>clientIp</code> function if needed, so the rate limit can't be dodged with a forged header.</p>
     </section>
 
     <section id="twine">

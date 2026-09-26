@@ -5,6 +5,7 @@ import { createJevClient, createProxyClient, createProxyHandler, createMockClien
 import { fakeClient } from "./helpers.js";
 
 const ok = (body) => new Response(JSON.stringify(body), { status: 200 });
+const SOURCE = Symbol.for("honeytongue.source");
 const reply = (status, body = "", headers = {}) =>
   new Response(typeof body === "string" ? body : JSON.stringify(body), { status, headers });
 
@@ -12,7 +13,7 @@ test("sends the documented request shape", async () => {
   let sent;
   const answer = { type: "noul", noul: 0.2 };
   const client = createJevClient({ apiKey: "k", fetch: async (url, init) => { sent = { url, ...init }; return ok({ answers: { q: answer } }); } });
-  assert.deepEqual(await client.ask({ s: 1 }, { q: { type: "noul" } }), { q: answer });
+  assert.deepEqual(await client.ask({ s: 1 }, { q: { type: "noul" } }), { q: answer, [SOURCE]: "jev" });
   assert.equal(sent.url, "https://api.typesafe.ai/v1/systemone");
   assert.equal(sent.headers.Authorization, "Bearer k");
   assert.deepEqual(JSON.parse(sent.body), { model: "jev-1.13.0", state: { s: 1 }, questions: { q: { type: "noul" } } });
@@ -51,7 +52,7 @@ test("retries rate limits and network errors, then succeeds", async () => {
     if (n === 2) return new Response("slow down", { status: 429 });
     return ok({ answers: { done: true } });
   } });
-  assert.deepEqual(await client.ask({}, {}), { done: true });
+  assert.deepEqual(await client.ask({}, {}), { done: true, [SOURCE]: "jev" });
   assert.equal(n, 3);
 });
 
@@ -193,6 +194,57 @@ test("the proxy tells players when Jev is busy", async () => {
   }
 });
 
+test("proxy replies say whether Jev or the mock answered, beside the answers", async () => {
+  const tell = { state: { player_input: "hi" }, questions: { threats: { type: "noul" } } };
+  const mock = await (await createProxyHandler({ client: createMockClient() })(post(tell))).json();
+  assert.equal(mock.source, "mock");
+  assert.equal("source" in mock.answers, false);
+
+  const jev = createJevClient({ apiKey: "k", fetch: async () => ok({ answers: { persuasion: { type: "score", score: 1 } } }) });
+  assert.equal((await (await createProxyHandler({ client: jev })(post(valid))).json()).source, "jev");
+  // A client that doesn't say where its answers came from gets no label, not a guess.
+  assert.equal((await (await createProxyHandler({ client: fakeClient() })(post(valid))).json()).source, undefined);
+});
+
+test("the proxy client reads the source from each reply", async () => {
+  const sources = ["mock", "jev", undefined, "something else"];
+  let n = 0;
+  const client = createProxyClient({ url: "https://proxy.test/", fetch: async () => ok({ answers: {}, source: sources[n++] }) });
+  const seen = [];
+  for (let i = 0; i < sources.length; i++) seen.push((await client.ask({}, {}))[SOURCE]);
+  assert.deepEqual(seen, ["mock", "jev", undefined, undefined]);
+});
+
+test("a proxy with no key and no client returns an error, never the mock", async () => {
+  const saved = process.env.TYPESAFE_API_KEY;
+  delete process.env.TYPESAFE_API_KEY;
+  const realFetch = globalThis.fetch;
+  let fetched = 0;
+  globalThis.fetch = async () => { fetched++; return ok({ answers: {} }); };
+  const logged = [];
+  const original = console.error;
+  console.error = (...args) => logged.push(args.join(" "));
+  try {
+    const res = await createProxyHandler()(post(valid), {});
+    const body = await res.json();
+    assert.equal(res.status, 502);
+    assert.equal(body.answers, undefined);
+    assert.equal(body.source, undefined);
+    assert.equal(fetched, 0);
+    assert.match(logged.join("\n"), /Missing TypeSafe API key/);
+  } finally {
+    console.error = original;
+    globalThis.fetch = realFetch;
+    if (saved !== undefined) process.env.TYPESAFE_API_KEY = saved;
+  }
+});
+
+test("the engine's debug output says which client answered", async () => {
+  const story = JSON.parse(readFileSync(new URL("../stories/gatehouse.json", import.meta.url), "utf8"));
+  assert.equal((await new Game(story, createMockClient()).turn("Chat with Harry")).debug.source, "mock");
+  assert.equal((await new Game(story, fakeClient()).turn("Chat with Harry")).debug.source, undefined);
+});
+
 test("a worst-case Gatehouse turn fits the proxy's default size limit", () => {
   const story = JSON.parse(readFileSync(new URL("../stories/gatehouse.json", import.meta.url), "utf8"));
   const game = new Game(story, createMockClient());
@@ -233,6 +285,40 @@ test("the mock only rewards secrets the player has learned", async () => {
   }, { s: { type: "score", criteria: ["0", "1", "2", "3", "4"] } })).s.score;
   assert.ok(await score(true) >= 3.2);
   assert.ok(await score(false) < 2);
+});
+
+test("the mock credits an offer to help only alongside a secret the player knows", async () => {
+  const mock = createMockClient();
+  const score = async (text, knows = true) => (await mock.ask({
+    player_input: text,
+    character: { persona: "A miller.", secrets: [{ fact: "His mill wheel is broken.", player_knows: knows }] },
+  }, { s: { type: "score", criteria: ["0", "1", "2", "3", "4"] } })).s.score;
+  const pairs = [
+    ["I can help mend your mill wheel.", "I can mend your mill wheel."],
+    ["I'll bring a new wheel for your mill.", "I'll find a new wheel for your mill."],
+    ["I will take your broken wheel to the smith.", "I will show your broken wheel, smith."],
+  ];
+  for (const [offer, plain] of pairs) assert.ok(await score(offer) - await score(plain) > 0.79, offer);
+  assert.equal(await score("I'll give you a silver coin."), await score("You look busy tonight."));
+  assert.equal(await score("I can help mend your mill wheel.", false), await score("Your mill wheel is broken.", false));
+});
+
+test("the mock leans toward persuading when the player pleads or speaks to the character by name", async () => {
+  const mock = createMockClient();
+  const criteria = {
+    persuade: "Try to convince or plead with the miller so he lends the player his cart",
+    read_note: "Read or look at the note the player carries",
+  };
+  const choose = async (text) => (await mock.ask(
+    { player_input: text, character: { name: "Oswin Tallow" } }, { a: { type: "choice", criteria } })).a;
+  for (const text of ["Oswin, I need the cart because my note is urgent.", "My note is urgent, Oswin.", "If you let me borrow it, I'll return the note tonight. Please."]) {
+    const a = await choose(text);
+    assert.equal(a.choice, "persuade", text);
+    assert.ok(a.confidence >= 0.6, `${text}: ${a.confidence}`);
+  }
+  // Naming him in passing isn't speaking to him, and naming him without making a case isn't persuasion.
+  assert.equal((await choose("Show Oswin the note because it's urgent")).probabilities.persuade, 2 / 3);
+  assert.equal((await choose("Oswin, read the note")).choice, "read_note");
 });
 
 test("the proxy's model comes from the option, then the Worker's TYPESAFE_MODEL, then the process's, then the default", async () => {
