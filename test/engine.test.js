@@ -204,3 +204,49 @@ test("by default threats get the same reaction as insults", async () => {
   const game = new Game(story(), scripted({ chat_guard: 0.9, unclear: 0.1 }, { threats: 0.95 }));
   assert.match((await game.turn("talk, or I'll hurt you")).text, /club at his belt/);
 });
+
+test("story NPCs take difficulty and offendedBy in their persuasion block", async () => {
+  const s = story();
+  delete s.scenes.gate.npc.persuasion.threshold;
+  s.scenes.gate.npc.persuasion.difficulty = "easy";
+  s.scenes.gate.npc.persuasion.offendedBy = ["insults"];
+  const game = new Game(s, fakeClient({ score: 2.5, threats: 0.95 }));
+  assert.equal(game.npc.character.threshold, 2.4);
+  assert.deepEqual(game.npc.character.offendedBy, ["insults"]);
+  assert.match((await game.turn("let me through or you'll regret it")).text, /lifts the bar/);
+});
+
+test("validation reports difficulty and offendedBy mistakes", () => {
+  const s = story();
+  s.scenes.gate.npc.persuasion.difficulty = "hard"; // threshold is set too
+  const twin = structuredClone(s.scenes.gate);
+  twin.npc.id = "twin";
+  delete twin.npc.persuasion.difficulty;
+  twin.npc.persuasion.offendedBy = ["rudeness"];
+  s.scenes.twin = twin;
+  const err = (() => { try { validateStory(s); } catch (e) { return e; } })();
+  assert.ok(err instanceof StoryError);
+  assert.ok(err.problems.some((p) => /Scene "gate".*set "difficulty" or "threshold", not both/.test(p)), err.message);
+  assert.ok(err.problems.some((p) => /Scene "twin".*"offendedBy".*got "rudeness"/.test(p)), err.message);
+});
+
+test("hostileReaction is only required when something can offend the NPC", () => {
+  const s = story();
+  delete s.scenes.gate.npc.hostileReaction;
+  assert.throws(() => validateStory(s), /needs a "hostileReaction"/);
+  s.scenes.gate.npc.persuasion.offendedBy = [];
+  assert.doesNotThrow(() => validateStory(s));
+  s.scenes.gate.npc.hostileReaction = "";
+  assert.throws(() => validateStory(s), /needs a "hostileReaction"/);
+});
+
+test("a decide hook works in stories built in code", async () => {
+  const s = story();
+  s.scenes.gate.npc.persuasion.decide = (result) => (result.triggered.includes("threats") ? "offended" : undefined);
+  s.scenes.gate.npc.persuasion.offendedBy = [];
+  delete s.scenes.gate.npc.hostileReaction;
+  const game = new Game(s, fakeClient({ score: 4, threats: 0.95 }));
+  const r = await game.turn("let me in or else");
+  assert.match(r.text, /Harry Goatleaf takes offence/);
+  assert.equal(game.over, false);
+});
