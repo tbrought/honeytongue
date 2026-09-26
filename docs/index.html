@@ -67,7 +67,7 @@ section { padding-top: 2.75rem; }
 <section class="hero" aria-labelledby="title">
   <div>
     <h1 class="title" id="title">Honeytongue</h1>
-    <p class="credits">A persuasion mechanic for text games<br>Release 0.1 / Serial number 260925 / MIT License</p>
+    <p class="credits">A persuasion mechanic for text games<br>Release 0.1 / Serial number 260926 / MIT License</p>
     <p class="lede">Characters your players can actually argue with. Players type anything, and each character judges it by their own values.</p>
     <div class="install"><span class="dim" aria-hidden="true">$</span><code id="cmd">npm install honeytongue</code><button type="button" id="copy">Copy</button></div>
     <ul class="commands">
@@ -107,7 +107,9 @@ section { padding-top: 2.75rem; }
       <li><a href="#start">Get started</a></li>
       <li><a href="#how">How it works</a></li>
       <li><a href="#characters">Characters</a></li>
+      <li><a href="#intimidation">Intimidation</a></li>
       <li><a href="#secrets">Secrets</a></li>
+      <li><a href="#control">Full control</a></li>
       <li><a href="#browser">Browser games</a></li>
       <li><a href="#twine">Twine</a></li>
       <li><a href="#engine">Text adventures</a></li>
@@ -157,14 +159,14 @@ else show(result.reaction ?? "His hand drops to his club.");</code></pre>
 
     <section id="how">
       <h2>How it works</h2>
-      <p>Each attempt sends one request to Jev with two questions. The first scores how persuasive the input is to this specific persona, on a rubric from "counterproductive" to "speaks directly to what they care about most." The second checks whether it's threatening or insulting.</p>
+      <p>Each attempt sends one request to Jev with three questions. The first scores how persuasive the input is to this specific persona, on a rubric from "counterproductive" to "speaks directly to what they care about most." The other two are yes/no checks for two <em>tells</em>: threats and insults.</p>
       <p>Your character's threshold turns the score into a verdict. Jev never decides what happens in your game: it only judges what was said.</p>
       <div class="table-wrap"><table>
         <thead><tr><th>Verdict</th><th>When</th><th>Patience cost</th></tr></thead>
         <tbody>
           <tr><td><code>convinced</code></td><td>The score reached the threshold</td><td>None</td></tr>
           <tr><td><code>unconvinced</code></td><td>Not persuasive enough to this character</td><td>1</td></tr>
-          <tr><td><code>offended</code></td><td>Threatening or insulting, including repeating an insult</td><td>2</td></tr>
+          <tr><td><code>offended</code></td><td>A threat or insult the character is offended by (both, by default), including repeating one</td><td>2</td></tr>
           <tr><td><code>repeated</code></td><td>Too close to an argument that already failed. Checked on your side, so it costs no API call.</td><td>1</td></tr>
         </tbody>
       </table></div>
@@ -173,22 +175,54 @@ else show(result.reaction ?? "His hand drops to his club.");</code></pre>
 
     <section id="characters">
       <h2>Characters</h2>
-      <p>The persona does most of the work. Write what the character values and what they can't stand, and the same argument will land differently with different people.</p>
+      <h3>Out of the box</h3>
+      <p>A name, a persona, and a goal are all a character needs. The persona does most of the work: write what they value and what they can't stand, and the same argument will land differently with different people. With nothing else set, a character is convinced at <code>"normal"</code> difficulty, takes offence at threats and insults, and never runs out of patience.</p>
+      <h3>Shaping a character</h3>
       <div class="table-wrap"><table>
         <thead><tr><th>Field</th><th>Default</th><th>What it does</th></tr></thead>
         <tbody>
-          <tr><td><code>name</code>, <code>persona</code>, <code>goal</code></td><td>Required</td><td>Who they are, and what the player wants from them</td></tr>
-          <tr><td><code>levels</code></td><td>5-level rubric</td><td>Your own rubric: 2 to 10 descriptions, weakest first</td></tr>
-          <tr><td><code>threshold</code></td><td>80% of the top level</td><td>Score needed to convince them</td></tr>
+          <tr><td><code>difficulty</code></td><td><code>"normal"</code></td><td>How hard they are to convince (see below)</td></tr>
+          <tr><td><code>offendedBy</code></td><td><code>["threats", "insults"]</code></td><td>Which tells offend them. <code>[]</code> means nothing does</td></tr>
           <tr><td><code>patience</code></td><td>Unlimited</td><td>How much failure they'll put up with</td></tr>
+          <tr><td><code>secrets</code></td><td>None</td><td>Facts that only help once the player learns them</td></tr>
           <tr><td><code>reactions</code></td><td>A generic line</td><td>Replies for unconvinced attempts, picked by score: <code>[{ min, text }]</code></td></tr>
           <tr><td><code>repeatReaction</code></td><td>A generic line</td><td>What they say when the player repeats themselves</td></tr>
-          <tr><td><code>secrets</code></td><td>None</td><td>Facts that only help once the player learns them</td></tr>
-          <tr><td><code>failCost</code>, <code>offendedCost</code></td><td>1, 2</td><td>Patience lost per failed or offensive attempt</td></tr>
-          <tr><td><code>hostileAt</code>, <code>repeatSimilarity</code>, <code>memory</code>, <code>maxInputLength</code></td><td>0.7, 0.8, 4, 500</td><td>Fine tuning</td></tr>
         </tbody>
       </table></div>
-      <p>If something's wrong, such as a threshold your rubric can't reach or a patience of zero, Honeytongue throws a <code>HoneytongueError</code> explaining what to fix.</p>
+      <p>Each difficulty word sets the score needed as a share of the top rubric level, so it keeps working with a rubric of your own:</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th><code>difficulty</code></th><th>Share of the top level</th><th>On the default 0 to 4 rubric</th></tr></thead>
+        <tbody>
+          <tr><td><code>"easy"</code></td><td>60%</td><td>2.4</td></tr>
+          <tr><td><code>"normal"</code></td><td>80%</td><td>3.2</td></tr>
+          <tr><td><code>"hard"</code></td><td>90%</td><td>3.6</td></tr>
+          <tr><td><code>"very hard"</code></td><td>95%</td><td>3.8</td></tr>
+        </tbody>
+      </table></div>
+      <p>Case and spacing don't matter, and <code>"very-hard"</code> or <code>"very_hard"</code> work too. A defined character keeps the word next to the <code>threshold</code> it works out to, so a copy like <code>{ ...guard.character, patience: 5 }</code> works. If a copy changes <code>difficulty</code> or <code>levels</code>, leave out its <code>threshold</code>.</p>
+      <p class="note">These shares are first guesses, and may change once they've been calibrated against live Jev.</p>
+      <p>If something's wrong, such as an unknown difficulty word, a patience of zero, or a <code>threshold</code> that disagrees with <code>difficulty</code>, Honeytongue throws a <code>HoneytongueError</code> explaining what to fix.</p>
+    </section>
+
+    <section id="intimidation">
+      <h2>Intimidation</h2>
+      <p>Every attempt is checked for threats and insults. Each result reports both: <code>tells</code> holds each probability, and <code>triggered</code> lists the ones Jev found, whether or not they caused offence.</p>
+      <p>A triggered tell in <code>offendedBy</code> makes the verdict <code>offended</code>, whatever the score. Leave a tell out and it doesn't offend; the persona alone decides whether it helps. Here's a cowardly guard who can be bullied but hates being laughed at:</p>
+<pre><code>const snag = new Persuadable(
+  {
+    name: "Snag",
+    persona: "A cowardly goblin guard, jumpy and easily frightened. Hates being laughed at.",
+    goal: "Unlock the prisoner's cage",
+    difficulty: "easy",
+    offendedBy: ["insults"],
+  },
+  { client },
+);
+
+const result = await snag.attempt("Open this cage, or I'll feed you to the wolves.");
+result.verdict;   <span class="c">// "convinced", if Jev judges that the threat works on Snag</span>
+result.triggered; <span class="c">// ["threats"], so you can narrate it as intimidation</span></code></pre>
+      <p>Mocking Snag is still <code>offended</code>.</p>
     </section>
 
     <section id="secrets">
@@ -198,6 +232,30 @@ else show(result.reaction ?? "His hand drops to his club.");</code></pre>
   { id: "sick_daughter", fact: "His daughter has a fever and the apothecary is closed." },
 ]</code></pre>
       <p>When the player discovers it in your game, call <code>guard.learn("sick_daughter")</code>. Until then, arguments leaning on it won't score higher, and may even seem suspicious to the character.</p>
+    </section>
+
+    <section id="control">
+      <h2>Full control</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Field</th><th>Default</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>threshold</code></td><td>Set by <code>difficulty</code></td><td>An exact score to convince them. Use it instead of <code>difficulty</code>; if you set both, they must agree</td></tr>
+          <tr><td><code>levels</code></td><td>5-level rubric</td><td>Your own rubric: 2 to 10 descriptions, weakest first</td></tr>
+          <tr><td><code>hostileAt</code></td><td>0.7</td><td>How sure Jev must be before a tell counts as triggered</td></tr>
+          <tr><td><code>decide</code></td><td>None</td><td>Your own rule for the final verdict</td></tr>
+          <tr><td><code>failCost</code>, <code>offendedCost</code></td><td>1, 2</td><td>Patience lost per failed or offensive attempt</td></tr>
+          <tr><td><code>repeatSimilarity</code>, <code>memory</code>, <code>maxInputLength</code></td><td>0.8, 4, 500</td><td>Fine tuning for repeats, context, and input length</td></tr>
+        </tbody>
+      </table></div>
+      <p><code>decide(result, context)</code> runs after the verdict is worked out and before anything changes. It gets a frozen copy of the result and <code>{ input, character, previousAttempts, patienceLeft }</code>, and returns a verdict, or nothing to keep the original. Patience and memory follow whatever it returns.</p>
+<pre><code><span class="c">// Harry never gives in to the very first attempt, however good it is.</span>
+decide: (result, { previousAttempts }) =&gt;
+  result.verdict === "convinced" &amp;&amp; previousAttempts.length === 0 ? "unconvinced" : undefined,</code></pre>
+      <ul class="points">
+        <li>It must be synchronous. Returning anything other than a verdict or <code>undefined</code>, including a Promise, throws a <code>HoneytongueError</code> and changes nothing.</li>
+        <li>It isn't applied when you call <code>readPersuasion()</code> directly, only in <code>attempt()</code>, <code>record()</code>, and <code>judgePersuasion()</code>.</li>
+        <li>JSON stories can't hold functions, so it isn't available in them. Stories built in code can set it in an NPC's <code>persuasion</code> block.</li>
+      </ul>
     </section>
 
     <section id="browser">
@@ -248,7 +306,7 @@ const client = createProxyClient({ url: "https://your-proxy.workers.dev" });</co
       <p>Honeytongue also ships a small text adventure engine, with a free-text parser and a JSON story format. The demo, The Gatehouse, has you talking your way past a gatekeeper after curfew. <a href="play/">Play it in your browser</a>, or in a terminal:</p>
 <pre><code>npx honeytongue              <span class="c"># play the demo</span>
 npx honeytongue story.json   <span class="c"># play your own story</span></code></pre>
-      <p>Stories are checked when they load, and every problem is listed at once, such as an action that leads to a scene that doesn't exist, or two different characters sharing an id. Give scenes a <code>name</code> like "East Gate" if your interface has a status line to show it in.</p>
+      <p>Stories are checked when they load, and every problem is listed at once, such as an action that leads to a scene that doesn't exist, or two different characters sharing an id. Give scenes a <code>name</code> like "East Gate" if your interface has a status line to show it in. An NPC's <code>persuasion</code> block takes the same settings as a character, such as <code>difficulty</code> and <code>offendedBy</code>.</p>
     </section>
 
     <section id="models">
@@ -269,11 +327,11 @@ $env:TYPESAFE_MODEL="jev-latest"       <span class="c"># Windows PowerShell</spa
 
     <section id="tuning">
       <h2>Testing and tuning</h2>
-      <p>Persuasion lives or dies by the persona and threshold, so test them with real phrasings. The repository includes an evaluation set covering parsing, persuasion score ranges, insults, prompt-injection attempts, and arguments using secrets the player hasn't learned.</p>
+      <p>Persuasion lives or dies by the persona and threshold, so test them with real phrasings. The repository includes an evaluation set covering parsing, persuasion score ranges, threats and insults, prompt-injection attempts, and arguments using secrets the player hasn't learned.</p>
 <pre><code>npm test                 <span class="c"># unit tests, no key needed</span>
 npm run eval             <span class="c"># checks the evaluation set against Jev</span>
 npm run eval -- --mock   <span class="c"># the keyword mock's baseline</span></code></pre>
-      <p>If characters are too easy, raise the threshold or make the persona more specific about what they won't accept. If they're too hard, describe more clearly what would move them.</p>
+      <p>If characters are too easy, raise the difficulty or make the persona more specific about what they won't accept. If they're too hard, describe more clearly what would move them.</p>
     </section>
 
     <section id="api">
@@ -287,7 +345,7 @@ npm run eval -- --mock   <span class="c"># the keyword mock's baseline</span></c
           <tr><td><code>createProxyClient()</code></td><td>Calling your proxy from a browser</td></tr>
           <tr><td><code>createProxyHandler()</code></td><td>Running the proxy on your server</td></tr>
           <tr><td><code>createMockClient()</code></td><td>Tests and offline development</td></tr>
-          <tr><td><code>persuasionQuestions()</code>, <code>persuasionState()</code>, <code>readPersuasion()</code></td><td>Merging persuasion into a larger Jev request</td></tr>
+          <tr><td><code>persuasionQuestions()</code>, <code>persuasionState()</code>, <code>readPersuasion()</code></td><td>Merging persuasion into a larger Jev request (<code>readPersuasion()</code> doesn't apply <code>decide</code>)</td></tr>
           <tr><td><code>Game</code>, <code>validateStory()</code></td><td>The text adventure engine</td></tr>
         </tbody>
       </table></div>

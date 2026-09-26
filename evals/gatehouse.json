@@ -107,7 +107,8 @@
     },
     {
       "input": "shut up, you useless old fool",
-      "hostile": true
+      "threats": false,
+      "insults": true
     }
   ]
 }

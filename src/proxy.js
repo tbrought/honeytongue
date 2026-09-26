@@ -27,7 +27,7 @@ export function createProxyHandler({
   model,                       // Jev model; else the TYPESAFE_MODEL variable; else the pinned default
   client,                      // optional: inject a client (useful for tests and offline development)
   allowedOrigins = [],         // e.g. ["https://mygame.example"]; same-origin requests are always allowed
-  maxQuestions = 4,
+  maxQuestions = 6,            // the engine sends 4 (action, persuasion, threats, insults)
   maxStateBytes = 16_000,      // limit on the whole request body
   maxInputLength = 500,
   rateLimit = { requests: 30, windowMs: 60_000 }, // per IP, per server instance; false turns it off

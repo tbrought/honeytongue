@@ -3,7 +3,7 @@
 // persuasion.js, how convincing they were (a Score). All state changes
 // and narration come from the author's story file.
 
-import { Persuadable, persuasionQuestions, cleanInput, defineCharacter, HoneytongueError } from "./persuasion.js";
+import { Persuadable, persuasionQuestions, readPersuasion, cleanInput, defineCharacter, HoneytongueError } from "./persuasion.js";
 
 const ACT_AT = 0.6;      // top option probability needed to act immediately
 const CLARIFY_AT = 0.3;  // between CLARIFY_AT and ACT_AT, ask "did you mean..."
@@ -102,7 +102,12 @@ export function validateStory(story) {
         try { defineCharacter(toCharacter(npc)); } catch (e) { problems.push(`${at}: ${e.message}`); }
         if (!text(npc.persuasion.success?.text)) problems.push(`${at}: npc.persuasion.success needs "text"`);
         else checkEffect(npc.persuasion.success, `${at} npc success`);
-        if (!text(npc.hostileReaction)) problems.push(`${at}: npc needs a "hostileReaction"`);
+        // Only needed when something can offend them: offendedBy: [] means nothing does.
+        const offendedBy = npc.persuasion.offendedBy;
+        const canOffend = !(Array.isArray(offendedBy) && offendedBy.length === 0);
+        if (npc.hostileReaction !== undefined ? !text(npc.hostileReaction) : canOffend) {
+          problems.push(`${at}: npc needs a "hostileReaction" (the line when threats or insults offend them)`);
+        }
         if (Number.isFinite(npc.patience)) {
           if (!text(npc.outOfPatience?.text)) problems.push(`${at}: npc has finite patience, so it needs "outOfPatience" with "text"`);
           else checkEffect(npc.outOfPatience, `${at} npc outOfPatience`);
@@ -234,7 +239,7 @@ export class Game {
     if (this.npc?.findRepeat(input)) return this.perform("__repeat", input, null, null);
 
     const { answers, ranked } = await this.interpret(input);
-    const debug = { ranked: ranked.slice(0, 3), persuasion: answers.persuasion, hostile: answers.hostile, maxScore: this.npc?.character.maxScore };
+    const debug = { ranked: ranked.slice(0, 3), persuasion: answers.persuasion, threats: answers.threats, insults: answers.insults, maxScore: this.npc?.character.maxScore };
     const [top, p] = ranked[0];
     const second = ranked[1]?.[0];
     const unclear = top === "unclear" || p < CLARIFY_AT;
@@ -293,15 +298,22 @@ export class Game {
     return { text, debug };
   }
 
+  /** Whether this turn's tells would offend the NPC: the same rule persuasion uses. */
   isHostile(answers) {
-    return Boolean(this.npc) && (answers?.hostile?.noul ?? 0) >= this.npc.character.hostileAt;
+    return Boolean(this.npc) && readPersuasion(this.npc.character, answers).verdict === "offended";
   }
 
-  /** NPCs react to insults whatever the player was doing, not just when persuading. */
+  /** NPCs react to threats and insults whatever the player was doing, not just when persuading. */
   react(lines, answers) {
     if (this.over || !this.isHostile(answers)) return;
-    lines.push(this.scene.npc.hostileReaction);
+    lines.push(this.hostileReaction());
     this.drain(this.npc.character.offendedCost, lines);
+  }
+
+  /** A decide() hook can make an NPC offended even when nothing in offendedBy can. */
+  hostileReaction() {
+    const npc = this.scene.npc;
+    return npc.hostileReaction ?? `${npc.name} takes offence.`;
   }
 
   // ---- Persuasion: the module judges, the story narrates --------------------
@@ -319,7 +331,7 @@ export class Game {
       lines.push(npc.persuasion.success.text);
       this.apply(npc.persuasion.success, lines);
     } else {
-      lines.push(result.verdict === "offended" ? npc.hostileReaction : result.reaction);
+      lines.push(result.verdict === "offended" ? this.hostileReaction() : result.reaction);
       if (result.outOfPatience) this.runOutOfPatience(lines);
     }
   }

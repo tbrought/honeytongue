@@ -205,6 +205,19 @@ test("a worst-case Gatehouse turn fits the proxy's default size limit", () => {
   assert.ok(bytes < 16_000, `worst case is ${bytes} bytes`);
 });
 
+test("the mock answers threats and insults separately", async () => {
+  const mock = createMockClient();
+  const tells = async (text) => {
+    const a = await mock.ask({ player_input: text }, { threats: { type: "noul" }, insults: { type: "noul" } });
+    return [a.threats.noul > 0.7, a.insults.noul > 0.7];
+  };
+  assert.deepEqual(await tells("open the gate or else"), [true, false]);
+  assert.deepEqual(await tells("shut up, you useless old fool"), [false, true]);
+  assert.deepEqual(await tells("Fuck you, Harry"), [false, true]);
+  assert.deepEqual(await tells("open it, idiot, or I'll break your arm"), [true, true]);
+  assert.deepEqual(await tells("please let me in"), [false, false]);
+});
+
 test("the mock needs whole words to call something hostile", async () => {
   const mock = createMockClient();
   const hostile = async (text) => (await mock.ask({ player_input: text }, { h: { type: "noul" } })).h.noul;
@@ -246,4 +259,17 @@ test("the proxy's model comes from the option, then the Worker's TYPESAFE_MODEL,
   });
   // A request can't choose the model.
   assert.equal(await withModelEnv(undefined, () => modelSent({}, {}, { ...valid, model: "jev-chosen-by-player" })), "jev-1.13.0");
+});
+
+test("a full engine turn fits within the proxy's default limits", async () => {
+  const story = JSON.parse(readFileSync(new URL("../stories/gatehouse.json", import.meta.url), "utf8"));
+  const handle = createProxyHandler({ client: createMockClient() });
+  const sizes = [];
+  const client = createProxyClient({
+    url: "https://proxy.test/",
+    fetch: async (url, init) => { sizes.push(Object.keys(JSON.parse(init.body).questions).length); return handle(new Request(url, init)); },
+  });
+  const game = new Game(story, client);
+  assert.match((await game.turn("read the letter")).text, /wax seal/);
+  assert.deepEqual(sizes, [4]);
 });
