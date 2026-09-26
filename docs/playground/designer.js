@@ -288,9 +288,8 @@ export function conversation(character, knows = []) {
   return npc;
 }
 
-/** Rerun lines, in order, against a fresh conversation. onResult(result, index) fires after each one. */
-export async function replay(character, knows, lines, client, onResult = () => {}) {
-  const npc = conversation(character, knows);
+/** Rerun lines, in order, in a conversation (usually a fresh one). onResult(result, index) fires after each one. */
+export async function replay(npc, lines, client, onResult = () => {}) {
   const results = [];
   for (const [i, line] of lines.entries()) {
     const result = await tryLine(npc, line, client);

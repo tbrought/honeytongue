@@ -197,10 +197,10 @@ test("the distribution is shown when the judge gives one", async () => {
 test("replay reruns every line, in order, against a fresh conversation", async () => {
   const lines = ["Hello", "Hello", "Please let me go, I could help you get a job as a cook in a town kitchen"];
   const seen = [];
-  const results = await replay(preset("nib"), ["wants_to_be_a_cook"], lines, createMockClient(), (r, i) => seen.push(i));
+  const results = await replay(conversation(preset("nib"), ["wants_to_be_a_cook"]), lines, createMockClient(), (r, i) => seen.push(i));
   assert.deepEqual(seen, [0, 1, 2]);
   assert.deepEqual(results.map((r) => r.verdict), ["unconvinced", "repeated", "convinced"]);
   // Without the secret, the same argument falls short.
-  const unknown = await replay(preset("nib"), [], lines.slice(2), createMockClient());
+  const unknown = await replay(conversation(preset("nib")), lines.slice(2), createMockClient());
   assert.ok(unknown[0].score < results[2].score);
 });
