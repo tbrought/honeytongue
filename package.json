@@ -1,7 +1,15 @@
 {
   "name": "honeytongue",
-  "version": "0.2.0",
+  "version": "0.1.0-alpha.0",
   "description": "Characters players can actually argue with: a persuasion mechanic for games, powered by Jev typed decisions",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tbrought/honeytongue.git"
+  },
+  "homepage": "https://tbrought.github.io/honeytongue/",
+  "bugs": {
+    "url": "https://github.com/tbrought/honeytongue/issues"
+  },
   "type": "module",
   "main": "src/index.js",
   "exports": {

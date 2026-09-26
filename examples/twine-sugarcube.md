@@ -7,7 +7,7 @@ Twine stories run in the player's browser, so you need a proxy to keep your API 
 ## 1. Story JavaScript
 
 ```js
-import("https://cdn.jsdelivr.net/npm/honeytongue@0.2/src/index.js").then(({ Persuadable, createProxyClient }) => {
+import("https://cdn.jsdelivr.net/npm/honeytongue@0.1/src/index.js").then(({ Persuadable, createProxyClient }) => {
   const client = createProxyClient({ url: "https://honeytongue-proxy.your-name.workers.dev" });
 
   setup.harry = new Persuadable({

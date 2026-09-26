@@ -74,7 +74,7 @@ The human develops on Windows in VS Code with PowerShell. Set the key with `$env
 - **Nothing has been run against live Jev yet.** The client was written from the API docs, and now checks every response's shape so a mismatch fails with a clear message. Thresholds, rubric wording, and the default levels are guesses until real evals run.
 - The Twine recipe (`examples/twine-sugarcube.md`) is untested inside Twine.
 - Scores shown in the docs site hero are illustrative placeholders, labeled as such.
-- `docs/index.html` has a placeholder GitHub link (`your-name`), and `package.json` has no `repository` field yet: both need the human's GitHub username.
+- The repository is github.com/tbrought/honeytongue (the site will be tbrought.github.io/honeytongue). The version is `0.1.0-alpha.0`, to be published with `npm publish --tag alpha` to hold the name; the stable `0.1.0` comes after live Jev validation.
 - The npm name `honeytongue` was available on 2026-09-25 (`npm view` returned 404). Check again before release.
 - The folder isn't a git repository yet, so the CI workflow hasn't run.
 

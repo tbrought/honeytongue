@@ -9,6 +9,8 @@ The same argument can win over one character and annoy another. Honeyed words mi
 - Secrets only help once the player has discovered them
 - Zero dependencies, TypeScript types included, offline mock for tests
 
+> **Alpha.** Honeytongue hasn't been tested against live Jev yet: TypeSafe has paused new signups, so this release was built and tested with the offline mock. Expect default thresholds and rubric wording to change once real results are in. Install it with `npm install honeytongue@alpha`. The CDN links below point to `@0.1` and will start working with the first stable 0.1.0 release.
+
 ## Quick start (Node)
 
 ```bash
@@ -54,7 +56,7 @@ When `patienceLeft` reaches 0, `outOfPatience` is `true`. What happens next is u
 Never put your API key in browser code. Instead, deploy the included proxy (a Cloudflare Worker takes about five minutes, see `examples/cloudflare-worker.js`) and use the browser-safe client:
 
 ```js
-import { Persuadable, createProxyClient } from "https://cdn.jsdelivr.net/npm/honeytongue@0.2/src/index.js";
+import { Persuadable, createProxyClient } from "https://cdn.jsdelivr.net/npm/honeytongue@0.1/src/index.js";
 
 const client = createProxyClient({ url: "https://honeytongue-proxy.your-name.workers.dev" });
 ```
