@@ -225,3 +225,84 @@ test("the mock lets a timid persona cave to threats only when threats don't offe
   const brave = { ...goblin, persona: "A grizzled veteran guard.", offendedBy: [] };
   assert.equal((await judgePersuasion(mock, brave, threat)).verdict, "unconvinced");
 });
+
+test("difficulty words map to a share of the top rubric score", () => {
+  const three = ["no", "maybe", "yes"];
+  for (const [difficulty, five, onThree] of [["easy", 2.4, 1.2], ["normal", 3.2, 1.6], ["hard", 3.6, 1.8], ["very hard", 3.8, 1.9]]) {
+    assert.equal(defineCharacter({ ...harry, difficulty }).threshold, five, difficulty);
+    assert.equal(defineCharacter({ ...harry, difficulty, levels: three }).threshold, onThree, `${difficulty} on 3 levels`);
+  }
+  assert.equal(defineCharacter(harry).threshold, defineCharacter({ ...harry, difficulty: "normal" }).threshold);
+  assert.equal(defineCharacter({ ...harry, difficulty: undefined }).threshold, 3.2);
+});
+
+test("difficulty words ignore case, surrounding spaces, and very-hard or very_hard", () => {
+  for (const [word, canonical, threshold] of [
+    ["Hard", "hard", 3.6], ["  EASY ", "easy", 2.4], ["Normal", "normal", 3.2],
+    ["very-hard", "very hard", 3.8], ["very_hard", "very hard", 3.8], ["Very Hard", "very hard", 3.8], ["very  hard", "very hard", 3.8],
+  ]) {
+    const c = defineCharacter({ ...harry, difficulty: word });
+    assert.equal(c.difficulty, canonical, JSON.stringify(word));
+    assert.equal(c.threshold, threshold, JSON.stringify(word));
+  }
+});
+
+test("difficulty rejects unknown words and a threshold that disagrees with it", () => {
+  for (const word of ["medium", "veryhard", "very hard!", "", "   ", 3, null, ["hard"]]) {
+    assert.throws(() => defineCharacter({ ...harry, difficulty: word }),
+      /"difficulty" must be one of "easy", "normal", "hard", or "very hard", got/, String(word));
+  }
+  assert.throws(() => defineCharacter({ ...harry, difficulty: "hard", threshold: 3 }),
+    (e) => e instanceof HoneytongueError &&
+      /set "difficulty" or "threshold", not both: difficulty "hard" is a threshold of 3.6 with 5 levels, but "threshold" is 3\. If you copied a defined character and changed its difficulty or levels, leave out its "threshold"/.test(e.message));
+  // Checked against the rubric in use: 3.6 is "hard" on 5 levels, not on 3.
+  assert.throws(() => defineCharacter({ ...harry, difficulty: "hard", threshold: 3.6, levels: ["no", "maybe", "yes"] }), /threshold of 1.8 with 3 levels/);
+  // An invalid threshold is reported as such, not as a conflict.
+  assert.throws(() => defineCharacter({ ...harry, difficulty: "hard", threshold: "3.6" }), /"threshold" must be above 0 and at most 4/);
+});
+
+test("difficulty and threshold can both be set when they agree", () => {
+  const c = defineCharacter({ ...harry, difficulty: "Very_Hard", threshold: 3.8 });
+  assert.equal(c.difficulty, "very hard");
+  assert.equal(c.threshold, 3.8);
+  assert.equal(defineCharacter({ ...harry, difficulty: "easy", threshold: 1.2, levels: ["no", "maybe", "yes"] }).threshold, 1.2);
+});
+
+test("a character defined with a difficulty word keeps it next to the threshold", () => {
+  const once = defineCharacter({ ...harry, difficulty: "Hard" });
+  assert.equal(once.difficulty, "hard");
+  assert.equal(once.threshold, 3.6);
+  assert.equal("difficulty" in defineCharacter(harry), false);
+  assert.equal("difficulty" in defineCharacter({ ...harry, threshold: 3 }), false);
+  const npc = new Persuadable({ ...harry, difficulty: "easy" }, { client: fakeClient() });
+  assert.equal(npc.character.difficulty, "easy");
+  assert.equal(npc.character.threshold, 2.4);
+});
+
+test("a defined character can be defined again, and a changed rubric or difficulty is recomputed", () => {
+  const once = defineCharacter({ ...harry, difficulty: "easy" });
+  assert.deepEqual(defineCharacter(once), once);
+  assert.equal(readPersuasion(once, { persuasion: { score: 2.5 } }).verdict, "convinced");
+  assert.ok(persuasionQuestions(once).persuasion);
+  // Editing a defined character in place still works: the threshold follows the word.
+  once.difficulty = "very hard";
+  assert.equal(defineCharacter(once).threshold, 3.8);
+  once.levels = ["no", "maybe", "yes"];
+  assert.equal(defineCharacter(once).threshold, 1.9);
+  // A threshold set by hand that disagrees with the word is still an error.
+  once.threshold = 1;
+  assert.throws(() => defineCharacter(once), /set "difficulty" or "threshold", not both/);
+});
+
+test("a copy of a defined character works, unless its difficulty or rubric changes without its threshold", () => {
+  const npc = new Persuadable({ ...harry, difficulty: "hard" }, { client: fakeClient() });
+  const calmer = new Persuadable({ ...npc.character, patience: 5 });
+  assert.equal(calmer.character.patience, 5);
+  assert.equal(calmer.character.difficulty, "hard");
+  assert.equal(calmer.character.threshold, 3.6);
+  const copy = { ...npc.character };
+  assert.throws(() => defineCharacter({ ...copy, difficulty: "easy" }), /not both.*If you copied a defined character and changed its difficulty or levels, leave out its "threshold"/);
+  assert.throws(() => defineCharacter({ ...copy, levels: ["no", "maybe", "yes"] }), /not both/);
+  const { threshold, ...withoutThreshold } = copy;
+  assert.equal(defineCharacter({ ...withoutThreshold, difficulty: "easy" }).threshold, 2.4);
+});
