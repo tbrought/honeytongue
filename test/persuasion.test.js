@@ -306,3 +306,81 @@ test("a copy of a defined character works, unless its difficulty or rubric chang
   const { threshold, ...withoutThreshold } = copy;
   assert.equal(defineCharacter({ ...withoutThreshold, difficulty: "easy" }).threshold, 2.4);
 });
+
+test("decide can return each verdict, and patience follows it", async () => {
+  const cases = [
+    // [what Jev's answers give, what decide returns, patience cost, reaction]
+    [{ score: 1 }, "convinced", 0, null],
+    [{ score: 1 }, "offended", 2, null],
+    [{ score: 1 }, "repeated", 1, "Harry has heard that already."],
+    [{ score: 4 }, "unconvinced", 1, "Harry isn't convinced."],
+    [{ score: 1 }, "unconvinced", 1, "Harry isn't convinced."],
+  ];
+  for (const [next, verdict, cost, reaction] of cases) {
+    const client = fakeClient(next);
+    const npc = new Persuadable({ ...harry, patience: 5, decide: () => verdict }, { client });
+    const r = await npc.attempt("let me in");
+    assert.equal(r.verdict, verdict);
+    assert.equal(r.patienceLeft, 5 - cost, verdict);
+    assert.equal(r.reaction, reaction, verdict);
+    assert.equal(npc.convinced, verdict === "convinced");
+    assert.deepEqual(npc.attempts.at(-1), { said: "let me in", outcome: verdict });
+  }
+});
+
+test("decide returning nothing keeps the verdict", async () => {
+  const npc = new Persuadable({ ...harry, patience: 3, decide: () => undefined }, { client: fakeClient({ score: 1 }) });
+  const r = await npc.attempt("let me in");
+  assert.equal(r.verdict, "unconvinced");
+  assert.equal(r.patienceLeft, 2);
+});
+
+test("decide sees a frozen result and what happened so far", async () => {
+  const seen = [];
+  const decide = (result, context) => { seen.push({ result, context }); };
+  const npc = new Persuadable({ ...harry, patience: 3, decide }, { client: fakeClient({ score: 1, threats: 0.9 }) });
+  await npc.attempt("open up or else");
+  await npc.attempt("open up or else"); // a repeat: decide runs for it too
+  const [first, second] = seen;
+  assert.equal(first.result.verdict, "offended");
+  assert.deepEqual(first.result.triggered, ["threats"]);
+  assert.equal(first.context.input, "open up or else");
+  assert.equal(first.context.character.name, "Harry");
+  assert.equal(first.context.patienceLeft, 3);
+  assert.deepEqual(first.context.previousAttempts, []);
+  assert.throws(() => { first.result.verdict = "convinced"; }, TypeError);
+  assert.throws(() => { first.result.triggered.push("insults"); }, TypeError);
+  assert.equal(second.result.verdict, "offended");
+  assert.deepEqual(second.context.previousAttempts, [{ said: "open up or else", outcome: "offended" }]);
+  assert.equal(second.context.patienceLeft, 1);
+});
+
+test("decide must return a verdict synchronously, and a bad answer changes nothing", async () => {
+  for (const [bad, message] of [
+    ["win", /decide\(\) must return "convinced", "unconvinced", "offended", or "repeated", or nothing to keep the verdict, got "win"/],
+    [{ verdict: "convinced" }, /got \{"verdict":"convinced"\}/],
+    [null, /got null/],
+    [true, /got true/],
+  ]) {
+    const npc = new Persuadable({ ...harry, patience: 3, decide: () => bad }, { client: fakeClient({ score: 1 }) });
+    await assert.rejects(npc.attempt("let me in"), (e) => e instanceof HoneytongueError && message.test(e.message));
+    assert.equal(npc.attempts.length, 0);
+    assert.equal(npc.patienceLeft, 3);
+  }
+  for (const decide of [async () => "convinced", () => Promise.reject(new Error("nope"))]) {
+    const npc = new Persuadable({ ...harry, decide }, { client: fakeClient({ score: 1 }) });
+    await assert.rejects(npc.attempt("let me in"), /decide\(\) must be synchronous and return a verdict, but it returned a Promise/);
+  }
+});
+
+test("decide must be a function", () => {
+  assert.throws(() => defineCharacter({ ...harry, decide: "convinced" }), /"decide" must be a function.*got "convinced"/);
+});
+
+test("judgePersuasion applies decide, readPersuasion doesn't", async () => {
+  const lenient = { ...harry, decide: (r) => (r.score >= 2 ? "convinced" : undefined) };
+  const r = await judgePersuasion(fakeClient({ score: 2.5 }), lenient, "let me in");
+  assert.equal(r.verdict, "convinced");
+  assert.equal(r.reaction, null);
+  assert.equal(readPersuasion(lenient, { persuasion: { score: 2.5 } }).verdict, "unconvinced");
+});

@@ -81,6 +81,9 @@ export function defineCharacter(character) {
     const got = typeof c[field] === "string" ? JSON.stringify(c[field]) : String(c[field]);
     if (!valid(c[field])) throw new HoneytongueError(`${who}: "${field}" must be ${rule}, got ${got}`);
   }
+  if (c.decide !== undefined && typeof c.decide !== "function") {
+    throw new HoneytongueError(`${who}: "decide" must be a function (result, context) => verdict, got ${describe(c.decide)}`);
+  }
   if (c.repeatReaction !== undefined && !isText(c.repeatReaction)) {
     throw new HoneytongueError(`${who}: "repeatReaction" must be a non-empty string`);
   }
@@ -217,9 +220,6 @@ export function readPersuasion(character, answers) {
   const triggered = TELLS.filter((t) => tells[t] >= c.hostileAt);
   const offended = triggered.some((t) => c.offendedBy.includes(t));
   const verdict = offended ? "offended" : score >= c.threshold ? "convinced" : "unconvinced";
-  const reaction = verdict === "unconvinced"
-    ? [...c.reactions].sort((a, b) => b.min - a.min).find((r) => score >= r.min)?.text ?? `${c.name} isn't convinced.`
-    : null;
   return {
     verdict,
     score,
@@ -227,20 +227,51 @@ export function readPersuasion(character, answers) {
     tells,
     triggered,
     confidence: answers?.persuasion?.confidence ?? null,
-    reaction,
+    reaction: reactionFor(c, verdict, score),
   };
 }
+
+/** The line a verdict comes with: authored reactions for unconvinced, the repeat line for repeats, else null. */
+function reactionFor(c, verdict, score) {
+  if (verdict === "repeated") return c.repeatReaction ?? `${c.name} has heard that already.`;
+  if (verdict !== "unconvinced") return null;
+  return [...c.reactions].sort((a, b) => b.min - a.min).find((r) => (score ?? 0) >= r.min)?.text ?? `${c.name} isn't convinced.`;
+}
+
+const VERDICTS = ["convinced", "unconvinced", "offended", "repeated"];
 
 const describe = (v) => {
   if (typeof v === "function") return "a function";
   try { return JSON.stringify(v) ?? String(v); } catch { return String(v); }
 };
 
+/** Let the character's own decide() hook overrule the verdict. Runs before any state changes. */
+function applyDecide(c, result, context) {
+  if (!c.decide) return result;
+  const view = Object.freeze({ ...result, tells: result.tells && Object.freeze({ ...result.tells }), triggered: Object.freeze([...result.triggered]) });
+  const chosen = c.decide(view, Object.freeze(context));
+  if (typeof chosen?.then === "function") {
+    chosen.then(null, () => {}); // don't leave its rejection unhandled; the error below explains the mistake
+    throw new HoneytongueError(`Character "${c.name}": decide() must be synchronous and return a verdict, but it returned a Promise`);
+  }
+  if (chosen === undefined || chosen === result.verdict) return result;
+  if (!VERDICTS.includes(chosen)) {
+    throw new HoneytongueError(`Character "${c.name}": decide() must return ${listWords(VERDICTS, "or")}, or nothing to keep the verdict, got ${describe(chosen)}`);
+  }
+  return { ...result, verdict: chosen, reaction: reactionFor(c, chosen, result.score) };
+}
+
 /** One-shot, stateless judgement. */
 export async function judgePersuasion(client, character, input, options = {}) {
   if (!cleanInput(input)) throw new HoneytongueError("Input is empty");
-  const answers = await client.ask(persuasionState(character, input, options), persuasionQuestions(character));
-  return readPersuasion(character, answers);
+  const c = defineCharacter(character);
+  const answers = await client.ask(persuasionState(c, input, options), persuasionQuestions(c));
+  return applyDecide(c, readPersuasion(c, answers), {
+    input: cleanInput(input, c.maxInputLength),
+    character: c,
+    previousAttempts: Object.freeze([...(options.previousAttempts ?? [])]),
+    patienceLeft: c.patience,
+  });
 }
 
 /** A character that remembers past attempts, notices repeats, and runs out of patience. */
@@ -311,12 +342,16 @@ export class Persuadable {
     const earlier = result.verdict !== "offended" && this.findRepeat(said);
     if (earlier) {
       // Nothing new was judged. Repeating an insult is still an insult; anything else is just a repeat.
-      const unjudged = { score: null, tells: null, confidence: null };
-      result = earlier.outcome === "offended"
-        ? { ...result, ...unjudged, verdict: "offended", triggered: this.#triggered.get(earlier) ?? [], reaction: null }
-        : { ...result, ...unjudged, verdict: "repeated", triggered: [],
-            reaction: c.repeatReaction ?? `${c.name} has heard that already.` };
+      const verdict = earlier.outcome === "offended" ? "offended" : "repeated";
+      result = { ...result, score: null, tells: null, confidence: null, verdict,
+        triggered: verdict === "offended" ? this.#triggered.get(earlier) ?? [] : [], reaction: reactionFor(c, verdict, null) };
     }
+    result = applyDecide(c, result, {
+      input: said,
+      character: c,
+      previousAttempts: Object.freeze(this.attempts.map((a) => Object.freeze({ ...a }))),
+      patienceLeft: this.patienceLeft,
+    });
 
     if (result.verdict === "convinced") this.convinced = true;
     const cost = { offended: c.offendedCost, unconvinced: c.failCost, repeated: c.failCost }[result.verdict] ?? 0;
