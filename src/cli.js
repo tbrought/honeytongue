@@ -6,29 +6,6 @@ import { Game, StoryError } from "./engine.js";
 import { createJevClient } from "./jev.js";
 import { createMockClient } from "./mock.js";
 
-const args = argv.slice(2);
-const storyPath = args.find((a) => !a.startsWith("--")) ?? new URL("../stories/gatehouse.json", import.meta.url);
-let story;
-try {
-  story = JSON.parse(await readFile(storyPath, "utf8"));
-} catch (err) {
-  console.error(`Couldn't read story file ${storyPath}: ${err.message}`);
-  process.exit(1);
-}
-
-const useMock = args.includes("--mock") || !env.TYPESAFE_API_KEY;
-if (useMock && !args.includes("--mock")) {
-  console.log("(No TYPESAFE_API_KEY set, so using the offline keyword mock. It's much dumber than Jev.)\n");
-}
-let debug = args.includes("--debug");
-let game;
-try {
-  game = new Game(story, useMock ? createMockClient() : createJevClient());
-} catch (err) {
-  console.error(err instanceof StoryError ? err.message : `Couldn't start: ${err.message}`);
-  process.exit(1);
-}
-
 const wrap = (text, width = 72) =>
   text.split("\n").map((line) => {
     const indent = line.match(/^\s*/)[0];
@@ -58,27 +35,63 @@ function printDebug(d) {
   if (tells.length) console.log(`  ${tag} ${tells.join(" · ")}`);
 }
 
-console.log(wrap(game.intro()));
-console.log("\n(Type 'help' for tips.)");
-
-const rl = readline.createInterface({ input: stdin, output: stdout, terminal: stdin.isTTY });
-const lines = rl[Symbol.asyncIterator]();
-
-while (!game.over) {
-  stdout.write("\n> ");
-  const { value, done } = await lines.next();
-  if (done) break;
-  const input = value.trim();
-  if (!stdin.isTTY) console.log(input);
-  if (/^(quit|exit|q)$/i.test(input)) break;
-  if (input === "debug") { debug = !debug; console.log(`Debug view ${debug ? "on" : "off"}.`); continue; }
-
+/** Play a story in the terminal: `honeytongue [story.json] [--mock] [--debug]`. */
+async function play(args) {
+  const storyPath = args.find((a) => !a.startsWith("--")) ?? new URL("../stories/gatehouse.json", import.meta.url);
+  let story;
   try {
-    const result = await game.turn(input);
-    if (debug && result.debug) printDebug(result.debug);
-    if (result.text) console.log("\n" + wrap(result.text));
+    story = JSON.parse(await readFile(storyPath, "utf8"));
   } catch (err) {
-    console.log(`\n(Something went wrong talking to Jev: ${err.message})`);
+    console.error(`Couldn't read story file ${storyPath}: ${err.message}`);
+    process.exitCode = 1;
+    return;
   }
+
+  const useMock = args.includes("--mock") || !env.TYPESAFE_API_KEY;
+  if (useMock && !args.includes("--mock")) {
+    console.log("(No TYPESAFE_API_KEY set, so using the offline keyword mock. It's much dumber than Jev.)\n");
+  }
+  let debug = args.includes("--debug");
+  let game;
+  try {
+    game = new Game(story, useMock ? createMockClient() : createJevClient());
+  } catch (err) {
+    console.error(err instanceof StoryError ? err.message : `Couldn't start: ${err.message}`);
+    process.exitCode = 1;
+    return;
+  }
+
+  console.log(wrap(game.intro()));
+  console.log("\n(Type 'help' for tips.)");
+
+  const rl = readline.createInterface({ input: stdin, output: stdout, terminal: stdin.isTTY });
+  const lines = rl[Symbol.asyncIterator]();
+
+  while (!game.over) {
+    stdout.write("\n> ");
+    const { value, done } = await lines.next();
+    if (done) break;
+    const input = value.trim();
+    if (!stdin.isTTY) console.log(input);
+    if (/^(quit|exit|q)$/i.test(input)) break;
+    if (input === "debug") { debug = !debug; console.log(`Debug view ${debug ? "on" : "off"}.`); continue; }
+
+    try {
+      const result = await game.turn(input);
+      if (debug && result.debug) printDebug(result.debug);
+      if (result.text) console.log("\n" + wrap(result.text));
+    } catch (err) {
+      console.log(`\n(Something went wrong talking to Jev: ${err.message})`);
+    }
+  }
+  rl.close();
 }
-rl.close();
+
+const args = argv.slice(2);
+if (args[0] === "playground") {
+  // The character playground's server is Node-only, so it's loaded only when asked for.
+  const { runPlayground } = await import("./playground-server.js");
+  await runPlayground(args.slice(1));
+} else {
+  await play(args);
+}

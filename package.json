@@ -57,6 +57,9 @@
     "src",
     "stories",
     "examples",
+    "docs/playground",
+    "docs/style.css",
+    "docs/theme.js",
     "README.md",
     "LICENSE"
   ],
