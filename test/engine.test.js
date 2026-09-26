@@ -38,7 +38,7 @@ test("failures end in the cell when patience runs out", async () => {
 test("insults are noticed even when not persuading", async () => {
   const game = new Game(story(), fakeClient({ action: "chat_guard", hostile: 0.95 }));
   const r = await game.turn("how's your shift, idiot");
-  assert.match(r.text, /club at her belt/);
+  assert.match(r.text, /club at his belt/);
 });
 
 test("repeating a failed argument doesn't call Jev again", async () => {
@@ -54,7 +54,7 @@ test("uncertain input asks for clarification", async () => {
   const client = fakeClient({ action: "chat_guard", p: 0.5 });
   client.ask = async () => ({ action: { probabilities: { chat_guard: 0.5, persuade_guard: 0.4, unclear: 0.1 } }, persuasion: { score: 0 }, hostile: { noul: 0 } });
   const game = new Game(story(), client);
-  assert.match((await game.turn("talk to her")).text, /Did you mean/);
+  assert.match((await game.turn("talk to him")).text, /Did you mean/);
   assert.match((await game.turn("1")).text, /double shift/);
 });
 
@@ -87,30 +87,30 @@ const scripted = (probabilities, { score = 0, hostile = 0.01 } = {}) => {
 test("an insult is noticed even when the action is ambiguous or unclear", async () => {
   const ambiguous = new Game(story(), scripted({ chat_guard: 0.5, persuade_guard: 0.45, unclear: 0.05 }, { hostile: 0.95 }));
   const r = await ambiguous.turn("hey you idiot, what's that toy");
-  assert.match(r.text, /club at her belt/);
+  assert.match(r.text, /club at his belt/);
   assert.doesNotMatch(r.text, /Did you mean/);
   assert.equal(ambiguous.pending, null);
   const unclear = new Game(story(), scripted({ unclear: 1 }, { hostile: 0.95 }));
   const u = await unclear.turn("you absolute worm");
-  assert.match(u.text, /club at her belt/);
+  assert.match(u.text, /club at his belt/);
   assert.doesNotMatch(u.text, /not sure how/);
 });
 
 test("'Did you mean' accepts numbers and words", async () => {
   for (const pick of ["1", "1.", "1)", "one", "first", "the first one", "#1"]) {
     const game = new Game(story(), scripted({ chat_guard: 0.5, persuade_guard: 0.4, unclear: 0.1 }));
-    await game.turn("talk to her");
+    await game.turn("talk to him");
     assert.match((await game.turn(pick)).text, /double shift/, `"${pick}" should pick option 1`);
   }
 });
 
 test("running out of patience plays its effect once, and then the NPC stops listening", async () => {
   const s = story();
-  s.scenes.gate.npc.outOfPatience = { text: "Maren turns her back on you.", giveItems: ["bruise"] };
+  s.scenes.gate.npc.outOfPatience = { text: "Harry turns his back on you.", giveItems: ["bruise"] };
   const game = new Game(s, scripted({ chat_guard: 0.9, unclear: 0.1 }, { hostile: 0.95 }));
   let text = "";
   for (const line of ["rude one", "rude two", "rude three", "rude four"]) text += (await game.turn(line)).text;
-  assert.equal(text.split("turns her back").length - 1, 1);
+  assert.equal(text.split("turns his back").length - 1, 1);
   assert.deepEqual(game.inventory.filter((i) => i === "bruise"), ["bruise"]);
   game.jev = scripted({ persuade_guard: 0.9, unclear: 0.1 }, { score: 4 });
   game.npc.client = game.jev;
@@ -119,7 +119,7 @@ test("running out of patience plays its effect once, and then the NPC stops list
 
 test("a convinced NPC isn't persuaded twice", async () => {
   const s = story();
-  s.scenes.gate.npc.persuasion.success = { text: "Maren hands you a pass.", giveItems: ["gate pass"] };
+  s.scenes.gate.npc.persuasion.success = { text: "Harry hands you a pass.", giveItems: ["gate pass"] };
   const game = new Game(s, scripted({ persuade_guard: 0.9, unclear: 0.1 }, { score: 4 }));
   assert.match((await game.turn("an honest plea")).text, /hands you a pass/);
   assert.match((await game.turn("another honest plea")).text, /already agreed/);
@@ -182,7 +182,7 @@ test("validation reports malformed stories instead of crashing", () => {
   s.scenes.cell.ending = true;
   const err = (() => { try { validateStory(s); } catch (e) { return e; } })();
   assert.ok(err instanceof StoryError, `expected a StoryError, got ${err}`);
-  for (const expected of [/player.inventory/, /"broken" must be an object/, /"nothing" must be an object/, /"requires"/, /"giveItems"/, /hostileAt/, /npc id "maren" is also used/, /"patience" needs an npc/, /"ending" must be/]) {
+  for (const expected of [/player.inventory/, /"broken" must be an object/, /"nothing" must be an object/, /"requires"/, /"giveItems"/, /hostileAt/, /npc id "harry" is also used/, /"patience" needs an npc/, /"ending" must be/]) {
     assert.ok(err.problems.some((p) => expected.test(p)), `missing a problem matching ${expected}:\n${err.message}`);
   }
 });

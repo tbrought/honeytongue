@@ -16,6 +16,7 @@ Everything below was built and tested without access to live Jev. It still needs
 
 ### Changed
 
+- The Gatehouse's guard, Sergeant Maren, is now Harry Goatleaf, the gatekeeper: a nod to the gatekeeper at Bree in The Lord of the Rings.
 - The proxy now enforces "same-origin only" when `allowedOrigins` is empty. Before, cross-origin requests were served anyway.
 - The proxy trusts `CF-Connecting-IP` only on Cloudflare and otherwise uses the last `X-Forwarded-For` entry, so a forged header can't dodge the rate limit. Rate-limited responses include `Retry-After`.
 - The proxy's request size limit counts bytes and checks `Content-Length` before reading the body.

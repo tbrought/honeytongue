@@ -16,8 +16,8 @@ export function fakeClient({ action = "persuade_guard", p = 0.9, score = 0, host
   return client;
 }
 
-export const maren = {
-  name: "Maren",
+export const harry = {
+  name: "Harry",
   persona: "An honest guard who hates flattery.",
   goal: "Open the gate",
 };

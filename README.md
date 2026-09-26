@@ -22,7 +22,7 @@ import { Persuadable, createJevClient } from "honeytongue";
 
 const guard = new Persuadable(
   {
-    name: "Sergeant Maren",
+    name: "Harry Goatleaf",
     persona: "A tired night guard who values honesty and despises flattery and bribes.",
     goal: "Open the gate after curfew",
     patience: 4,
@@ -32,7 +32,7 @@ const guard = new Persuadable(
 
 const result = await guard.attempt("You're the finest guard in the kingdom. Surely you can make an exception?");
 result.verdict;      // "unconvinced"
-result.reaction;     // "Sergeant Maren isn't convinced."
+result.reaction;     // "Harry Goatleaf isn't convinced."
 result.patienceLeft; // 3
 ```
 
@@ -88,7 +88,7 @@ Mistakes throw a `HoneytongueError` with a readable message, such as a threshold
 Put hidden motivations in `secrets` rather than `persona`, so players can't win on a replay by guessing:
 
 ```js
-secrets: [{ id: "sick_daughter", fact: "Her daughter has a fever and the apothecary is closed." }]
+secrets: [{ id: "sick_daughter", fact: "His daughter has a fever and the apothecary is closed." }]
 ```
 
 Call `guard.learn("sick_daughter")` when the player discovers it. Before that, arguments leaning on it won't help.
@@ -121,7 +121,7 @@ Client errors are `HoneytongueError`s that say what probably went wrong (a rejec
 
 ## Flagship example: The Gatehouse
 
-A complete text adventure built on Honeytongue, with a free-text parser and a JSON story format. You must get into the city after curfew, and Sergeant Maren is in the way.
+A complete text adventure built on Honeytongue, with a free-text parser and a JSON story format. You must get into the city after curfew, and Harry Goatleaf, the gatekeeper, is in the way.
 
 ```bash
 npm run play        # with Jev, showing its reasoning each turn

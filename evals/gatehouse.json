@@ -2,7 +2,7 @@
   "story": "../stories/gatehouse.json",
   "cases": [
     {
-      "input": "grab the guard's attention and ask how her night is going",
+      "input": "grab the gatekeeper's attention and ask how his night is going",
       "expect": "chat_guard"
     },
     {
@@ -14,7 +14,7 @@
       "expect": "read_letter"
     },
     {
-      "input": "slip her a coin",
+      "input": "slip him a coin",
       "expect": "bribe_guard"
     },
     {
@@ -29,7 +29,7 @@
       ]
     },
     {
-      "input": "shove past her",
+      "input": "shove past him",
       "expect": "attack_guard"
     },
     {
@@ -53,7 +53,7 @@
       ]
     },
     {
-      "input": "you're clearly the finest guard in the kingdom, surely you can make an exception",
+      "input": "you're clearly the finest gatekeeper in the kingdom, surely you can make an exception",
       "expect": "persuade_guard",
       "score": [
         0,

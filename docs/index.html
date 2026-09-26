@@ -79,24 +79,24 @@ section { padding-top: 2.75rem; }
 
   <figure class="screen transcript" aria-labelledby="transcript-caption">
     <p class="room-name">East Gate</p>
-    <p>Rain drips from the arch of the east gate. Sergeant Maren, who values honesty and despises flattery, leans on her spear under the lantern.</p>
+    <p>Rain drips from the arch of the east gate. Harry Goatleaf, the gatekeeper, values honesty and despises flattery. He leans on his spear under the lantern.</p>
     <div class="turn" style="--i:0">
       <p class="cmd">You're the finest guard in the kingdom. Surely you can make an exception?</p>
       <p class="readout"><span class="meter" style="--score:10%" aria-hidden="true"><i></i><b></b></span><span>0.36 / 4</span><span class="verdict">unconvinced</span></p>
-      <p>Maren doesn't even look up. "Gate's shut till dawn."</p>
+      <p>Harry doesn't even look up. "Gate's shut till dawn."</p>
     </div>
     <div class="turn" style="--i:1">
       <p class="cmd">Please, I have a letter that has to reach the city tonight.</p>
       <p class="readout"><span class="meter" style="--score:45%" aria-hidden="true"><i></i><b></b></span><span>1.84 / 4</span><span class="verdict">unconvinced</span></p>
-      <p>"Everyone's got a reason," Maren says. "Mine's keeping this job."</p>
+      <p>"Everyone's got a reason," Harry says. "Mine's keeping this job."</p>
     </div>
     <div class="turn" style="--i:2">
       <p class="cmd">I won't lie to you. This letter is a fever remedy for the apothecary. Let me through and I'll send her to your daughter tonight.</p>
       <p class="readout"><span class="meter" style="--score:90%" aria-hidden="true"><i></i><b></b></span><span>3.52 / 4</span><span class="verdict won">convinced</span></p>
-      <p>Maren lets out a long breath and lifts the bar.</p>
+      <p>Harry lets out a long breath and lifts the bar.</p>
     </div>
     <p class="cmd" style="--i:3"><span class="cursor" aria-hidden="true"></span></p>
-    <figcaption class="caption" id="transcript-caption">Three attempts to persuade a gate guard. Scores are illustrative until live results are in; the tall mark on each meter is Maren's threshold.</figcaption>
+    <figcaption class="caption" id="transcript-caption">Three attempts to persuade a gatekeeper. Scores are illustrative until live results are in; the tall mark on each meter is Harry's threshold.</figcaption>
   </figure>
 </section>
 
@@ -135,7 +135,7 @@ $env:TYPESAFE_API_KEY="your-key"       <span class="c"># Windows PowerShell</spa
 
 const guard = new Persuadable(
   {
-    name: "Sergeant Maren",
+    name: "Harry Goatleaf",
     persona: "A tired night guard who values honesty and despises flattery and bribes.",
     goal: "Open the gate after curfew",
     patience: 4,
@@ -149,7 +149,7 @@ const guard = new Persuadable(
 
 if (result.verdict === "convinced") openTheGate();
 else if (result.outOfPatience) callTheWatch();
-else show(result.reaction ?? "Her hand drops to her club.");</code></pre>
+else show(result.reaction ?? "His hand drops to his club.");</code></pre>
         </li>
       </ol>
       <p>To try it without a key, use <code>createMockClient()</code>. It judges by keywords, so it's far less clever than Jev, but it's handy for building and testing.</p>
@@ -193,9 +193,9 @@ else show(result.reaction ?? "Her hand drops to her club.");</code></pre>
 
     <section id="secrets">
       <h2>Secrets</h2>
-      <p>If the guard's persona mentions her sick daughter, a player on their second playthrough can open with it and win instantly. Put hidden motivations in <code>secrets</code> instead:</p>
+      <p>If the gatekeeper's persona mentions his sick daughter, a player on their second playthrough can open with it and win instantly. Put hidden motivations in <code>secrets</code> instead:</p>
 <pre><code>secrets: [
-  { id: "sick_daughter", fact: "Her daughter has a fever and the apothecary is closed." },
+  { id: "sick_daughter", fact: "His daughter has a fever and the apothecary is closed." },
 ]</code></pre>
       <p>When the player discovers it in your game, call <code>guard.learn("sick_daughter")</code>. Until then, arguments leaning on it won't score higher, and may even seem suspicious to the character.</p>
     </section>
@@ -237,15 +237,15 @@ const client = createProxyClient({ url: "https://your-proxy.workers.dev" });</co
 <pre><code>import("https://cdn.jsdelivr.net/npm/honeytongue@0.2/src/index.js")
   .then(({ Persuadable, createProxyClient }) =&gt; {
     const client = createProxyClient({ url: "https://your-proxy.workers.dev" });
-    setup.maren = new Persuadable({ name: "Maren", persona: "...", goal: "..." }, { client });
+    setup.harry = new Persuadable({ name: "Harry Goatleaf", persona: "...", goal: "..." }, { client });
   });</code></pre>
-      <p>Then call <code>setup.maren.attempt(_plea)</code> from a button and send the player to a passage based on the verdict. The full recipe in <code>examples/twine-sugarcube.md</code> also handles errors, empty input, and double clicks.</p>
+      <p>Then call <code>setup.harry.attempt(_plea)</code> from a button and send the player to a passage based on the verdict. The full recipe in <code>examples/twine-sugarcube.md</code> also handles errors, empty input, and double clicks.</p>
       <p class="note">The Twine recipe hasn't been tested inside Twine yet. If you try it, please report how it goes.</p>
     </section>
 
     <section id="engine">
       <h2>Text adventures</h2>
-      <p>Honeytongue also ships a small text adventure engine, with a free-text parser and a JSON story format. The demo, The Gatehouse, has you talking your way into a city after curfew. <a href="play/">Play it in your browser</a>, or in a terminal:</p>
+      <p>Honeytongue also ships a small text adventure engine, with a free-text parser and a JSON story format. The demo, The Gatehouse, has you talking your way past a gatekeeper after curfew. <a href="play/">Play it in your browser</a>, or in a terminal:</p>
 <pre><code>npx honeytongue              <span class="c"># play the demo</span>
 npx honeytongue story.json   <span class="c"># play your own story</span></code></pre>
       <p>Stories are checked when they load, and every problem is listed at once, such as an action that leads to a scene that doesn't exist, or two different characters sharing an id. Give scenes a <code>name</code> like "East Gate" if your interface has a status line to show it in.</p>

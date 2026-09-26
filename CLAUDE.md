@@ -84,7 +84,7 @@ Work through these phases in order. At the end of each phase, stop, summarize wh
 
 **Phase 1: Verify locally.** Run `npm test`, `npm run play:mock`, `npm run example`, and `npm run eval -- --mock` on this machine. Fix anything that fails on Windows. Add a `.github/workflows/test.yml` that runs `npm test` on current Node LTS versions.
 
-**Phase 2: Live Jev validation.** Ask the human to set `TYPESAFE_API_KEY` in the terminal (never ask them to paste it into chat or a file). Make one small live request first and confirm the response shape matches `src/jev.js`. Then run `npm run eval` and report every miss. Tune Maren's persona, the rubric levels, and thresholds in the story file (not in code) until results are sensible, rerunning evals after each change. Record final eval results in the README. Also note typical latency and token usage per call.
+**Phase 2: Live Jev validation.** Ask the human to set `TYPESAFE_API_KEY` in the terminal (never ask them to paste it into chat or a file). Make one small live request first and confirm the response shape matches `src/jev.js`. Then run `npm run eval` and report every miss. Tune Harry's persona, the rubric levels, and thresholds in the story file (not in code) until results are sensible, rerunning evals after each change. Record final eval results in the README. Also note typical latency and token usage per call.
 
 **Phase 3: Hardening from real results.** Based on Phase 2, decide with the human whether the defaults in `persuasion.js` (levels, threshold, hostileAt, repeatSimilarity) need to change. Add eval cases for any failure you discover.
 

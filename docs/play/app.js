@@ -76,7 +76,7 @@ function updateStatus() {
   const total = npc.character.patience;
   const pips = el("span", { className: "pips", role: "img", ariaLabel: `${patienceLeft} of ${total}` },
     ...Array.from({ length: total }, (_, i) => el("i", { className: i < patienceLeft ? "on" : "" })));
-  patience.replaceChildren(el("span", { className: "label" }, `${npc.character.name.split(" ").pop()}'s patience`), pips);
+  patience.replaceChildren(el("span", { className: "label" }, `${npc.character.name.split(" ")[0]}'s patience`), pips);
 }
 
 /** Buttons for "Did you mean", and for starting again at the end. */

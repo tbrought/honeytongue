@@ -13,7 +13,7 @@
   <title>Talk your way past the guard</title>
 </head>
 <body>
-  <p>Sergeant Maren blocks the gate. What do you say?</p>
+  <p>Harry Goatleaf, the gatekeeper, blocks the gate. What do you say?</p>
   <form id="talk">
     <label for="line">Your words</label>
     <input id="line" maxlength="500" autocomplete="off" size="60" required>
@@ -26,15 +26,15 @@
 
     const PROXY_URL = "http://localhost:8787";
 
-    const maren = new Persuadable(
+    const harry = new Persuadable(
       {
-        name: "Sergeant Maren",
+        name: "Harry Goatleaf",
         persona: "A tired night guard who values honesty and despises flattery and bribes.",
         goal: "Open the gate after curfew",
         patience: 4,
         reactions: [
           { min: 0, text: "\"Gate's shut till dawn.\"" },
-          { min: 2, text: "She hesitates. \"You'll have to do better than that.\"" },
+          { min: 2, text: "He hesitates. \"You'll have to do better than that.\"" },
         ],
       },
       { client: createProxyClient({ url: PROXY_URL }) },
@@ -50,15 +50,15 @@
       if (!input.value.trim()) return;
       button.disabled = true;
       try {
-        const r = await maren.attempt(input.value);
-        if (r.verdict === "convinced") reply.textContent = "Maren sighs and lifts the bar. You're through.";
-        else if (r.outOfPatience) reply.textContent = "\"Enough.\" Maren blows her whistle.";
-        else reply.textContent = r.verdict === "offended" ? "Her hand drops to her club." : r.reaction;
+        const r = await harry.attempt(input.value);
+        if (r.verdict === "convinced") reply.textContent = "Harry sighs and lifts the bar. You're through.";
+        else if (r.outOfPatience) reply.textContent = "\"Enough.\" Harry blows his whistle.";
+        else reply.textContent = r.verdict === "offended" ? "His hand drops to his club." : r.reaction;
         input.value = "";
       } catch (err) {
         reply.textContent = `Couldn't reach the proxy: ${err.message}`;
       } finally {
-        button.disabled = maren.convinced || maren.outOfPatience;
+        button.disabled = harry.convinced || harry.outOfPatience;
       }
     });
   </script>
