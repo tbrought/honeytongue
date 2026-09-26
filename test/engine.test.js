@@ -186,3 +186,21 @@ test("validation reports malformed stories instead of crashing", () => {
     assert.ok(err.problems.some((p) => expected.test(p)), `missing a problem matching ${expected}:\n${err.message}`);
   }
 });
+
+test("NPCs react during other actions only to tells in their offendedBy", async () => {
+  const s = story();
+  s.scenes.gate.npc.persuasion.offendedBy = ["insults"];
+  const threatened = new Game(s, scripted({ chat_guard: 0.9, unclear: 0.1 }, { threats: 0.95 }));
+  const t = await threatened.turn("how's your shift? answer or else");
+  assert.doesNotMatch(t.text, /club at his belt/);
+  assert.match(t.text, /double shift/);
+  const insulted = new Game(s, scripted({ chat_guard: 0.9, unclear: 0.1 }, { insults: 0.95 }));
+  assert.match((await insulted.turn("how's your shift, idiot")).text, /club at his belt/);
+  const unclear = new Game(s, scripted({ unclear: 1 }, { threats: 0.95 }));
+  assert.match((await unclear.turn("grr")).text, /not sure how/);
+});
+
+test("by default threats get the same reaction as insults", async () => {
+  const game = new Game(story(), scripted({ chat_guard: 0.9, unclear: 0.1 }, { threats: 0.95 }));
+  assert.match((await game.turn("talk, or I'll hurt you")).text, /club at his belt/);
+});

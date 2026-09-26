@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { Persuadable, persuasionQuestions, defineCharacter, readPersuasion, persuasionState, judgePersuasion, cleanInput, similarity, HoneytongueError } from "../src/index.js";
 import { fakeClient, harry } from "./helpers.js";
+import { createMockClient } from "../src/mock.js";
 
 test("default threshold scales with the number of levels", () => {
   assert.equal(defineCharacter(harry).threshold, 3.2);
@@ -143,4 +144,84 @@ test("attempts made at the same time run one after another", async () => {
   assert.equal(first.verdict, "unconvinced");
   assert.equal(second.verdict, "repeated");
   assert.equal(client.calls.length, 1);
+});
+
+test("offendedBy defaults to both tells, and the default questions don't mention pressure", () => {
+  assert.deepEqual(defineCharacter(harry).offendedBy, ["threats", "insults"]);
+  assert.doesNotMatch(persuasionQuestions(harry).persuasion.instructions.question, /not automatically weak/);
+});
+
+test("each offendedBy setting decides which tells offend", () => {
+  const answers = {
+    none: {},
+    threats: { threats: { noul: 0.9 } },
+    insults: { insults: { noul: 0.9 } },
+    both: { threats: { noul: 0.9 }, insults: { noul: 0.9 } },
+  };
+  // offendedBy -> verdict for each kind of input, all with a convincing score.
+  const table = [
+    [undefined, { none: "convinced", threats: "offended", insults: "offended", both: "offended" }],
+    [["insults"], { none: "convinced", threats: "convinced", insults: "offended", both: "offended" }],
+    [["threats"], { none: "convinced", threats: "offended", insults: "convinced", both: "offended" }],
+    [[], { none: "convinced", threats: "convinced", insults: "convinced", both: "convinced" }],
+  ];
+  const triggered = { none: [], threats: ["threats"], insults: ["insults"], both: ["threats", "insults"] };
+  for (const [offendedBy, expected] of table) {
+    for (const [kind, verdict] of Object.entries(expected)) {
+      const r = readPersuasion({ ...harry, offendedBy }, { persuasion: { score: 4 }, ...answers[kind] });
+      const label = `offendedBy ${JSON.stringify(offendedBy)}, ${kind}`;
+      assert.equal(r.verdict, verdict, label);
+      assert.deepEqual(r.triggered, triggered[kind], label);
+      assert.deepEqual(r.tells, { threats: answers[kind].threats ? 0.9 : 0, insults: answers[kind].insults ? 0.9 : 0 }, label);
+    }
+  }
+});
+
+test("tells and triggered are reported on every verdict", async () => {
+  const client = fakeClient({ score: 1, threats: 0.9 });
+  const npc = new Persuadable({ ...harry, offendedBy: ["insults"] }, { client });
+  const unconvinced = await npc.attempt("open it or else");
+  assert.equal(unconvinced.verdict, "unconvinced");
+  assert.deepEqual(unconvinced.triggered, ["threats"]);
+  assert.equal(unconvinced.tells.threats, 0.9);
+  const repeated = await npc.attempt("Open it, or else!");
+  assert.equal(repeated.verdict, "repeated");
+  assert.deepEqual(repeated.triggered, []);
+  assert.equal(repeated.tells, null);
+  client.next = { ...client.next, threats: 0.01, insults: 0.9 };
+  const offended = await npc.attempt("you worm");
+  assert.equal(offended.verdict, "offended");
+  assert.deepEqual(offended.triggered, ["insults"]);
+  client.next = { ...client.next, insults: 0.01, threats: 0.95, score: 4 };
+  const convinced = await npc.attempt("I'll break your arm");
+  assert.equal(convinced.verdict, "convinced");
+  assert.deepEqual(convinced.triggered, ["threats"]);
+  assert.deepEqual(convinced.tells, { threats: 0.95, insults: 0.01 });
+});
+
+test("tells a character isn't offended by are left to the persona", () => {
+  const q = (offendedBy) => persuasionQuestions({ ...harry, offendedBy }).persuasion.instructions.question;
+  assert.match(q(["insults"]), /Threats or intimidation are not automatically weak/);
+  assert.doesNotMatch(q(["insults"]), /insults or mockery/i);
+  assert.match(q(["threats"]), /Insults or mockery are not automatically weak/);
+  assert.match(q([]), /Threats or intimidation and insults or mockery are not automatically weak/);
+});
+
+test("offendedBy is validated, and duplicates are dropped", () => {
+  assert.throws(() => defineCharacter({ ...harry, offendedBy: ["threat"] }), /"offendedBy" must be an array of "threats" and\/or "insults".*got "threat"/);
+  assert.throws(() => defineCharacter({ ...harry, offendedBy: "insults" }), /"offendedBy".*got "insults"/);
+  assert.throws(() => defineCharacter({ ...harry, offendedBy: [null] }), /"offendedBy".*got null/);
+  assert.deepEqual(defineCharacter({ ...harry, offendedBy: ["insults", "threats", "insults"] }).offendedBy, ["threats", "insults"]);
+  const once = defineCharacter({ ...harry, offendedBy: ["insults"] });
+  assert.deepEqual(defineCharacter(once).offendedBy, ["insults"]);
+});
+
+test("the mock lets a timid persona cave to threats only when threats don't offend", async () => {
+  const mock = createMockClient();
+  const goblin = { name: "Snag", persona: "A cowardly goblin guard who hates being laughed at.", goal: "Unlock the cage" };
+  const threat = "Open this cage or I'll gut you";
+  assert.equal((await judgePersuasion(mock, { ...goblin, offendedBy: ["insults"] }, threat)).verdict, "convinced");
+  assert.equal((await judgePersuasion(mock, goblin, threat)).verdict, "offended");
+  const brave = { ...goblin, persona: "A grizzled veteran guard.", offendedBy: [] };
+  assert.equal((await judgePersuasion(mock, brave, threat)).verdict, "unconvinced");
 });
