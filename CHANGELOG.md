@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-alpha.2 (2026-09-26)
+
+The character playground, and an offline mock that can win The Gatehouse the way the story intends. Like the earlier alphas, this was built and tested with the offline mock only.
 
 ### Added
 

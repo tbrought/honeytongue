@@ -102,7 +102,7 @@ Human (shipping it):
 - **Nothing has been run against live Jev yet.** The client was written from the API docs, and now checks every response's shape so a mismatch fails with a clear message. Thresholds, rubric wording, and the default levels are guesses until real evals run.
 - The Twine recipe (`examples/twine-sugarcube.md`) is untested inside Twine.
 - Scores shown in the docs site hero are illustrative placeholders, labeled as such.
-- The repository is github.com/tbrought/honeytongue (the site will be tbrought.github.io/honeytongue). The latest release is `0.1.0-alpha.1` (published 2026-09-26); the stable `0.1.0` comes after live Jev validation.
+- The repository is github.com/tbrought/honeytongue (the site will be tbrought.github.io/honeytongue). The latest release is `0.1.0-alpha.2` (prepared 2026-09-26: the playground and the mock fix; alpha.1 was published the same day); the stable `0.1.0` comes after live Jev validation.
 - Character settings (0.1.0-alpha.1): `difficulty` maps a word to a share of the top rubric level (easy 0.6, normal 0.8, hard 0.9, very hard 0.95, in `DIFFICULTY` in `persuasion.js`). **These shares are guesses and need calibrating against live Jev.** `offendedBy` picks which tells offend; tells not in it are left to the persona, via an extra sentence in the persuasion question (also unverified live). Results carry `tells` and `triggered`; `hostility` is gone. `decide(result, context)` is a synchronous character hook applied in `record()` and `judgePersuasion()`, not `readPersuasion()`. Don't add stages, extra or custom tells, or closeness labels until there are live results.
 ## Roadmap
 
@@ -110,7 +110,7 @@ Work through the phases in order. At the start of each phase, send a short plan 
 
 **Done: Phase A, character settings** (released as `0.1.0-alpha.1`).
 
-**Phase B: Character playground** (release as `0.1.0-alpha.2`, in review on `feature/playground`). Built:
+**Done: Phase B, character playground** (released as `0.1.0-alpha.2`). Built:
 - `npx honeytongue playground`, the main mode: a local server that judges with the developer's own key;
 - the hosted page at `docs/playground/`, a designer and mock-only preview under a "Preview only" banner, with no proxy URL setting;
 - the form, presets (`stories/characters.json`), inline validation, the per-line readout with the level reached, Replay (warning about API calls only in local mode with a key), copy as code, copy as story JSON, share links, and a saved draft.
