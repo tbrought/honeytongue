@@ -1,0 +1,56 @@
+{
+  "name": "honeytongue",
+  "version": "0.2.0",
+  "description": "Characters players can actually argue with: a persuasion mechanic for games, powered by Jev typed decisions",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./persuasion": {
+      "types": "./src/persuasion.d.ts",
+      "default": "./src/persuasion.js"
+    },
+    "./proxy": {
+      "types": "./src/proxy.d.ts",
+      "default": "./src/proxy.js"
+    }
+  },
+  "bin": {
+    "honeytongue": "src/cli.js"
+  },
+  "scripts": {
+    "play": "node src/cli.js --debug",
+    "play:mock": "node src/cli.js --mock --debug",
+    "eval": "node scripts/eval.js",
+    "example": "node examples/standalone.js",
+    "test": "node --test",
+    "proxy": "node examples/node-proxy.js",
+    "build:demo": "node scripts/build-demo.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "game-mechanic",
+    "persuasion",
+    "npc",
+    "dialogue",
+    "interactive-fiction",
+    "text-adventure",
+    "jev",
+    "typesafe"
+  ],
+  "license": "MIT",
+  "types": "src/index.d.ts",
+  "files": [
+    "src",
+    "stories",
+    "examples",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false
+}

@@ -1,0 +1,152 @@
+{
+  "title": "THE GATEHOUSE",
+  "intro": "Curfew fell an hour ago. You carry a sealed letter that must reach the city tonight, and one tired guard stands between you and the gate.",
+  "start": "gate",
+  "player": {
+    "inventory": [
+      "silver coin",
+      "sealed letter"
+    ],
+    "flags": []
+  },
+  "scenes": {
+    "gate": {
+      "name": "East Gate",
+      "description": "Rain drips from the arch of the east gate. Sergeant Maren leans on her spear under the lantern, a small wooden toy horse poking out of her coat pocket. To your left, the city wall disappears into darkness.",
+      "npc": {
+        "id": "maren",
+        "name": "Sergeant Maren",
+        "persona": "A tired night-shift guard in her forties. Values honesty and plain speaking above all. Despises flattery, bribes, and anyone who pulls rank. Distracted by worry about something at home that she doesn't mention to strangers. She could lose her post for opening the gate, so she needs a genuinely good reason.",
+        "secrets": [
+          {
+            "id": "knows_daughter_is_sick",
+            "fact": "Her young daughter has had a fever for three days, and the city apothecary won't see anyone after curfew. Help for her daughter matters more to her than the rules."
+          }
+        ],
+        "patience": 4,
+        "hostileReaction": "Maren's hand drops to the club at her belt. \"Say that again and you'll see the inside of a cell.\"",
+        "outOfPatience": {
+          "text": "\"Enough.\" Maren puts a whistle to her lips. Two more guards jog out of the gatehouse.",
+          "goto": "cell"
+        },
+        "persuasion": {
+          "goal": "Open the gate and let the player into the city tonight, despite the curfew",
+          "threshold": 3.2,
+          "levels": [
+            "Not really an attempt, or counterproductive to her: flattery, obvious lies, demands, or pulling rank",
+            "Weak: generic pleading or excuses that give her nothing she cares about",
+            "Polite and reasonable, but no real reason for her to risk her post",
+            "Honest and specific, touching something she values, but not quite enough to take the risk",
+            "Genuinely compelling to her: honest, specific, and connected to what she cares about most"
+          ],
+          "reactions": [
+            {
+              "min": 0,
+              "text": "Maren doesn't even look up. \"Gate's shut till dawn.\""
+            },
+            {
+              "min": 1.5,
+              "text": "\"Everyone's got a reason,\" Maren says. \"Mine's keeping this job.\""
+            },
+            {
+              "min": 2.5,
+              "text": "Maren hesitates, thumb brushing the toy horse in her pocket. \"You'll have to do better than that.\""
+            }
+          ],
+          "success": {
+            "text": "Maren lets out a long breath and lifts the bar. \"Lantern Street. Ask for Ilse, and tell her Maren sent you. And if you meant what you said, don't make me regret it.\"",
+            "goto": "city_welcome"
+          }
+        },
+        "repeatReaction": "\"You said that already,\" Maren says, not unkindly. \"Saying it louder won't open the gate.\""
+      },
+      "actions": {
+        "persuade_guard": {
+          "label": "Try to talk your way past Maren",
+          "description": "Try to convince, plead with, argue with, or reason with the guard so she lets the player through the gate",
+          "persuade": true
+        },
+        "chat_guard": {
+          "label": "Chat with Maren",
+          "description": "Make small talk or ask the guard about herself, her shift, or the toy in her pocket, without asking to be let through",
+          "text": "Maren eyes you, then shrugs. \"Third double shift this week. My girl's had a fever three days, and the apothecary won't open after curfew.\" She tucks the toy horse deeper into her pocket.",
+          "setFlags": [
+            "knows_daughter_is_sick"
+          ]
+        },
+        "bribe_guard": {
+          "label": "Offer Maren money",
+          "description": "Offer the guard money, a coin, or a gift in exchange for passage",
+          "requires": {
+            "items": [
+              "silver coin"
+            ]
+          },
+          "blockedText": "You pat your pockets. You have nothing to offer.",
+          "text": "Maren looks at the coin, then at you. \"Put that away before I decide I saw it.\"",
+          "patience": -1
+        },
+        "read_letter": {
+          "label": "Examine the letter",
+          "description": "Read, examine, or look at the sealed letter the player is carrying",
+          "text": "The wax seal is unbroken. The address reads: Ilse Varga, Apothecary, Lantern Street. Underneath, someone has scrawled: urgent, fever remedy enclosed.",
+          "setFlags": [
+            "knows_letter_is_for_apothecary"
+          ]
+        },
+        "inspect_wall": {
+          "label": "Search along the wall",
+          "description": "Look around the wall or surroundings for another way into the city",
+          "text": "Out of the lantern's reach, thick ivy climbs the old stones all the way to the parapet.",
+          "setFlags": [
+            "found_ivy"
+          ]
+        },
+        "climb_wall": {
+          "label": "Climb the wall",
+          "description": "Climb the wall or the ivy to sneak into the city",
+          "requires": {
+            "flags": [
+              "found_ivy"
+            ]
+          },
+          "blockedText": "The stones by the gate are sheer and slick with rain. You'd need something to climb.",
+          "text": "You wait until Maren turns to trim the lantern wick, then haul yourself up the ivy, soaked and scraped.",
+          "goto": "city_sneak"
+        },
+        "attack_guard": {
+          "label": "Attack Maren",
+          "description": "Physically attack, fight, or shove past the guard",
+          "text": "It goes about as well as fighting an armed guard ever goes.",
+          "goto": "cell"
+        },
+        "leave": {
+          "label": "Walk away",
+          "description": "Give up, turn around, and walk away from the gate for the night",
+          "text": "You turn your collar up against the rain and trudge back the way you came.",
+          "goto": "walked_away"
+        }
+      }
+    },
+    "city_welcome": {
+      "name": "Lantern Street",
+      "description": "The gate thuds shut behind you. Lantern Street glows at the end of the road.",
+      "ending": "You talked your way in"
+    },
+    "city_sneak": {
+      "name": "Muddy Alley",
+      "description": "You drop into a muddy alley inside the walls. Nobody saw you, and nobody will know why the letter arrived.",
+      "ending": "You snuck in"
+    },
+    "cell": {
+      "name": "Gatehouse Cell",
+      "description": "The gatehouse cell smells of wet straw. The letter will have to wait until morning.",
+      "ending": "You spent the night in a cell"
+    },
+    "walked_away": {
+      "name": "The Road Back",
+      "description": "Somewhere behind you, the gate stays shut until dawn.",
+      "ending": "You gave up"
+    }
+  }
+}

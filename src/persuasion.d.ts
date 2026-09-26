@@ -1,0 +1,23 @@
+export {
+  Persuadable,
+  judgePersuasion,
+  persuasionQuestions,
+  persuasionState,
+  readPersuasion,
+  defineCharacter,
+  cleanInput,
+  similarity,
+  HoneytongueError,
+  DEFAULT_LEVELS,
+} from "./index.js";
+export type {
+  Character,
+  DefinedCharacter,
+  Secret,
+  Verdict,
+  PersuasionResult,
+  AttemptResult,
+  AttemptOptions,
+  Attempt,
+  JevClient,
+} from "./index.js";
