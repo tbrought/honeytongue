@@ -291,7 +291,7 @@ npx wrangler deploy</code></pre>
         <li>
           <p>In your game, use the proxy client instead of <code>createJevClient()</code>.</p>
 <pre><code>import { Persuadable, createProxyClient } from
-  "https://cdn.jsdelivr.net/npm/honeytongue@0.1/src/index.js";
+  "https://cdn.jsdelivr.net/npm/honeytongue@alpha/src/index.js";
 
 const client = createProxyClient({ url: "https://your-proxy.workers.dev" });</code></pre>
         </li>
@@ -303,7 +303,7 @@ const client = createProxyClient({ url: "https://your-proxy.workers.dev" });</co
     <section id="twine">
       <h2>Twine</h2>
       <p>For SugarCube 2, load Honeytongue in your Story JavaScript and keep the character on <code>setup</code>:</p>
-<pre><code>import("https://cdn.jsdelivr.net/npm/honeytongue@0.1/src/index.js")
+<pre><code>import("https://cdn.jsdelivr.net/npm/honeytongue@alpha/src/index.js")
   .then(({ Persuadable, createProxyClient }) =&gt; {
     const client = createProxyClient({ url: "https://your-proxy.workers.dev" });
     setup.harry = new Persuadable({ name: "Harry Goatleaf", persona: "...", goal: "..." }, { client });

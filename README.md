@@ -56,7 +56,7 @@ When `patienceLeft` reaches 0, `outOfPatience` is `true`. What happens next is u
 Never put your API key in browser code. Instead, deploy the included proxy (a Cloudflare Worker takes about five minutes, see `examples/cloudflare-worker.js`) and use the browser-safe client:
 
 ```js
-import { Persuadable, createProxyClient } from "https://cdn.jsdelivr.net/npm/honeytongue@0.1/src/index.js";
+import { Persuadable, createProxyClient } from "https://cdn.jsdelivr.net/npm/honeytongue@alpha/src/index.js";
 
 const client = createProxyClient({ url: "https://honeytongue-proxy.your-name.workers.dev" });
 ```

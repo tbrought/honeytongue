@@ -81,6 +81,7 @@ Agent (preparing a release):
 1. Confirm `npm test` passes, plus `npm run typecheck` once it exists.
 2. Run `npm run build:demo` and commit any changes to `docs/`.
 3. Bump the version in `package.json` and everywhere else it appears (README, docs site, CDN links). Prereleases follow the pattern `0.1.0-alpha.1`, `alpha.2`, and so on; stable releases drop the suffix.
+   CDN links (docs site, README, `examples/`) load `honeytongue@alpha` while only prereleases exist, because jsDelivr can't resolve a range like `@0.1` to a prerelease. **When `0.1.0` ships, switch them back to a version range such as `@0.1`.**
 4. Move the CHANGELOG's Unreleased entries under a heading with the version and today's UTC date, keeping a "Breaking" heading where needed.
 5. Run `npm pack --dry-run` and check the version and file list (no tests, evals, secrets, or stray files).
 6. Hand over with a summary and the exact commands for the human's steps.
