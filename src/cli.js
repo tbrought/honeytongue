@@ -35,9 +35,41 @@ function printDebug(d) {
   if (tells.length) console.log(`  ${tag} ${tells.join(" · ")}`);
 }
 
-/** Play a story in the terminal: `honeytongue [story.json] [--mock] [--debug]`. */
+/** Ask which bundled scene to play. Returns its file's URL, or null if the player quits first. */
+async function chooseScene(lines) {
+  const scenes = JSON.parse(await readFile(new URL("../stories/index.json", import.meta.url), "utf8"));
+  console.log("Choose a scene:\n");
+  scenes.forEach((s, i) => console.log(`  ${i + 1}) ${s.title} (about ${s.minutes} minutes)\n     ${s.hook}`));
+  for (;;) {
+    stdout.write(`\nScene (1-${scenes.length}): `);
+    const { value, done } = await lines.next();
+    if (done) return null;
+    const answer = value.trim();
+    if (!stdin.isTTY) console.log(answer);
+    if (/^(quit|exit|q)$/i.test(answer)) return null;
+    // A number, or enough of a title to be sure ("goblin", "lighthouse").
+    const scene = scenes[Number(answer) - 1] ?? (answer.length > 2 ? scenes.find((s) => s.title.toLowerCase().includes(answer.toLowerCase())) : undefined);
+    if (scene) {
+      console.log("");
+      return new URL(`../stories/${scene.file}`, import.meta.url);
+    }
+    console.log(`Type a number from 1 to ${scenes.length}.`);
+  }
+}
+
+/** Play a story in the terminal: `honeytongue [story.json] [--mock] [--debug]`. With no story, pick a bundled scene. */
 async function play(args) {
-  const storyPath = args.find((a) => !a.startsWith("--")) ?? new URL("../stories/gatehouse.json", import.meta.url);
+  const rl = readline.createInterface({ input: stdin, output: stdout, terminal: stdin.isTTY });
+  try {
+    await run(args, rl[Symbol.asyncIterator]());
+  } finally {
+    rl.close();
+  }
+}
+
+async function run(args, lines) {
+  const storyPath = args.find((a) => !a.startsWith("--")) ?? await chooseScene(lines);
+  if (!storyPath) return;
   let story;
   try {
     story = JSON.parse(await readFile(storyPath, "utf8"));
@@ -64,9 +96,6 @@ async function play(args) {
   console.log(wrap(game.intro()));
   console.log("\n(Type 'help' for tips.)");
 
-  const rl = readline.createInterface({ input: stdin, output: stdout, terminal: stdin.isTTY });
-  const lines = rl[Symbol.asyncIterator]();
-
   while (!game.over) {
     stdout.write("\n> ");
     const { value, done } = await lines.next();
@@ -84,7 +113,6 @@ async function play(args) {
       console.log(`\n(Something went wrong talking to Jev: ${err.message})`);
     }
   }
-  rl.close();
 }
 
 const args = argv.slice(2);
