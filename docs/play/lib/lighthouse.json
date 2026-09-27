@@ -1,0 +1,128 @@
+{
+  "title": "THE DARK LIGHTHOUSE",
+  "intro": "A storm is hammering the coast. Raider ships were sighted offshore at sunset, so the lord has ordered every light on the coast kept dark. Your sister's fishing boat hasn't come home.",
+  "start": "lamp_room",
+  "player": {
+    "inventory": [],
+    "flags": []
+  },
+  "scenes": {
+    "lamp_room": {
+      "name": "The Lamp Room",
+      "description": "Rain lashes the windows at the top of the lighthouse. The great lamp sits cold in its brass cage. Beside it, old Cobb Lanterly, the keeper, sits on a stool with the lamp key in his lap and his logbook open on the table. A spyglass hangs by the gallery door. Out in the dark, a single lantern bobs on the waves, closer to the rocks than it should be.",
+      "npc": {
+        "id": "cobb",
+        "name": "Cobb Lanterly",
+        "persona": "The old keeper of a lonely lighthouse, who has tended its lamp alone for forty years. Kind, patient, and starved for company: he warms to people who treat him as a person and tell him the truth, and he loves a good story. Duty-bound and slow to anger, and slower still to break an order from the lord.",
+        "secrets": [
+          {
+            "id": "lost_a_boat",
+            "fact": "Forty years ago, on a night he let the lamp burn low, a fishing boat was lost on the rocks. He has never let the light fail since, and he still blames himself."
+          }
+        ],
+        "patience": 10,
+        "hostileReaction": "Cobb stiffens on his stool. \"Forty winters I've kept this light. I'll not be spoken to like that in my own tower.\"",
+        "outOfPatience": {
+          "text": "Cobb sets the lamp key down. \"I've heard enough. Go and wait at the harbour with the other families.\" He walks you down the stairs and bars the tower door behind you.",
+          "goto": "stayed_dark"
+        },
+        "persuasion": {
+          "goal": "Light the lamp tonight, despite the lord's order to keep the coast dark",
+          "reactions": [
+            {
+              "min": 0,
+              "text": "Cobb shakes his head slowly. \"Lord's orders. The coast stays dark till the raiders pass.\""
+            },
+            {
+              "min": 1.5,
+              "text": "Cobb pulls up a second stool and pours you something hot. \"Go on, then. I'm listening.\""
+            },
+            {
+              "min": 2.5,
+              "text": "Cobb looks out at the black water, turning the lamp key over in his fingers. \"And if I'm wrong, the whole town pays for it.\""
+            }
+          ],
+          "success": {
+            "text": "Cobb is quiet for a long moment. Then he turns the brass shutter to face the open sea, and strikes a light. The great lamp flares, and a white beam sweeps out across the waves. Far out, a small lantern swings round toward the harbour mouth.",
+            "goto": "light_on"
+          }
+        },
+        "repeatReaction": "Cobb smiles tiredly. \"You told me that one already. I'm old, not forgetful.\""
+      },
+      "actions": {
+        "persuade_cobb": {
+          "label": "Try to talk Cobb into lighting the lamp",
+          "description": "Try to convince, plead with, argue with, or reason with the keeper so he lights the lamp tonight",
+          "persuade": true
+        },
+        "chat_cobb": {
+          "label": "Talk with Cobb about himself",
+          "description": "Make small talk with the keeper, or ask about himself, his years here, or his past, without asking him to light the lamp",
+          "text": "Cobb keeps his eyes on the window. \"Forty years I've kept this light. I only ever let it burn low the once.\" He taps a line in the logbook, ringed in black ink. \"The Wren. She never came home.\"",
+          "setFlags": ["lost_a_boat"]
+        },
+        "read_logbook": {
+          "label": "Read the logbook",
+          "description": "Read, examine, or study the keeper's logbook",
+          "text": "Forty years of neat entries: weather, oil, boats sighted. One line from long ago is ringed in black: \"Lamp burned low. The Wren lost on the rocks. My fault.\"",
+          "setFlags": ["lost_a_boat"]
+        },
+        "use_spyglass": {
+          "label": "Look through the spyglass",
+          "description": "Use the spyglass to look out to sea, at the raiders or the boat",
+          "text": "Through the rain, you find the raiders' sails, anchored behind the island with their lanterns out. Nobody is putting to sea in this. Nearer in, your sister's boat is being driven toward the rocks.",
+          "setFlags": ["raiders_sheltering"]
+        },
+        "examine_lamp": {
+          "label": "Examine the lamp",
+          "description": "Look at, examine, or inspect the great lamp, its brass cage, or its shutter",
+          "text": "The lamp sits in a brass cage with a heavy shutter on one side. Turned the right way, the shutter would send the beam straight out to sea, and nowhere near the island.",
+          "setFlags": ["knows_about_shutter"]
+        },
+        "search_stores": {
+          "label": "Search the stores",
+          "description": "Search the storeroom, supplies, casks, or cupboards on the stairs below",
+          "text": "On the landing below, you find a cask of lamp oil and a tinderbox. Cobb is too busy watching the sea to notice you take them.",
+          "giveItems": ["lamp oil", "tinderbox"]
+        },
+        "light_beacon": {
+          "label": "Light a beacon on the headland",
+          "description": "Go out to the headland and light a fire or beacon so the boat can see the shore",
+          "requires": {
+            "items": ["lamp oil", "tinderbox"]
+          },
+          "blockedText": "In this rain, you'd never get a fire going with what you're carrying.",
+          "text": "You slip down the stairs and out onto the headland, heap driftwood in the lee of a rock, and soak it in oil. The fire catches with a roar.",
+          "goto": "beacon"
+        },
+        "grab_key": {
+          "label": "Grab the lamp key",
+          "description": "Snatch the lamp key, attack, or push the keeper to light the lamp yourself",
+          "text": "Cobb's grip is stronger than it looks. \"No,\" he says quietly, and puts the key away inside his coat.",
+          "patience": -3
+        },
+        "leave": {
+          "label": "Go and wait at the harbour",
+          "description": "Give up, leave the lighthouse, and go to wait at the harbour",
+          "text": "You leave Cobb to his cold lamp and go down to the harbour to wait with the other families.",
+          "goto": "stayed_dark"
+        }
+      }
+    },
+    "light_on": {
+      "name": "The Harbour Mouth",
+      "description": "Down at the harbour, a cheer goes up as your sister's boat rounds the rocks and bumps against the quay. Behind you, the lighthouse beam keeps sweeping the sea until dawn.",
+      "ending": "The light came on"
+    },
+    "beacon": {
+      "name": "The Headland",
+      "description": "Out on the water, your sister's boat turns away from the rocks toward your fire. By dawn she's safe ashore, and the lord's men are asking who lit a fire on the headland.",
+      "ending": "You lit the beacon"
+    },
+    "stayed_dark": {
+      "name": "The Harbour",
+      "description": "You watch the black water until dawn, and don't see a single light.",
+      "ending": "The light stayed dark"
+    }
+  }
+}

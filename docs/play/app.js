@@ -1,6 +1,7 @@
-// The Gatehouse in a browser: the same Game the terminal player uses, with an old-school screen around it.
+// The demo scenes in a browser: the same Game the terminal player uses, with an old-school screen around it.
 // The files in ./lib are copies of src/ and stories/, refreshed by `npm run build:demo`,
-// because GitHub Pages only serves the docs folder.
+// because GitHub Pages only serves the docs folder. The address's hash picks the scene (#goblin-camp);
+// with none, the page lists them.
 import { Game } from "./lib/engine.js";
 import { createProxyClient } from "./lib/jev.js";
 import { createMockClient } from "./lib/mock.js";
@@ -15,6 +16,9 @@ const client = proxyUrl ? createProxyClient({ url: proxyUrl }) : createMockClien
 const finePointer = matchMedia("(pointer: fine)").matches;
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
+let scenes = [];       // stories/index.json: id, file, title, hook, minutes
+const stories = new Map(); // id -> story, fetched on first play
+let scene;
 let story;
 let game;
 let moves = 0;
@@ -86,7 +90,8 @@ function updateChoices() {
   const key = (label, say) => el("button", { type: "button", className: "key", onclick: () => submit(say) }, label);
   choices.replaceChildren();
   if (game.over) {
-    choices.append(key("Restart", "restart"), el("a", { href: "../", className: "key" }, "Back to the docs"));
+    choices.append(key("Restart", "restart"), el("a", { href: "#", className: "key" }, "Choose another scene"),
+      el("a", { href: "../", className: "key" }, "Back to the docs"));
   } else if (game.pending) {
     game.pending.options.forEach((id, i) => {
       const action = game.scene.actions[id];
@@ -135,8 +140,10 @@ async function submit(raw) {
   input.readOnly = true;
   const thinking = line("Thinking", "dim thinking");
   const threshold = game.npc?.character.threshold;
+  const playing = game;
   try {
     const result = await game.turn(text);
+    if (game !== playing) return; // the player switched scenes while this turn was out
     moves++;
     thinking.remove();
     showMode(result.debug?.source);
@@ -147,9 +154,11 @@ async function submit(raw) {
     thinking.remove();
     line(`(Something went wrong talking to Jev: ${err.message})`, "error");
   } finally {
-    busy = false;
-    input.readOnly = false;
-    settle();
+    if (game === playing) {
+      busy = false;
+      input.readOnly = false;
+      settle();
+    }
   }
 }
 
@@ -190,11 +199,63 @@ function showMode(source) {
 }
 showMode(proxyUrl ? "jev" : "mock");
 
+async function fetchJson(path) {
+  const res = await fetch(path);
+  if (!res.ok) throw new Error(`${path} returned ${res.status}`);
+  return res.json();
+}
+
+/** Show the scene list, or play the scene the hash names. */
+async function route() {
+  const id = decodeURIComponent(location.hash.slice(1));
+  const chosen = scenes.find((s) => s.id === id);
+  $("picker").hidden = Boolean(chosen);
+  $("play").hidden = !chosen;
+  document.querySelector(".moves").hidden = !chosen;
+  busy = false;
+  input.readOnly = false;
+  if (!chosen) {
+    scene = story = game = null;
+    $("title").textContent = "Demo Scenes";
+    $("room").textContent = "Demo scenes";
+    $("patience").hidden = true;
+    document.title = "Honeytongue Demo Scenes";
+    if (id) history.replaceState(null, "", location.pathname + location.search); // an unknown scene: just list them
+    return;
+  }
+  scene = chosen;
+  $("title").textContent = scene.title;
+  document.title = `${scene.title} · Honeytongue`;
+  try {
+    if (!stories.has(scene.id)) stories.set(scene.id, await fetchJson(`lib/${scene.file}`));
+    if (scene !== chosen) return; // another scene was picked while this one loaded
+    story = stories.get(scene.id);
+    start();
+  } catch (err) {
+    log.replaceChildren();
+    line(`(The story couldn't be loaded: ${err.message})`, "error");
+  }
+}
+
+/** A link per scene: title, hook, and roughly how long it takes. */
+function showScenes() {
+  $("scenes").replaceChildren(...scenes.map((s) => el("li", {},
+    el("a", { className: "scene", href: `#${s.id}` },
+      el("b", {}, s.title), el("span", {}, s.hook), el("span", { className: "dim" }, `About ${s.minutes} minutes`)))));
+}
+
+addEventListener("hashchange", async () => {
+  await route();
+  // Keyboard and screen reader users land at the top of what just appeared.
+  if (!game || !finePointer) $("title").focus({ preventScroll: true });
+  scrollTo(0, 0);
+});
+
 try {
-  const res = await fetch("lib/gatehouse.json");
-  if (!res.ok) throw new Error(`the story file returned ${res.status}`);
-  story = await res.json();
-  start();
+  scenes = await fetchJson("lib/index.json");
+  showScenes();
+  await route();
 } catch (err) {
-  line(`(The story couldn't be loaded: ${err.message})`, "error");
+  $("play").hidden = false;
+  line(`(The scenes couldn't be loaded: ${err.message})`, "error");
 }

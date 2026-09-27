@@ -5,6 +5,10 @@ export const DEMO_FILES = [
   "src/persuasion.js",
   "src/jev.js",
   "src/mock.js",
+  "stories/index.json",
   "stories/gatehouse.json",
+  "stories/goblin-camp.json",
+  "stories/tidy-profit.json",
+  "stories/lighthouse.json",
   "stories/characters.json",
 ].map((source) => [source, `docs/play/lib/${source.split("/").pop()}`]);
