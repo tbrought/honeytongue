@@ -8,7 +8,8 @@ const STOP = new Set(
   "the and you your with for about into that this try them her his are not any from over other way out let she him who what".split(" ")
 );
 const words = (s) => (String(s).toLowerCase().match(/[a-z]+/g) || []).filter((w) => w.length > 2 && !STOP.has(w));
-const stem = (w) => w.replace(/(ing|ed|es|s)$/, "");
+// A trailing "e" goes too, so crate and crates, or hide and hiding, meet in the middle.
+const stem = (w) => w.replace(/(ing|ed|es|s)$/, "").replace(/e$/, "");
 const stems = (s) => new Set(words(s).map(stem));
 // Lowercase, with curly apostrophes (common on phone keyboards) made straight.
 const lower = (s) => String(s).toLowerCase().replace(/[‘’]/g, "'");
@@ -53,8 +54,13 @@ function mockChoice(input, criteria, character) {
   for (const [option, desc] of Object.entries(criteria)) {
     const text = `${option.replace(/_/g, " ")} ${typeof desc === "string" ? desc : ""}`;
     raw[option] = [...stems(text)].filter((w) => said.has(w)).length;
+    // Saying every word of an option's name ("examine the cage" for examine_cage) is a strong sign.
+    const named = stems(option.replace(/_/g, " "));
+    if (named.size && [...named].every((w) => said.has(w))) raw[option] += 2;
     if (arguing && PERSUADE_OPTION.test(text.toLowerCase())) raw[option] += pleading ? 4 : 2;
   }
+  // Squaring sharpens the odds, so one clearly better match isn't read as a toss-up with every option sharing a word.
+  for (const option of Object.keys(raw)) raw[option] **= 2;
   let total = Object.values(raw).reduce((a, b) => a + b, 0);
   if (total === 0 && "unclear" in raw) { raw.unclear = 1; total = 1; }
   const probabilities = Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, total ? v / total : 0]));

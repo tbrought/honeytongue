@@ -317,8 +317,29 @@ test("the mock leans toward persuading when the player pleads or speaks to the c
     assert.ok(a.confidence >= 0.6, `${text}: ${a.confidence}`);
   }
   // Naming him in passing isn't speaking to him, and naming him without making a case isn't persuasion.
-  assert.equal((await choose("Show Oswin the note because it's urgent")).probabilities.persuade, 2 / 3);
+  // Two points to one, squared.
+  assert.equal((await choose("Show Oswin the note because it's urgent")).probabilities.persuade, 4 / 5);
   assert.equal((await choose("Oswin, read the note")).choice, "read_note");
+});
+
+test("the mock acts on one clearly better match even when other options share a word with the input", async () => {
+  const criteria = {
+    persuade: "Try to convince the guard so he unlocks the cage and lets the player go",
+    examine_cage: "Look at, examine, or test the bars and lashings of the cage",
+    examine_bedroll: "Look at or examine the guard's bedroll",
+    break_bar: "Pull a bar of the cage loose",
+    wait: "Sit and wait in the cage",
+  };
+  const a = (await createMockClient().ask({ player_input: "examine the cage" }, { a: { type: "choice", criteria } })).a;
+  assert.equal(a.choice, "examine_cage");
+  assert.ok(a.confidence >= 0.6, String(a.confidence));
+});
+
+test("the mock matches plurals and -ing forms with the plain word", async () => {
+  const criteria = { stow: "Hide inside a crate", look: "Look at the barrels" };
+  const a = (await createMockClient().ask({ player_input: "try hiding among the crates" }, { a: { type: "choice", criteria } })).a;
+  assert.equal(a.choice, "stow");
+  assert.equal(a.confidence, 1);
 });
 
 test("the proxy's model comes from the option, then the Worker's TYPESAFE_MODEL, then the process's, then the default", async () => {

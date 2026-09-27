@@ -96,7 +96,7 @@
         },
         "inspect_wall": {
           "label": "Search along the wall",
-          "description": "Look around the wall or surroundings for another way into the city",
+          "description": "Search or look around the wall or surroundings for another way into the city",
           "text": "Out of the lantern's reach, thick ivy climbs the old stones all the way to the parapet.",
           "setFlags": [
             "found_ivy"
