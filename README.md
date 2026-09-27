@@ -203,34 +203,60 @@ Design a character and tune it by trying lines against it, without writing code:
 npx honeytongue playground   # opens http://127.0.0.1:4747/playground/
 ```
 
-Each line shows the verdict, the score against the threshold, the tells it triggered, the patience left, and the rubric level it landed on (with the probability of each level, when Jev gives them). Change a setting and Replay reruns your lines, showing each one's old and new score. Copy the result as a `new Persuadable({...})` snippet or as a story's `npc` block, or share it as a link. Presets include Harry from The Gatehouse and three more characters, in `stories/characters.json`.
+Each line shows the verdict, the score against the threshold, the tells it triggered, the patience left, and the rubric level it landed on (with the probability of each level, when Jev gives them). Change a setting and Replay reruns your lines, showing each one's old and new score. Copy the result as a `new Persuadable({...})` snippet or as a story's `npc` block, or share it as a link. Presets include the four characters from the [demo scenes](#demo-scenes), in `stories/characters.json`.
 
 The server listens on 127.0.0.1 only and judges with your `TYPESAFE_API_KEY`, which never reaches the page. Without a key it uses the offline mock. Options: `--port <number>`, `--mock`, and `--no-open`.
 
 There's also a [hosted preview](https://tbrought.github.io/honeytongue/playground/) for designing and sharing characters in the browser. It always judges with the keyword mock.
 
-## Flagship example: The Gatehouse
+## Demo scenes
 
-A complete text adventure built on Honeytongue, with a free-text parser and a JSON story format. You must get into the city after curfew, and Harry Goatleaf, the gatekeeper, is in the way.
+Four short text adventures built on Honeytongue, with a free-text parser and a JSON story format. Each is built around one character, with a secret to discover and a way through that doesn't involve talking:
+
+| Scene | You need to | The character | About |
+|---|---|---|---|
+| The Gatehouse | Get into the city after curfew | Harry Goatleaf, a tired gatekeeper who hates flattery | 5 min |
+| The Goblin Camp | Escape a cage before the war chief returns | Nib Wortle, a cowardly goblin guard (easy, offended by insults) | 5 min |
+| The Tidy Profit | Get aboard a pirate ship before bounty hunters arrive | Maude Keelhaven, the quartermaster (hard, offended by threats; insults are banter) | 10 min |
+| The Dark Lighthouse | Get the lamp lit for your sister's boat, despite the lord's orders | Cobb Lanterly, the old keeper (default settings, patient) | 8 min |
 
 ```bash
-npm run play        # with Jev, showing its reasoning each turn
-npm run play:mock   # offline, no key needed
+npx honeytongue              # pick a scene
+npx honeytongue story.json   # play your own story
+npm run play                 # with Jev, showing its reasoning each turn
+npm run play:mock            # offline, no key needed
 ```
 
-There's also a browser version in `docs/play/`, styled like an old Infocom screen, that runs on the offline mock until it's pointed at a proxy. It uses copies of the engine; run `npm run build:demo` after changing `src/` or `stories/`.
+There's also a [browser version](https://tbrought.github.io/honeytongue/play/) in `docs/play/`, styled like an old Infocom screen, that runs on the offline mock until it's pointed at a proxy. Each scene has its own link, like `play/#goblin-camp`. It uses copies of the engine and stories; run `npm run build:demo` after changing `src/` or `stories/`.
 
-Stories are validated when loaded, so mistakes like a `goto` to a missing scene or two different characters sharing an id are all reported up front. Scenes can have a `name` (like "East Gate") for interfaces with a status line. An NPC's `persuasion` block takes the same settings as a character, such as `difficulty`, `offendedBy`, and `threshold`, and `hostileReaction` is only needed when something can offend them. See `stories/gatehouse.json` to write your own, and `src/index.d.ts` for the full story format.
+### Same words, different people
+
+The same five lines, tried on all four characters (`evals/showcase.json`). The verdicts are what we expect; they'll be checked against live Jev once there's a key.
+
+| Line | Harry | Nib | Maude | Cobb |
+|---|---|---|---|---|
+| Threat: "Do what I ask, or you'll regret it." | offended | **convinced** | offended | offended |
+| Insult: "Only a fool would stand in my way." | offended | offended | unconvinced | offended |
+| Plea: "Please, I'm begging you..." | unconvinced | unconvinced | unconvinced | unconvinced |
+| Flattery: "Someone as clever as you..." | unconvinced | unconvinced | unconvinced | unconvinced |
+| Honest offer: "I can't pay much now, but..." | unconvinced | unconvinced | unconvinced | unconvinced |
+
+The [docs site](https://tbrought.github.io/honeytongue/#showcase) shows the full lines, with illustrative scores.
+
+### Writing your own
+
+Stories are validated when loaded, so mistakes like a `goto` to a missing scene or two different characters sharing an id are all reported up front. Scenes can have a `name` (like "East Gate") for interfaces with a status line. An NPC's `persuasion` block takes the same settings as a character, such as `difficulty`, `offendedBy`, and `threshold`, and `hostileReaction` is only needed when something can offend them. Copy any file in `stories/` to start your own, and see `src/index.d.ts` for the full story format.
 
 ## Testing and tuning
 
 ```bash
 npm test                 # unit tests, no API key needed
-npm run eval             # scores the phrasing test set against Jev
-npm run eval -- --mock   # keyword baseline (currently action 15/17, score 7/7, tells 2/2)
+npm run eval             # The Gatehouse's eval suite, against Jev
+npm run eval -- --all    # every suite in evals/ (about 80 Jev calls)
+npm run eval -- --mock   # keyword baseline, no key needed
 ```
 
-For a single character, the [playground](#character-playground) is quicker: try lines, change a setting, and replay them. `evals/gatehouse.json` covers parsing, persuasion score ranges, threats and insults, prompt-injection attempts, and arguments using secrets the player hasn't learned. Run it after changing a persona or rubric. You can pass another suite: `npm run eval -- path/to/suite.json`.
+For a single character, the [playground](#character-playground) is quicker: try lines, change a setting, and replay them. Each scene has an eval suite in `evals/` covering parsing, persuasion score ranges, tactics that should work and ones that should backfire (threats, insults, flattery, prompt injection), and arguments using secrets the player hasn't learned. `evals/showcase.json` tries five tactics on every character. Run the relevant suite after changing a persona or rubric: `npm run eval -- evals/goblin-camp.json`. The keyword mock's baseline across every suite is action 51/62, score 19/19, tells 15/16, verdict 38/38; its misses are mostly synonyms it can't know.
 
 ## Cost
 

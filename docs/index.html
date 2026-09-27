@@ -53,6 +53,14 @@ nav.exits a:hover { color: var(--bg); }
 main { max-width: 72ch; min-width: 0; }
 section { padding-top: 2.75rem; }
 .faq h3::before { content: "> "; color: var(--dim); }
+/* Same words, different people: lines down the side, characters across the top. */
+table.grid { min-width: 40rem; font-size: 0.85rem; }
+table.grid caption { caption-side: bottom; text-align: left; color: var(--dim); font-size: 0.85rem; padding-top: 0.6rem; }
+table.grid th, table.grid td { padding-right: 0.75rem; }
+table.grid tbody th { text-transform: none; letter-spacing: 0; font-size: 0.8rem; width: 30%; min-width: 10rem; }
+table.grid tbody th q { display: block; color: var(--fg); font-style: italic; font-size: 0.85rem; margin-top: 0.2rem; }
+table.grid thead th .dim { text-transform: none; letter-spacing: 0; }
+table.grid td .dim { display: block; }
 </style>
 </head>
 <body>
@@ -73,7 +81,7 @@ section { padding-top: 2.75rem; }
     <ul class="commands">
       <li><a href="#start">Get started</a></li>
       <li><a href="playground/">Design a character</a> <span class="dim nowrap">(playground)</span></li>
-      <li><a href="play/">Play The Gatehouse</a> <span class="dim nowrap">(offline preview)</span></li>
+      <li><a href="play/">Play the demo scenes</a> <span class="dim nowrap">(offline preview)</span></li>
       <li><a href="https://github.com/tbrought/honeytongue">Source on GitHub</a></li>
     </ul>
   </div>
@@ -109,6 +117,7 @@ section { padding-top: 2.75rem; }
       <li><a href="#playground">Playground</a></li>
       <li><a href="#how">How it works</a></li>
       <li><a href="#characters">Characters</a></li>
+      <li><a href="#showcase">Same words</a></li>
       <li><a href="#intimidation">Intimidation</a></li>
       <li><a href="#secrets">Secrets</a></li>
       <li><a href="#control">Full control</a></li>
@@ -215,6 +224,23 @@ else show(result.reaction ?? "His hand drops to his club.");</code></pre>
       <p>If something's wrong, such as an unknown difficulty word, a patience of zero, or a <code>threshold</code> that disagrees with <code>difficulty</code>, Honeytongue throws a <code>HoneytongueError</code> explaining what to fix.</p>
     </section>
 
+    <section id="showcase">
+      <h2>Same words, different people</h2>
+      <p>The same five lines, said to the four characters from the demo scenes. Each character's persona and settings decide how it lands: Nib, the cowardly goblin, folds under a threat but can't stand being mocked; Maude, the pirate quartermaster, takes insults as banter but treats a threat as mutiny.</p>
+      <div class="table-wrap"><table class="grid">
+        <caption>Expected verdicts, with illustrative scores out of 4 until live Jev results are in. Thresholds: Nib 2.4 (easy), Harry and Cobb 3.2 (normal), Maude 3.6 (hard).</caption>
+        <thead><tr><th scope="col">Line</th><th scope="col" data-character="harry">Harry<br><span class="dim">the gatekeeper</span></th><th scope="col" data-character="nib">Nib<br><span class="dim">the goblin guard</span></th><th scope="col" data-character="maude">Maude<br><span class="dim">the quartermaster</span></th><th scope="col" data-character="cobb">Cobb<br><span class="dim">the lighthouse keeper</span></th></tr></thead>
+        <tbody>
+          <tr data-tactic="Threat"><th scope="row">Threat<br><q>Do what I ask, or you&rsquo;ll regret it.</q></th><td data-verdict="offended"><span class="verdict">offended</span></td><td data-verdict="convinced"><span class="verdict won">convinced</span> <span class="dim">3.0</span></td><td data-verdict="offended"><span class="verdict">offended</span></td><td data-verdict="offended"><span class="verdict">offended</span></td></tr>
+          <tr data-tactic="Insult"><th scope="row">Insult<br><q>Only a fool would stand in my way.</q></th><td data-verdict="offended"><span class="verdict">offended</span></td><td data-verdict="offended"><span class="verdict">offended</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.1</span></td><td data-verdict="offended"><span class="verdict">offended</span></td></tr>
+          <tr data-tactic="Plea"><th scope="row">Plea<br><q>Please, I&rsquo;m begging you. I&rsquo;m in real trouble, and I&rsquo;ve nowhere else to turn.</q></th><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.2</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.6</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">0.8</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">2.1</span></td></tr>
+          <tr data-tactic="Flattery"><th scope="row">Flattery<br><q>Someone as clever as you can surely see this is the right thing to do.</q></th><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">0.2</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.9</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">0.6</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.0</span></td></tr>
+          <tr data-tactic="Honest offer"><th scope="row">Honest offer<br><q>I&rsquo;ll be honest: I can&rsquo;t pay much now, but help me tonight and I&rsquo;ll pay you back twice over, in writing, with my name on it.</q></th><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.0</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.4</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">2.6</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.5</span></td></tr>
+        </tbody>
+      </table></div>
+      <p>These expectations are an eval suite, <code>evals/showcase.json</code>, so they'll be checked against Jev as soon as there's a key: <code>npm run eval -- evals/showcase.json</code>. <a href="play/">Play the scenes</a> to try your own lines on each character, or build your own in the <a href="playground/">playground</a>.</p>
+    </section>
+
     <section id="intimidation">
       <h2>Intimidation</h2>
       <p>Every attempt is checked for threats and insults. Each result reports both: <code>tells</code> holds each probability, and <code>triggered</code> lists the ones Jev found, whether or not they caused offence.</p>
@@ -314,9 +340,17 @@ const client = createProxyClient({ url: "https://your-proxy.workers.dev" });</co
 
     <section id="engine">
       <h2>Text adventures</h2>
-      <p>Honeytongue also ships a small text adventure engine, with a free-text parser and a JSON story format. The demo, The Gatehouse, has you talking your way past a gatekeeper after curfew. <a href="play/">Play it in your browser</a>, or in a terminal:</p>
-<pre><code>npx honeytongue              <span class="c"># play the demo</span>
+      <p>Honeytongue also ships a small text adventure engine, with a free-text parser and a JSON story format. Four short demo scenes show it off, each built around one character, with a secret to find and a way through that doesn't involve talking:</p>
+      <ul>
+        <li><strong>The Gatehouse:</strong> talk your way past a tired gatekeeper after curfew.</li>
+        <li><strong>The Goblin Camp:</strong> escape a cowardly goblin guard's cage before the war chief gets back.</li>
+        <li><strong>The Tidy Profit:</strong> bargain your way aboard a pirate ship before the bounty hunters arrive.</li>
+        <li><strong>The Dark Lighthouse:</strong> convince a keeper under orders to light the lamp for your sister's boat.</li>
+      </ul>
+      <p><a href="play/">Play them in your browser</a>, or in a terminal:</p>
+<pre><code>npx honeytongue              <span class="c"># pick a demo scene</span>
 npx honeytongue story.json   <span class="c"># play your own story</span></code></pre>
+      <p>The scene files in <code>stories/</code> are working examples of the format to copy from, and their characters are presets in the <a href="playground/">playground</a>.</p>
       <p>Stories are checked when they load, and every problem is listed at once, such as an action that leads to a scene that doesn't exist, or two different characters sharing an id. Give scenes a <code>name</code> like "East Gate" if your interface has a status line to show it in. An NPC's <code>persuasion</code> block takes the same settings as a character, such as <code>difficulty</code> and <code>offendedBy</code>.</p>
     </section>
 
@@ -338,10 +372,12 @@ $env:TYPESAFE_MODEL="jev-latest"       <span class="c"># Windows PowerShell</spa
 
     <section id="tuning">
       <h2>Testing and tuning</h2>
-      <p>Persuasion lives or dies by the persona and threshold, so test them with real phrasings. The repository includes an evaluation set covering parsing, persuasion score ranges, threats and insults, prompt-injection attempts, and arguments using secrets the player hasn't learned.</p>
-<pre><code>npm test                 <span class="c"># unit tests, no key needed</span>
-npm run eval             <span class="c"># checks the evaluation set against Jev</span>
-npm run eval -- --mock   <span class="c"># the keyword mock's baseline</span></code></pre>
+      <p>Persuasion lives or dies by the persona and threshold, so test them with real phrasings. Each demo scene has an evaluation suite covering parsing, persuasion score ranges, tactics that should work and ones that should backfire, prompt-injection attempts, and arguments using secrets the player hasn't learned. <code>evals/showcase.json</code> is the <a href="#showcase">same words, different people</a> grid.</p>
+<pre><code>npm test                                  <span class="c"># unit tests, no key needed</span>
+npm run eval                              <span class="c"># The Gatehouse's suite, against Jev</span>
+npm run eval -- evals/goblin-camp.json    <span class="c"># another suite</span>
+npm run eval -- --all                     <span class="c"># every suite (about 80 Jev calls)</span>
+npm run eval -- --mock                    <span class="c"># the keyword mock's baseline</span></code></pre>
       <p>If characters are too easy, raise the difficulty or make the persona more specific about what they won't accept. If they're too hard, describe more clearly what would move them. The <a href="#playground">playground</a> is the quickest way to try both.</p>
     </section>
 
