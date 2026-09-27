@@ -34,17 +34,17 @@ Jev is TypeSafe AI's "System One" decision model, released September 2026. It do
 | `src/jev.js` | `createJevClient` (server only, refuses browsers) and `createProxyClient` (browser safe). Clients tag answers with `SOURCE` (`"jev"` or `"mock"`), which the engine exposes as `debug.source` |
 | `src/proxy.js` | `createProxyHandler`: Request to Response proxy for Cloudflare, Vercel, Deno, Bun, Node. Replies carry `answers` and `source`; it uses the mock only when one is passed in as `client` |
 | `src/mock.js` | Keyword mock with the same answer shapes, for tests and offline play |
-| `src/cli.js` | Terminal player, and the `playground` subcommand. Node only |
+| `src/cli.js` | Terminal player (a menu of the bundled scenes when no story path is given), and the `playground` subcommand. Node only |
 | `src/playground-server.js` | `npx honeytongue playground`: serves `docs/playground` on 127.0.0.1 and judges through `createProxyHandler` with the developer's key (or the mock). Refuses other Host headers, needs a per-run token, serves a fixed file list. Node only, loaded only by `cli.js`, not exported from `index.js` |
 | `src/index.d.ts` | Hand-written TypeScript types for every export and the story format. `persuasion.d.ts` and `proxy.d.ts` re-export the subsets for those entry points |
-| `stories/gatehouse.json` | Demo story |
-| `stories/characters.json` | Preset characters in `Persuadable` format, for the playground and Phase C's scenes. `test/characters.test.js` keeps Harry's in step with the story |
-| `evals/gatehouse.json`, `scripts/eval.js` | Evaluation set and runner |
+| `stories/*.json` | The demo scenes: `gatehouse` (the introductory scene), `goblin-camp`, `tidy-profit`, `lighthouse`. `stories/index.json` lists them in order with a hook and play time, for the CLI menu and the web demo's picker |
+| `stories/characters.json` | Preset characters in `Persuadable` format, one per scene, for the playground. `test/characters.test.js` keeps each scene's character identical to its preset |
+| `evals/*.json`, `scripts/eval.js` | An eval suite per scene (actions, score ranges, tells, verdicts), plus `showcase.json`: five tactics tried on every preset, shown as the docs site's "Same words, different people" grid (`test/showcase.test.js` keeps the grid in step). `npm run eval -- <suite>` or `-- --all` |
 | `examples/` | Standalone, Cloudflare Worker, Node proxy (`npm run proxy`), browser page, Twine recipe |
 | `docs/index.html`, `docs/style.css`, `docs/theme.js` | Documentation site for GitHub Pages. Classic text adventure look: amber CRT (dark) or paper teletype (light), shared stylesheet |
-| `docs/play/` | Browser version of The Gatehouse. `lib/` holds copies of the engine, the story, and the presets made by `npm run build:demo` (`scripts/build-demo.js`, list in `scripts/demo-files.js`) because Pages only serves `docs/`. Uses the mock unless its `honeytongue-proxy` meta tag has a URL |
+| `docs/play/` | Browser version of the demo scenes: a picker, and `#<scene id>` plays one. `lib/` holds copies of the engine, the stories, the scene list, and the presets made by `npm run build:demo` (`scripts/build-demo.js`, list in `scripts/demo-files.js`) because Pages only serves `docs/`. Uses the mock unless its `honeytongue-proxy` meta tag has a URL |
 | `docs/playground/` | The character playground. `designer.js` is its DOM-free logic (tested in `test/designer.test.js`), `app.js` the page. It imports `../play/lib/`, sharing the demo's copies. On Pages it's a mock-only preview; the local server fills its `honeytongue-local` meta tag and serves `src/` at those paths. Shipped in the npm package, with `docs/style.css` and `docs/theme.js` |
-| `test/` | `node:test` unit tests using a scripted fake client. `demo.test.js` fails if `docs/play/lib` is stale |
+| `test/` | `node:test` unit tests using a scripted fake client. `scenes.test.js` plays every scene's talking and non-talking routes on the mock. `demo.test.js` fails if `docs/play/lib` is stale |
 | `CHANGELOG.md` | Unreleased changes, for the release notes |
 
 ## Principles (do not break these)
@@ -97,50 +97,44 @@ Human (shipping it):
 
 ## Current status and known unknowns
 
-- Local verification and CI are done (2026-09-25): unit tests pass on Node 18, 20, 22, and 24 (`node --test` counts every file under `test/`, including `test/helpers.js`). Keyword mock baseline on the eval set: action 15/17, score 7/7, tells 2/2.
+- Local verification and CI are done (2026-09-25): unit tests pass on Node 18, 20, 22, and 24 (`node --test` counts every file under `test/`, including `test/helpers.js`). Keyword mock baseline across every eval suite (2026-09-26): action 51/62, score 19/19, tells 15/16, verdict 38/38 (The Gatehouse alone: action 15/17, score 7/7, tells 2/2). The action misses are synonyms a keyword matcher can't know.
 - **TypeSafe paused new signups on 2026-09-24, so there is no API key yet.** While waiting, the work that doesn't need Jev was done: a bug and edge-case pass over every module (see `CHANGELOG.md`), the docs site restyle and mobile/dark-mode check, and the browser demo (it runs on the offline mock, and the docs hero links it as an "offline preview"). See "Roadmap" for what's next.
-- The public web demo and the hosted playground run on the mock, so the mock must be able to win each scene the way the story intends. `test/engine.test.js` plays The Gatehouse's golden path on the mock; keep mock changes generic, never tuned to one story's wording or the eval set.
+- The public web demo and the hosted playground run on the mock, so the mock must be able to win each scene the way the story intends. `test/scenes.test.js` plays each scene's talking route to its success ending, and its non-talking route to its ending, on the mock; keep mock changes generic, never tuned to one story's wording or the eval set.
 - **Nothing has been run against live Jev yet.** The client was written from the API docs, and now checks every response's shape so a mismatch fails with a clear message. Thresholds, rubric wording, and the default levels are guesses until real evals run.
 - The Twine recipe (`examples/twine-sugarcube.md`) is untested inside Twine.
-- Scores shown in the docs site hero are illustrative placeholders, labeled as such.
-- The repository is github.com/tbrought/honeytongue (the site will be tbrought.github.io/honeytongue). The latest release is `0.1.0-alpha.2` (prepared 2026-09-26: the playground and the mock fix; alpha.1 was published the same day); the stable `0.1.0` comes after live Jev validation.
+- Scores shown in the docs site hero and the "Same words, different people" grid are illustrative placeholders, labeled as such.
+- **Harry Goatleaf keeps his name.** It's a deliberate nod to Tolkien, and the human has settled it: don't rename him or suggest renaming him. Every other character, place, and line should be original; web-search any new character's full name before proposing it.
+- The repository is github.com/tbrought/honeytongue (the site will be tbrought.github.io/honeytongue). The latest release is `0.1.0-alpha.3` (prepared 2026-09-26: the three new scenes; alpha.2, the playground, was published the same day); the stable `0.1.0` comes after live Jev validation.
 - Character settings (0.1.0-alpha.1): `difficulty` maps a word to a share of the top rubric level (easy 0.6, normal 0.8, hard 0.9, very hard 0.95, in `DIFFICULTY` in `persuasion.js`). **These shares are guesses and need calibrating against live Jev.** `offendedBy` picks which tells offend; tells not in it are left to the persona, via an extra sentence in the persuasion question (also unverified live). Results carry `tells` and `triggered`; `hostility` is gone. `decide(result, context)` is a synchronous character hook applied in `record()` and `judgePersuasion()`, not `readPersuasion()`. Don't add stages, extra or custom tells, or closeness labels until there are live results.
 ## Roadmap
 
 Work through the phases in order. At the start of each phase, send a short plan and wait for approval; at the end, summarize what changed and what you found, and stop.
 
-**Done: Phase A, character settings** (released as `0.1.0-alpha.1`).
-
-**Done: Phase B, character playground** (released as `0.1.0-alpha.2`). Built:
-- `npx honeytongue playground`, the main mode: a local server that judges with the developer's own key;
-- the hosted page at `docs/playground/`, a designer and mock-only preview under a "Preview only" banner, with no proxy URL setting;
-- the form, presets (`stories/characters.json`), inline validation, the per-line readout with the level reached, Replay (warning about API calls only in local mode with a key), copy as code, copy as story JSON, share links, and a saved draft.
-
-**Phase C: New scenes** (release as `0.1.0-alpha.3`):
-- The Goblin Camp: a cowardly guard, `offendedBy: ["insults"]`, easy.
-- The Brig: a pirate quartermaster, `offendedBy: ["threats"]`, hard.
-- The Dungeon Cell: a lonely jailer, default settings, generous patience.
-
-Each scene takes 5 to 10 minutes and has one main character, one secret, one non-talking route, two to four endings, and original names. Also:
-- Rename Harry Goatleaf, and keep The Gatehouse as the intro scene.
-- Add a scene picker.
-- Add an eval suite for each scene, and a golden-path test for each scene on the mock.
+**Done:**
+- Phase A, character settings (`0.1.0-alpha.1`).
+- The mock fix and Phase B, the character playground (`0.1.0-alpha.2`): `npx honeytongue playground`, a local server that judges with the developer's own key, and the hosted designer at `docs/playground/`, a mock-only preview.
+- Phase C, new scenes (`0.1.0-alpha.3`): The Goblin Camp (Nib, easy, offended by insults), The Tidy Profit (Maude, hard, offended by threats), and The Dark Lighthouse (Cobb, default settings, patience 10), with The Gatehouse kept as the introductory scene. Also the web demo's scene picker, the CLI's scene menu, an eval suite per scene, mock route tests per scene, and the "Same words, different people" showcase.
 
 **Phase D: Quality.**
 - A type test using `tsc --noEmit` in CI.
 - A CI check that `npm run build:demo` leaves `docs/` unchanged.
 - CI on Node 22 and 24, with `engines` raised to `>=20`.
 
-**Phase E: Twine.** The human builds a small SugarCube story using the local mock proxy (`npm run proxy`); you fix what they find.
+**Phase E: Positioning** (release as `0.1.0-alpha.4`).
+- Reposition from "text games" to "any game where players type or speak to characters", across the README, docs site, and package description.
+- Add a Phaser example showing an NPC in a visual web game.
 
-**When the demo proxy is deployed:** add an `allowedCharacters` option to `createProxyHandler`, so the public proxy only forwards requests for the demo's own characters and rejects any other persona. Without it, anyone could use the demo's key to judge characters of their own.
+**Twine:** the human builds a small SugarCube story using the local mock proxy (`npm run proxy`); you fix what they find.
 
 **Waiting on Jev keys:**
-- Live evals. Ask the human to set `TYPESAFE_API_KEY` in the terminal; never ask them to paste it into chat or a file. Make one small live request first and confirm the response shape matches `src/jev.js`. Then run `npm run eval` and report every miss. Tune personas, rubric levels, and thresholds in the story files (not in code), and note typical latency and token usage per call.
+- Live evals. Ask the human to set `TYPESAFE_API_KEY` in the terminal; never ask them to paste it into chat or a file. Make one small live request first and confirm the response shape matches `src/jev.js`. Then run the eval suites (`npm run eval -- --all`) and report every miss. Tune personas, rubric levels, and thresholds in the story files (not in code), and note typical latency and token usage per call.
 - A score-consistency check: the same input, repeated.
 - Calibrating the difficulty shares and the other defaults in `persuasion.js`, with the human.
 - Replacing the illustrative scores on the docs site with real ones.
+- Deploying the demo proxy, with an `allowedCharacters` option on `createProxyHandler` so the public proxy only forwards requests for the demo's own characters and rejects any other persona. Without it, anyone could use the demo's key to judge characters of their own.
 - Publishing `0.1.0`.
+
+**After launch:** an engine-agnostic persuasion endpoint (send a character and the player's words, get back a verdict), so Unity, Godot, Unreal, and Ren'Py games can use Honeytongue over plain HTTP.
 
 **Deferred until there are real results and user requests:** stages, extra tells, custom tells, closeness labels, rapport.
 
