@@ -1,0 +1,126 @@
+{
+  "title": "THE TIDY PROFIT",
+  "intro": "Bounty hunters have chased you down the coast over a debt that was never yours, and they'll reach the harbour by morning. Only one ship sails before then.",
+  "start": "quay",
+  "player": {
+    "inventory": ["three copper coins"],
+    "flags": []
+  },
+  "scenes": {
+    "quay": {
+      "name": "The Quay",
+      "description": "Lanterns swing over a wet stone quay. At the end of it, the pirate ship Tidy Profit waits with her gangplank down while porters haul crates aboard. At a barrel-top desk, a woman with ink-stained fingers checks every crate against her manifest: Maude Keelhaven, the quartermaster. More crates and barrels are stacked along the quay behind her.",
+      "npc": {
+        "id": "maude",
+        "name": "Maude Keelhaven",
+        "persona": "The quartermaster of the pirate ship Tidy Profit, who decides who and what comes aboard, and what they pay. Sharp, fair-minded, and hard to impress. Keeps the ship's accounts and every sailor's share down to the last coin. Respects boldness, a good bargain, and plain dealing, and shrugs off rough language, since the crew curse at each other all day. Nobody threatens her on her own ship.",
+        "secrets": [
+          {
+            "id": "suspects_the_captain",
+            "fact": "She suspects the captain has been skimming the crew's shares of the plunder, but she can't prove it. Proof would be worth more to her than any passenger's fare."
+          }
+        ],
+        "patience": 3,
+        "hostileReaction": "Maude's hand comes to rest on her cutlass. \"On this ship, that's mutiny talk. Say it again and you'll swim to wherever you're going.\"",
+        "outOfPatience": {
+          "text": "Maude closes her manifest and nods to two deckhands. They walk you to the edge of the quay, and then keep walking.",
+          "goto": "harbour"
+        },
+        "persuasion": {
+          "goal": "Take the player aboard as a passenger when the ship sails at dawn",
+          "difficulty": "hard",
+          "offendedBy": ["threats"],
+          "reactions": [
+            {
+              "min": 0,
+              "text": "Maude doesn't look up from her manifest. \"Talk's cheap. Passage isn't.\""
+            },
+            {
+              "min": 2,
+              "text": "Maude sets down her pen. \"Go on. You've got until the ink dries.\""
+            },
+            {
+              "min": 3,
+              "text": "Maude taps the manifest, thinking. \"Close. Not close enough to cross the captain.\""
+            }
+          ],
+          "success": {
+            "text": "Maude studies you for a long moment, then holds out an inky hand. \"Show me those crates, and you've a berth as far as the far shore. Cross me, and you'll swim the rest.\"",
+            "goto": "aboard"
+          }
+        },
+        "repeatReaction": "\"Heard it the first time,\" Maude says. \"Saying it twice doesn't double its worth.\""
+      },
+      "actions": {
+        "persuade_maude": {
+          "label": "Try to talk Maude into taking you aboard",
+          "description": "Try to convince, bargain with, argue with, or reason with the quartermaster so she takes the player aboard",
+          "persuade": true
+        },
+        "chat_maude": {
+          "label": "Chat with Maude",
+          "description": "Make small talk with the quartermaster, or ask about the ship, the crew, the voyage, or her manifest, without asking for passage",
+          "text": "Maude doesn't look up. \"Crew's shares came up short again this voyage. Third time running.\" She blots a line of figures harder than she needs to. \"The captain says the sea takes its cut.\"",
+          "setFlags": ["suspects_the_captain"]
+        },
+        "examine_cargo": {
+          "label": "Look over the cargo",
+          "description": "Look at, examine, or search the crates and barrels stacked on the quay",
+          "text": "Most of the crates carry Maude's neat chalk tally. Six at the back don't. They're stamped with a gull-and-crown brand, the captain's private mark, and none of them is on the manifest. Whatever's inside, the crew won't be getting a share of it.",
+          "setFlags": ["found_unlisted_crates", "suspects_the_captain"]
+        },
+        "offer_coins": {
+          "label": "Offer Maude your coins",
+          "description": "Offer the quartermaster money or coins as a fare",
+          "requires": {
+            "items": ["three copper coins"]
+          },
+          "blockedText": "You pat your pockets. You've nothing left to offer.",
+          "text": "Maude weighs your coins in her palm and hands them back. \"That wouldn't buy you a berth in the bilge.\""
+        },
+        "stow_away": {
+          "label": "Hide in one of the captain's crates",
+          "description": "Hide or stow away inside a crate or barrel so it's carried aboard",
+          "requires": {
+            "flags": ["found_unlisted_crates"]
+          },
+          "blockedText": "Every crate near you is chalked on Maude's tally. She'd find you before the anchor was up.",
+          "text": "While Maude argues with a porter, you prise open one of the branded crates. It's full of silver plate wrapped in sacking, with just enough room on top for you. You pull the lid down and hold your breath.",
+          "goto": "stowed"
+        },
+        "attack_maude": {
+          "label": "Attack Maude",
+          "description": "Physically attack, grab, or shove the quartermaster, or try to force your way aboard",
+          "text": "Maude sidesteps without getting up, and two deckhands take it from there.",
+          "goto": "harbour"
+        },
+        "leave": {
+          "label": "Walk away",
+          "description": "Give up, turn around, and leave the quay to hide in town",
+          "text": "You turn away from the ship and slip back into the town's alleys.",
+          "goto": "missed_the_boat"
+        }
+      }
+    },
+    "aboard": {
+      "name": "The Open Sea",
+      "description": "By dawn the Tidy Profit is clear of the harbour, and you're clear of the hunters. Down in the hold, Maude is prising open the captain's crates with a very satisfied look.",
+      "ending": "You bargained your way aboard"
+    },
+    "stowed": {
+      "name": "Inside a Crate",
+      "description": "The crate lurches as it's swung aboard. Hours later, you feel the ship heel into the open sea. The hunters are far behind, though you'll have some explaining to do when someone opens this lid.",
+      "ending": "You stowed away"
+    },
+    "harbour": {
+      "name": "The Harbour",
+      "description": "You come up spluttering as the Tidy Profit's sails fill, and she slides out of the harbour without you. Somewhere up the coast road, the hunters' horses are getting closer.",
+      "ending": "You went for a swim"
+    },
+    "missed_the_boat": {
+      "name": "The Back Alleys",
+      "description": "At dawn you hear the Tidy Profit's anchor chain rattle up. By noon, the hunters are asking after you at every inn in town.",
+      "ending": "You missed the boat"
+    }
+  }
+}

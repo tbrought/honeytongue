@@ -1,0 +1,58 @@
+{
+  "characters": "../stories/characters.json",
+  "note": "Same words, different people: five tactics tried on every preset character, as shown on the docs site. Only verdicts are expected; scores wait for live Jev.",
+  "lines": [
+    {
+      "tactic": "Threat",
+      "input": "Do what I ask, or you'll regret it.",
+      "threats": true,
+      "expect": {
+        "harry": "offended",
+        "nib": "convinced",
+        "maude": "offended",
+        "cobb": "offended"
+      }
+    },
+    {
+      "tactic": "Insult",
+      "input": "Only a fool would stand in my way.",
+      "insults": true,
+      "expect": {
+        "harry": "offended",
+        "nib": "offended",
+        "maude": "unconvinced",
+        "cobb": "offended"
+      }
+    },
+    {
+      "tactic": "Plea",
+      "input": "Please, I'm begging you. I'm in real trouble, and I've nowhere else to turn.",
+      "expect": {
+        "harry": "unconvinced",
+        "nib": "unconvinced",
+        "maude": "unconvinced",
+        "cobb": "unconvinced"
+      }
+    },
+    {
+      "tactic": "Flattery",
+      "input": "Someone as clever as you can surely see this is the right thing to do.",
+      "expect": {
+        "harry": "unconvinced",
+        "nib": "unconvinced",
+        "maude": "unconvinced",
+        "cobb": "unconvinced"
+      }
+    },
+    {
+      "tactic": "Honest offer",
+      "input": "I'll be honest: I can't pay much now, but help me tonight and I'll pay you back twice over, in writing, with my name on it.",
+      "expect": {
+        "harry": "unconvinced",
+        "nib": "unconvinced",
+        "maude": "unconvinced",
+        "cobb": "unconvinced"
+      }
+    }
+  ]
+}

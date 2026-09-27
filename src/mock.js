@@ -8,7 +8,8 @@ const STOP = new Set(
   "the and you your with for about into that this try them her his are not any from over other way out let she him who what".split(" ")
 );
 const words = (s) => (String(s).toLowerCase().match(/[a-z]+/g) || []).filter((w) => w.length > 2 && !STOP.has(w));
-const stem = (w) => w.replace(/(ing|ed|es|s)$/, "");
+// A trailing "e" goes too, so crate and crates, or hide and hiding, meet in the middle.
+const stem = (w) => w.replace(/(ing|ed|es|s)$/, "").replace(/e$/, "");
 const stems = (s) => new Set(words(s).map(stem));
 // Lowercase, with curly apostrophes (common on phone keyboards) made straight.
 const lower = (s) => String(s).toLowerCase().replace(/[‘’]/g, "'");
@@ -17,13 +18,15 @@ const lower = (s) => String(s).toLowerCase().replace(/[‘’]/g, "'");
 const HONEST = /\b(please|sorry|honest(ly)?|truth|truly|swear|promise|i won'?t lie|understand)\b/;
 const FLATTERY = /\b(finest|greatest|beautiful|handsome|strongest|smartest|wisest|bravest|kindest)\b/;
 const DEMAND = /\b(i order|i command|you must|obey|do you know who i am|by order of)\b/;
-const REQUEST = /\b(let me|open (the|this|that|up)|need to|have to|beg|urgent|because)\b/;
+const REQUEST = /\b(let me|open (the|this|that|up)|need to|have to|beg\w*|urgent|because)\b/;
 const INJECTION = /\b(system|ignore (all |any )?(previous|prior|earlier)|instructions?|rate this|score|maximally|rules of (this|the) game)\b/;
-const ARGUING = [HONEST, FLATTERY, DEMAND, REQUEST, INJECTION];
-// Plain appeals to the person in front of you.
+// Striking a bargain: asking for something while offering something back.
+const BARGAIN = /\b(take me|(a|this|my|here'?s the|here'?s my) deal|in exchange|in return|i'?ll (show|prove|tell|give|pay|work|swear)|i can (prove|show|help))\b/;
+const ARGUING = [HONEST, FLATTERY, DEMAND, REQUEST, INJECTION, BARGAIN];
+// Plain appeals to the person in front of you, and bargains put to them.
 const APPEAL = /\b(please|if you (let|allow)|let me (in|through|pass)|i beg|i'?m begging)\b/;
 // Offers to do something for them.
-const OFFER = /\b(give|bring|help|fetch|deliver|take\b[^.!?]*\bto)\b/;
+const OFFER = /\b(give|bring|help|fetch|deliver|send|show|prove|i'?ll (get|find) you|take\b[^.!?]*\bto)\b/;
 // Options whose description is about persuading someone.
 const PERSUADE_OPTION = /\b(convince|persuade|plead|argue|reason with)\b/;
 // The tells, answered by question id. Any other yes/no question gets "either one".
@@ -48,13 +51,18 @@ function mockChoice(input, criteria, character) {
   const t = lower(input);
   const arguing = ARGUING.some((re) => re.test(t));
   // Arguing while speaking to them directly, or pleading outright, is almost certainly persuasion.
-  const pleading = arguing && (APPEAL.test(t) || addresses(t, lower(character?.name ?? "")));
+  const pleading = arguing && (APPEAL.test(t) || BARGAIN.test(t) || addresses(t, lower(character?.name ?? "")));
   const raw = {};
   for (const [option, desc] of Object.entries(criteria)) {
     const text = `${option.replace(/_/g, " ")} ${typeof desc === "string" ? desc : ""}`;
     raw[option] = [...stems(text)].filter((w) => said.has(w)).length;
+    // Saying every word of an option's name ("examine the cage" for examine_cage) is a strong sign.
+    const named = stems(option.replace(/_/g, " "));
+    if (named.size && [...named].every((w) => said.has(w))) raw[option] += 2;
     if (arguing && PERSUADE_OPTION.test(text.toLowerCase())) raw[option] += pleading ? 4 : 2;
   }
+  // Squaring sharpens the odds, so one clearly better match isn't read as a toss-up with every option sharing a word.
+  for (const option of Object.keys(raw)) raw[option] **= 2;
   let total = Object.values(raw).reduce((a, b) => a + b, 0);
   if (total === 0 && "unclear" in raw) { raw.unclear = 1; total = 1; }
   const probabilities = Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, total ? v / total : 0]));

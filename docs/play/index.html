@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>The Gatehouse</title>
-<meta name="description" content="A tiny text adventure: talk your way past a tired gate guard. A Honeytongue demo.">
+<title>Honeytongue Demo Scenes</title>
+<meta name="description" content="Four tiny text adventures where you talk your way past characters who judge what you say. A Honeytongue demo.">
 <!-- Set content to your proxy's URL (see examples/cloudflare-worker.js) to play with Jev. Empty = offline mock. -->
 <meta name="honeytongue-proxy" content="">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -63,13 +63,21 @@
 .status .pips i.on { background: currentColor; }
 .status .moves { white-space: nowrap; }
 a.key { text-decoration: none; }
+
+.scenes { list-style: none; padding: 0; margin: 0 0 1.5rem; display: grid; gap: 0.75rem; }
+.scene { display: block; border: 1px solid var(--dim); padding: 0.8rem 1rem; text-decoration: none; color: var(--fg); }
+.scene:hover, .scene:focus-visible { background: var(--fg); color: var(--bg); text-shadow: none; }
+.scene b { display: block; color: var(--bright); font-weight: 600; }
+.scene:hover b, .scene:focus-visible b, .scene:hover .dim, .scene:focus-visible .dim { color: inherit; }
+.scene span { display: block; }
+#picker > p { margin: 0 0 1rem; }
 @media (max-width: 420px) { .status .label { display: none; } }
 @media (max-width: 340px) { .status .moves-label { display: none; } }
 </style>
 </head>
 <body>
 <header class="status">
-  <span class="room" id="room">The Gatehouse</span>
+  <span class="room" id="room">Demo scenes</span>
   <span class="extra" id="patience" hidden></span>
   <span class="moves"><span class="moves-label">Moves </span><span id="moves">0</span></span>
   <button type="button" data-theme-toggle>Paper</button>
@@ -77,11 +85,17 @@ a.key { text-decoration: none; }
 
 <main class="game">
   <div class="banner">
-    <h1>The Gatehouse</h1>
+    <h1 id="title" tabindex="-1">Demo Scenes</h1>
     <p>An interactive persuasion demo<br>Release 1 / Serial number 260925 / <a href="../">Honeytongue 0.1</a></p>
   </div>
   <p class="mode" id="mode" hidden></p>
 
+  <section id="picker" aria-label="Scenes" hidden>
+    <p>Pick a scene. Each has one character to win over, a secret to find, and another way through if talking fails.</p>
+    <ul class="scenes" id="scenes"></ul>
+  </section>
+
+  <div id="play" hidden>
   <div id="log" role="log" aria-live="polite" aria-relevant="additions"></div>
   <div class="choices" id="choices"></div>
 
@@ -96,6 +110,8 @@ a.key { text-decoration: none; }
     <button type="button" class="key" data-say="help">Help</button>
     <button type="button" class="key" data-say="debug" id="debug-key" aria-pressed="false">Debug</button>
     <button type="button" class="key" data-say="restart">Restart</button>
+    <a class="key" href="#">Scenes</a>
+  </div>
   </div>
 </main>
 

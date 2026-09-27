@@ -46,39 +46,39 @@
   },
   "maude": {
     "name": "Maude Keelhaven",
-    "persona": "The quartermaster of a pirate ship, and the one who keeps the prisoner in the brig. Sharp, fair-minded, and hard to impress. Keeps the ship's accounts and every sailor's share down to the last coin. Respects a good bargain and plain dealing, and shrugs off rough language, since the crew curse at each other all day. Nobody threatens her on her own ship.",
-    "goal": "Let the player out of the brig and put them ashore at the next port",
+    "persona": "The quartermaster of the pirate ship Tidy Profit, who decides who and what comes aboard, and what they pay. Sharp, fair-minded, and hard to impress. Keeps the ship's accounts and every sailor's share down to the last coin. Respects boldness, a good bargain, and plain dealing, and shrugs off rough language, since the crew curse at each other all day. Nobody threatens her on her own ship.",
+    "goal": "Take the player aboard as a passenger when the ship sails at dawn",
     "difficulty": "hard",
     "offendedBy": ["threats"],
     "patience": 3,
     "secrets": [
       {
         "id": "suspects_the_captain",
-        "fact": "She suspects the captain has been skimming the crew's shares of the plunder, but she can't prove it. Proof would be worth more to her than any ransom."
+        "fact": "She suspects the captain has been skimming the crew's shares of the plunder, but she can't prove it. Proof would be worth more to her than any passenger's fare."
       }
     ],
     "reactions": [
-      { "min": 0, "text": "Maude doesn't look up from her ledger. \"Talk's cheap. You're not.\"" },
+      { "min": 0, "text": "Maude doesn't look up from her manifest. \"Talk's cheap. Passage isn't.\"" },
       { "min": 2, "text": "Maude sets down her pen. \"Go on. You've got until the ink dries.\"" },
-      { "min": 3, "text": "Maude taps the ledger, thinking. \"Close. Not close enough to risk my neck.\"" }
+      { "min": 3, "text": "Maude taps the manifest, thinking. \"Close. Not close enough to cross the captain.\"" }
     ],
     "repeatReaction": "\"Heard it the first time,\" Maude says. \"Saying it twice doesn't double its worth.\""
   },
   "cobb": {
     "name": "Cobb Lanterly",
-    "persona": "An old night jailer who has kept the dungeon alone for twenty years. Kind but bound by duty, and starved for company: he warms to prisoners who treat him like a person rather than a set of keys. Slow to anger, and slower to break a rule.",
-    "goal": "Unlock the cell door and let the player walk free",
+    "persona": "The old keeper of a lonely lighthouse, who has tended its lamp alone for forty years. Kind, patient, and starved for company: he warms to people who treat him as a person and tell him the truth, and he loves a good story. Duty-bound and slow to anger, and slower still to break an order from the lord.",
+    "goal": "Light the lamp tonight, despite the lord's order to keep the coast dark",
     "patience": 10,
     "secrets": [
       {
-        "id": "was_once_wrongly_jailed",
-        "fact": "As a young man he was jailed for a theft he didn't commit, and the warden who believed him and set him free gave him this job."
+        "id": "lost_a_boat",
+        "fact": "Forty years ago, on a night he let the lamp burn low, a fishing boat was lost on the rocks. He has never let the light fail since, and he still blames himself."
       }
     ],
     "reactions": [
-      { "min": 0, "text": "Cobb shuffles past with his lantern. \"Get some sleep, lad. Morning comes whether you talk or not.\"" },
-      { "min": 1.5, "text": "Cobb pauses by the bars and pulls up his stool. \"Go on, then. It's a long night.\"" },
-      { "min": 2.5, "text": "Cobb turns the key ring over in his hands, not looking at you. \"Everyone in here says they're innocent.\"" }
+      { "min": 0, "text": "Cobb shakes his head slowly. \"Lord's orders. The coast stays dark till the raiders pass.\"" },
+      { "min": 1.5, "text": "Cobb pulls up a second stool and pours you something hot. \"Go on, then. I'm listening.\"" },
+      { "min": 2.5, "text": "Cobb looks out at the black water, turning the lamp key over in his fingers. \"And if I'm wrong, the whole town pays for it.\"" }
     ],
     "repeatReaction": "Cobb smiles tiredly. \"You told me that one already. I'm old, not forgetful.\""
   }
