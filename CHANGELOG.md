@@ -19,7 +19,7 @@ Three new demo scenes, each built around a different kind of character. Like the
 ### Changed
 
 - Maude Keelhaven's and Cobb Lanterly's presets in `stories/characters.json` now match their scenes. Maude decides who comes aboard as a passenger, rather than guarding a prisoner. Cobb is a lighthouse keeper, rather than a night jailer, with a new goal and secret. Their difficulty, `offendedBy`, and patience are unchanged.
-- The offline mock matches actions more sharply. One clearly better option is no longer read as a toss-up with every option sharing a word. Saying every word of an option's name ("examine the cage") counts strongly, and plurals and -ing forms match the plain word ("crates" and "crate"). If your tests assert the mock's exact `probabilities`, expect different numbers.
+- The offline mock matches actions more sharply. One clearly better option is no longer read as a toss-up with every option sharing a word. Saying every word of an option's name ("examine the cage") counts strongly, and plurals and -ing forms match the plain word ("crates" and "crate"). It also recognises a bargain ("take me aboard and I'll show you", "I can prove") as persuasion, and credits more offers ("send", "show", "prove", "I'll get you"), so plainly worded arguments can win the offline demo, not just carefully chosen ones. If your tests assert the mock's exact `probabilities` or scores, expect different numbers.
 - The Gatehouse's "search along the wall" action now mentions searching in its description, so the mock matches it.
 
 ### Fixed

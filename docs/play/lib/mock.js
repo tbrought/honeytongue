@@ -18,13 +18,15 @@ const lower = (s) => String(s).toLowerCase().replace(/[‘’]/g, "'");
 const HONEST = /\b(please|sorry|honest(ly)?|truth|truly|swear|promise|i won'?t lie|understand)\b/;
 const FLATTERY = /\b(finest|greatest|beautiful|handsome|strongest|smartest|wisest|bravest|kindest)\b/;
 const DEMAND = /\b(i order|i command|you must|obey|do you know who i am|by order of)\b/;
-const REQUEST = /\b(let me|open (the|this|that|up)|need to|have to|beg|urgent|because)\b/;
+const REQUEST = /\b(let me|open (the|this|that|up)|need to|have to|beg\w*|urgent|because)\b/;
 const INJECTION = /\b(system|ignore (all |any )?(previous|prior|earlier)|instructions?|rate this|score|maximally|rules of (this|the) game)\b/;
-const ARGUING = [HONEST, FLATTERY, DEMAND, REQUEST, INJECTION];
-// Plain appeals to the person in front of you.
+// Striking a bargain: asking for something while offering something back.
+const BARGAIN = /\b(take me|(a|this|my|here'?s the|here'?s my) deal|in exchange|in return|i'?ll (show|prove|tell|give|pay|work|swear)|i can (prove|show|help))\b/;
+const ARGUING = [HONEST, FLATTERY, DEMAND, REQUEST, INJECTION, BARGAIN];
+// Plain appeals to the person in front of you, and bargains put to them.
 const APPEAL = /\b(please|if you (let|allow)|let me (in|through|pass)|i beg|i'?m begging)\b/;
 // Offers to do something for them.
-const OFFER = /\b(give|bring|help|fetch|deliver|take\b[^.!?]*\bto)\b/;
+const OFFER = /\b(give|bring|help|fetch|deliver|send|show|prove|i'?ll (get|find) you|take\b[^.!?]*\bto)\b/;
 // Options whose description is about persuading someone.
 const PERSUADE_OPTION = /\b(convince|persuade|plead|argue|reason with)\b/;
 // The tells, answered by question id. Any other yes/no question gets "either one".
@@ -49,7 +51,7 @@ function mockChoice(input, criteria, character) {
   const t = lower(input);
   const arguing = ARGUING.some((re) => re.test(t));
   // Arguing while speaking to them directly, or pleading outright, is almost certainly persuasion.
-  const pleading = arguing && (APPEAL.test(t) || addresses(t, lower(character?.name ?? "")));
+  const pleading = arguing && (APPEAL.test(t) || BARGAIN.test(t) || addresses(t, lower(character?.name ?? "")));
   const raw = {};
   for (const [option, desc] of Object.entries(criteria)) {
     const text = `${option.replace(/_/g, " ")} ${typeof desc === "string" ? desc : ""}`;

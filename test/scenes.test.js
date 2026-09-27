@@ -74,6 +74,27 @@ test("each scene has one main character, with one secret to discover", () => {
   }
 });
 
+// One plainly worded winning line per scene, once its clues are found, so the offline demo doesn't only accept test wording.
+// The mock is a stand-in for Jev: keep these few, and keep its fixes generic.
+const NATURAL = {
+  gatehouse: [["knows_daughter_is_sick", "knows_letter_is_for_apothecary"], "Harry, this letter has a fever remedy for the apothecary. Let me through and I'll send her to your daughter."],
+  "goblin-camp": [["wants_to_be_a_cook"], "Nib, let me out and I'll get you a job as a cook in town."],
+  "tidy-profit": [["suspects_the_captain", "found_unlisted_crates"], "I can prove the captain is stealing from the crew. Take me with you and the proof is yours."],
+  lighthouse: [["lost_a_boat"], "Cobb, my sister is out there. Please light the lamp before she hits the rocks."],
+};
+
+test("a plainly worded argument can win every scene on the mock", async () => {
+  for (const scene of scenes) {
+    const [flags, line] = NATURAL[scene.id];
+    const story = load(scene.file);
+    const game = new Game(story, createMockClient());
+    for (const f of flags) game.flags.add(f);
+    await game.turn(line);
+    const success = Object.values(story.scenes).find((s) => s.npc).npc.persuasion.success.goto;
+    assert.equal(game.sceneId, success, `${scene.id}: ${line}`);
+  }
+});
+
 for (const scene of scenes) {
   const routes = ROUTES[scene.id];
 

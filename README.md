@@ -256,7 +256,7 @@ npm run eval -- --all    # every suite in evals/ (about 80 Jev calls)
 npm run eval -- --mock   # keyword baseline, no key needed
 ```
 
-For a single character, the [playground](#character-playground) is quicker: try lines, change a setting, and replay them. Each scene has an eval suite in `evals/` covering parsing, persuasion score ranges, tactics that should work and ones that should backfire (threats, insults, flattery, prompt injection), and arguments using secrets the player hasn't learned. `evals/showcase.json` tries five tactics on every character. Run the relevant suite after changing a persona or rubric: `npm run eval -- evals/goblin-camp.json`. The keyword mock's baseline across every suite is action 51/62, score 19/19, tells 15/16, verdict 38/38; its misses are mostly synonyms it can't know.
+For a single character, the [playground](#character-playground) is quicker: try lines, change a setting, and replay them. Each scene has an eval suite in `evals/` covering parsing, persuasion score ranges, tactics that should work and ones that should backfire (threats, insults, flattery, prompt injection), and arguments using secrets the player hasn't learned. `evals/showcase.json` tries five tactics on every character. Run the relevant suite after changing a persona or rubric: `npm run eval -- evals/goblin-camp.json`. The keyword mock's baseline across every suite is action 52/62, score 19/19, tells 15/16, verdict 38/38; its misses are mostly synonyms it can't know.
 
 ## Cost
 

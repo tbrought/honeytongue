@@ -296,7 +296,7 @@ test("the mock credits an offer to help only alongside a secret the player knows
   const pairs = [
     ["I can help mend your mill wheel.", "I can mend your mill wheel."],
     ["I'll bring a new wheel for your mill.", "I'll find a new wheel for your mill."],
-    ["I will take your broken wheel to the smith.", "I will show your broken wheel, smith."],
+    ["I will take your broken wheel to the smith.", "I will see your broken wheel, smith."],
   ];
   for (const [offer, plain] of pairs) assert.ok(await score(offer) - await score(plain) > 0.79, offer);
   assert.equal(await score("I'll give you a silver coin."), await score("You look busy tonight."));
