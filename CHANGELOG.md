@@ -1,8 +1,15 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-alpha.2 (2026-09-26)
+
+The character playground, and an offline mock that can win The Gatehouse the way the story intends. Like the earlier alphas, this was built and tested with the offline mock only.
 
 ### Added
+
+- A character playground for designing a character and tuning it by trying lines against it, without writing code. Each line shows the verdict, the score against the threshold, the tells it triggered, the patience left, the judge (`[jev]`, `[mock]`, or `[unknown]`), and the rubric level it landed on, with the probability of each level when Jev gives them. Editing the character starts a fresh conversation, and Replay reruns the previous lines, showing each one's old and new score. It can copy the character as a `new Persuadable({...})` snippet (only the settings that differ from the defaults, keeping the difficulty word) or as a story's `npc` block (with `[TODO: ...]` placeholders for story-only text), and share it as a link. Invalid settings are flagged next to their field with `defineCharacter()`'s own message.
+- `npx honeytongue playground` (or `npm run playground` in the repository) runs the playground on your machine and judges with your `TYPESAFE_API_KEY`, or with the offline mock when there's no key or with `--mock`. The server listens on 127.0.0.1 only and the key never reaches the page. It refuses requests addressed to any other host and requires a per-run token. Options: `--port`, `--mock`, and `--no-open`.
+- A hosted preview of the playground at `docs/playground/`, linked from the docs site and the README. It judges with the keyword mock and sends nothing anywhere.
+- `stories/characters.json`: four preset characters. Harry Goatleaf from The Gatehouse, plus three for upcoming scenes: Nib Wortle, a cowardly goblin guard (easy, offended only by insults); Maude Keelhaven, a pirate quartermaster (hard, offended only by threats); and Cobb Lanterly, a lonely night jailer (default settings, patience 10).
 
 - Proxy replies say which one answered, with `"source": "jev"` or `"mock"` beside `answers`. The engine passes it on per turn as `debug.source`. The proxy only uses the mock when one is passed in as `client` (as `npm run proxy` does without a key); a deployed proxy with no key still returns an error.
 - Debug output in the terminal player and the web demo is labelled `[jev]` or `[mock]` by who actually answered, or `[unknown]` when the client doesn't say, instead of always `[jev]`.

@@ -1,6 +1,6 @@
 {
   "name": "honeytongue",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "description": "Characters players can actually argue with: a persuasion mechanic for games, powered by Jev typed decisions",
   "repository": {
     "type": "git",
@@ -36,6 +36,7 @@
     "example": "node examples/standalone.js",
     "test": "node --test",
     "proxy": "node examples/node-proxy.js",
+    "playground": "node src/cli.js playground",
     "build:demo": "node scripts/build-demo.js"
   },
   "engines": {
@@ -57,6 +58,9 @@
     "src",
     "stories",
     "examples",
+    "docs/playground",
+    "docs/style.css",
+    "docs/theme.js",
     "README.md",
     "LICENSE"
   ],

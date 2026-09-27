@@ -72,6 +72,7 @@ section { padding-top: 2.75rem; }
     <div class="install"><span class="dim" aria-hidden="true">$</span><code id="cmd">npm install honeytongue</code><button type="button" id="copy">Copy</button></div>
     <ul class="commands">
       <li><a href="#start">Get started</a></li>
+      <li><a href="playground/">Design a character</a> <span class="dim nowrap">(playground)</span></li>
       <li><a href="play/">Play The Gatehouse</a> <span class="dim nowrap">(offline preview)</span></li>
       <li><a href="https://github.com/tbrought/honeytongue">Source on GitHub</a></li>
     </ul>
@@ -105,6 +106,7 @@ section { padding-top: 2.75rem; }
     <p class="label" aria-hidden="true">Exits:</p>
     <ol>
       <li><a href="#start">Get started</a></li>
+      <li><a href="#playground">Playground</a></li>
       <li><a href="#how">How it works</a></li>
       <li><a href="#characters">Characters</a></li>
       <li><a href="#intimidation">Intimidation</a></li>
@@ -155,6 +157,15 @@ else show(result.reaction ?? "His hand drops to his club.");</code></pre>
         </li>
       </ol>
       <p>To try it without a key, use <code>createMockClient()</code>. It judges by keywords, so it's far less clever than Jev, but it's handy for building and testing.</p>
+    </section>
+
+    <section id="playground">
+      <h2>Playground</h2>
+      <p>Tuning a character is the hard part, so the playground lets you do it without writing code. Fill in a character (or start from a preset), try lines against it the way a player would, and see each verdict, the score against the threshold, which tells were triggered, how much patience is left, and the rubric level the score landed on. Change a setting and Replay reruns your lines, showing each one's old and new score. When you're happy, copy the character as code or as a story's <code>npc</code> block, or share it as a link.</p>
+      <p>To tune with real judgements, run it on your own machine with your key:</p>
+<pre><code>npx honeytongue playground   <span class="c"># opens http://127.0.0.1:4747/playground/</span></code></pre>
+      <p>The server listens on your machine only, and your key stays in it: the page only ever talks to that server. Without a key it uses the offline mock. Options: <code>--port</code>, <code>--mock</code>, and <code>--no-open</code>.</p>
+      <p><a href="playground/">Open the playground here</a> to design and share characters in your browser. Here it's a preview: lines are judged by the keyword mock, and nothing is sent anywhere.</p>
     </section>
 
     <section id="how">
@@ -331,7 +342,7 @@ $env:TYPESAFE_MODEL="jev-latest"       <span class="c"># Windows PowerShell</spa
 <pre><code>npm test                 <span class="c"># unit tests, no key needed</span>
 npm run eval             <span class="c"># checks the evaluation set against Jev</span>
 npm run eval -- --mock   <span class="c"># the keyword mock's baseline</span></code></pre>
-      <p>If characters are too easy, raise the difficulty or make the persona more specific about what they won't accept. If they're too hard, describe more clearly what would move them.</p>
+      <p>If characters are too easy, raise the difficulty or make the persona more specific about what they won't accept. If they're too hard, describe more clearly what would move them. The <a href="#playground">playground</a> is the quickest way to try both.</p>
     </section>
 
     <section id="api">

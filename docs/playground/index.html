@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Character Playground</title>
+<meta name="description" content="Design a Honeytongue character and tune it by trying lines against it, without writing code.">
+<!-- Nothing loads from anywhere but this site and Google Fonts. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'">
+<!-- Filled in by `npx honeytongue playground` with how to reach its local judge. Empty here = preview only. -->
+<meta name="honeytongue-local" content="">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=VT323&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Crect width=%2716%27 height=%2716%27 rx=%272%27 fill=%27%230c0904%27/%3E%3Crect x=%275%27 y=%273%27 width=%276%27 height=%2710%27 fill=%27%23f2b34d%27/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../style.css">
+<script src="../theme.js"></script>
+<style>
+.pg { padding-top: 2rem; padding-bottom: 2.5rem; }
+.pg h1 { font-size: clamp(2.4rem, 10vw, 3.6rem); line-height: 0.9; margin: 0 0 0.5rem; }
+.pg h2 { font-size: 1.9rem; margin: 0 0 0.75rem; }
+.lede { color: var(--dim); max-width: 70ch; }
+.mode { border: 1px dashed var(--dim); color: var(--dim); padding: 0.5rem 0.8rem; margin: 0 0 1.5rem; font-size: 0.9rem; }
+.mode strong { color: var(--bright); }
+.mode code { white-space: nowrap; }
+
+.panels { display: grid; gap: 2rem; }
+@media (min-width: 900px) {
+  .panels { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  /* The conversation stays in view while the character is edited. */
+  .talk { position: sticky; top: 3.25rem; max-height: calc(100vh - 4rem); display: flex; flex-direction: column; }
+  .talk #attempts { flex: 1; overflow-y: auto; min-height: 6rem; }
+}
+.panel { background: var(--screen); border: 3px double var(--line); padding: 1rem 1.1rem 1.25rem; min-width: 0; }
+
+/* Buttons that look like keys, as in the demo */
+.key {
+  font: 500 0.85rem var(--mono); color: var(--fg); text-shadow: inherit;
+  background: none; border: 1px solid var(--dim); padding: 0.35rem 0.7rem; cursor: pointer; text-align: left;
+}
+.key:hover:not(:disabled) { background: var(--fg); color: var(--bg); text-shadow: none; }
+.key:disabled { opacity: 0.45; cursor: not-allowed; }
+.key.primary { border-width: 2px; color: var(--bright); font-weight: 600; }
+.keys { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 1rem; }
+.keys:last-child { margin-bottom: 0; }
+
+/* Form */
+.field { margin: 0 0 1rem; }
+.field > label, fieldset > legend, .label { display: block; color: var(--bright); font-weight: 500; font-size: 0.9rem; margin: 0 0 0.25rem; }
+.hint { color: var(--dim); font-size: 0.8rem; margin: 0.2rem 0 0; }
+input[type="text"], input[type="number"], textarea, select {
+  width: 100%; font: 400 1rem/1.45 var(--mono); /* 16px or more stops phones zooming in */
+  color: var(--bright); caret-color: var(--bright); text-shadow: inherit;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 0; padding: 0.35rem 0.5rem;
+}
+textarea { resize: vertical; }
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--bright); outline-offset: 0; }
+[aria-invalid="true"] { border-color: var(--bright); border-style: dashed; }
+.error { color: var(--bright); font-size: 0.85rem; margin: 0.25rem 0 0; }
+.error::before { content: "[!] "; font-weight: 600; }
+.error:empty { display: none; }
+.pair { display: grid; gap: 0 1rem; grid-template-columns: 1fr 1fr; }
+@media (max-width: 420px) { .pair { grid-template-columns: 1fr; } }
+fieldset { border: 1px dashed var(--line); margin: 0 0 1rem; padding: 0.5rem 0.75rem 0.75rem; min-width: 0; }
+fieldset > legend { padding: 0 0.3rem; margin: 0; }
+.check { display: inline-flex; align-items: center; gap: 0.45rem; margin-right: 1.25rem; cursor: pointer; }
+.check input { width: 1.05rem; height: 1.05rem; accent-color: var(--fg); margin: 0; }
+.rows { list-style: none; padding: 0; margin: 0 0 0.5rem; }
+.rows > li { border-bottom: 1px dashed var(--line); padding: 0.5rem 0 0.75rem; }
+.row-foot { display: flex; flex-wrap: wrap; align-items: end; gap: 0.5rem 1rem; margin-top: 0.4rem; }
+.row-foot .grow { flex: 1 1 10rem; }
+.row-foot .min { flex: 0 0 6rem; }
+.row-foot label { font-size: 0.8rem; color: var(--dim); }
+details.advanced { border: 1px dashed var(--dim); padding: 0.5rem 0.75rem; margin: 0 0 1rem; }
+details.advanced > summary { cursor: pointer; color: var(--bright); font-weight: 500; }
+details.advanced[open] > summary { margin-bottom: 0.75rem; }
+.presets .key { font-size: 0.8rem; }
+#output { font-size: 0.85rem; min-height: 8rem; margin-top: 0.5rem; white-space: pre; overflow-wrap: normal; }
+
+/* Conversation */
+.stats { color: var(--dim); font-size: 0.85rem; margin: 0 0 0.75rem; }
+.stats strong { color: var(--bright); }
+.notice { border-left: 3px solid var(--dim); padding: 0.1rem 0 0.1rem 0.75rem; color: var(--dim); font-size: 0.9rem; margin: 0 0 1rem; }
+.notice:empty { display: none; }
+#attempts { list-style: none; padding: 0; margin: 0 0 1rem; }
+#attempts:empty::before { content: "Nothing tried yet. Type a line below, as the player would say it."; color: var(--dim); font-size: 0.9rem; }
+.attempt { border-bottom: 1px dashed var(--line); padding: 0 0 0.75rem; margin: 0 0 0.75rem; }
+.attempt .cmd { margin-top: 0; white-space: pre-wrap; }
+.attempt .reaction { margin: 0.35rem 0 0; font-style: italic; }
+.attempt .error { margin: 0.35rem 0 0; }
+.tag { color: var(--dim); }
+.why { margin: 0.35rem 0 0; padding: 0 0 0 0.75rem; border-left: 3px solid var(--line); font-size: 0.85rem; }
+.why p { margin: 0; color: var(--dim); }
+.why q { color: var(--fg); }
+.dist { display: inline-flex; align-items: flex-end; gap: 2px; height: 1.1rem; vertical-align: middle; }
+.dist i { width: 0.55rem; height: max(1px, calc(var(--p, 0) * 100%)); background: var(--lit); }
+.was { opacity: 0.75; }
+.was .meter > i { background: repeating-linear-gradient(90deg, var(--dim) 0 6px, transparent 6px 8px); }
+.meter.small { width: 6rem; }
+.thinking::after { content: "..."; }
+
+#try textarea { min-height: 3.2rem; }
+.try-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.4rem; }
+.count { color: var(--dim); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<a class="skip" href="#line">Skip to the conversation</a>
+<header class="status">
+  <span class="room"><a href="../">Honeytongue</a> / Playground</span>
+  <button type="button" data-theme-toggle>Paper</button>
+</header>
+
+<main class="wrap pg">
+  <h1>Character Playground</h1>
+  <p class="lede">Design a character, then try lines against it the way a player would. Every change starts a fresh conversation, and Replay reruns your lines so you can see what the change did.</p>
+  <p class="mode" id="mode">Preview only. To tune with real judgements, run <code>npx honeytongue playground</code>. Here, lines are judged by simple keyword matching, a stand-in for Jev that understands far less.</p>
+
+  <div class="panels">
+    <section class="panel" aria-labelledby="character-heading">
+      <h2 id="character-heading">Character</h2>
+      <div class="presets">
+        <p class="label" id="presets-label">Start from</p>
+        <div class="keys" id="presets" role="group" aria-labelledby="presets-label"></div>
+      </div>
+
+      <form id="character" novalidate autocomplete="off">
+        <div class="field">
+          <label for="f-name">Name</label>
+          <input type="text" id="f-name" data-field="name" aria-describedby="e-name">
+          <p class="error" id="e-name"></p>
+        </div>
+        <div class="field">
+          <label for="f-persona">Persona</label>
+          <textarea id="f-persona" data-field="persona" rows="4" aria-describedby="h-persona e-persona"></textarea>
+          <p class="hint" id="h-persona">Who they are and what they value. Jev judges every line through this.</p>
+          <p class="error" id="e-persona"></p>
+        </div>
+        <div class="field">
+          <label for="f-goal">Goal</label>
+          <input type="text" id="f-goal" data-field="goal" aria-describedby="h-goal e-goal">
+          <p class="hint" id="h-goal">What the player is trying to talk them into.</p>
+          <p class="error" id="e-goal"></p>
+        </div>
+        <div class="pair">
+          <div class="field">
+            <label for="f-difficulty">Difficulty</label>
+            <select id="f-difficulty" data-field="difficulty" aria-describedby="h-difficulty e-difficulty">
+              <option value="easy">Easy</option>
+              <option value="normal" selected>Normal</option>
+              <option value="hard">Hard</option>
+              <option value="very hard">Very hard</option>
+            </select>
+            <p class="hint" id="h-difficulty"></p>
+            <p class="error" id="e-difficulty"></p>
+          </div>
+          <div class="field">
+            <label for="f-patience">Patience</label>
+            <input type="number" id="f-patience" data-field="patience" min="1" step="1" inputmode="numeric" placeholder="Unlimited" aria-describedby="h-patience e-patience">
+            <p class="hint" id="h-patience">Failed attempts before they give up.</p>
+            <p class="error" id="e-patience"></p>
+          </div>
+        </div>
+        <fieldset aria-describedby="h-offended e-offendedBy">
+          <legend>Offended by</legend>
+          <label class="check"><input type="checkbox" data-tell="threats" checked> Threats</label>
+          <label class="check"><input type="checkbox" data-tell="insults" checked> Insults</label>
+          <p class="hint" id="h-offended">An offensive line fails whatever its score. Leave one unticked to let the persona decide, so a coward can be intimidated.</p>
+          <p class="error" id="e-offendedBy"></p>
+        </fieldset>
+        <fieldset aria-describedby="h-secrets e-secrets">
+          <legend>Secrets</legend>
+          <p class="hint" id="h-secrets">Facts that only help an argument once the player has learned them.</p>
+          <ul class="rows" id="secrets"></ul>
+          <button type="button" class="key" id="add-secret">Add a secret</button>
+          <p class="error" id="e-secrets"></p>
+        </fieldset>
+        <fieldset aria-describedby="h-reactions e-reactions">
+          <legend>Reactions</legend>
+          <p class="hint" id="h-reactions">What they say when unconvinced, picked by the highest score reached.</p>
+          <ul class="rows" id="reactions"></ul>
+          <button type="button" class="key" id="add-reaction">Add a reaction</button>
+          <p class="error" id="e-reactions"></p>
+        </fieldset>
+        <div class="field">
+          <label for="f-repeatReaction">Repeat reaction</label>
+          <textarea id="f-repeatReaction" data-field="repeatReaction" rows="2" aria-describedby="h-repeatReaction e-repeatReaction"></textarea>
+          <p class="hint" id="h-repeatReaction">What they say when the player repeats themselves. Optional.</p>
+          <p class="error" id="e-repeatReaction"></p>
+        </div>
+
+        <details class="advanced" id="advanced">
+          <summary>Advanced settings</summary>
+          <p class="hint">These override the simple settings: a threshold replaces the difficulty.</p>
+          <div class="field">
+            <label for="f-levels">Rubric levels, weakest first, one per line</label>
+            <textarea id="f-levels" data-field="levels" rows="6" aria-describedby="h-levels e-levels"></textarea>
+            <p class="hint" id="h-levels">2 to 10 levels. Leave empty for the default five.</p>
+            <p class="error" id="e-levels"></p>
+          </div>
+          <div class="pair">
+            <div class="field">
+              <label for="f-threshold">Threshold</label>
+              <input type="number" id="f-threshold" data-field="threshold" min="0" step="0.05" inputmode="decimal" aria-describedby="h-threshold e-threshold">
+              <p class="hint" id="h-threshold">The score that convinces them.</p>
+              <p class="error" id="e-threshold"></p>
+            </div>
+            <div class="field">
+              <label for="f-hostileAt">Offence at</label>
+              <input type="number" id="f-hostileAt" data-field="hostileAt" min="0" max="1" step="0.05" inputmode="decimal" placeholder="0.7" aria-describedby="h-hostileAt e-hostileAt">
+              <p class="hint" id="h-hostileAt">How sure Jev must be, 0 to 1, that a line threatens or insults.</p>
+              <p class="error" id="e-hostileAt"></p>
+            </div>
+          </div>
+        </details>
+      </form>
+
+      <h3>Use it</h3>
+      <div class="keys">
+        <button type="button" class="key" id="copy-code">Copy as code</button>
+        <button type="button" class="key" id="copy-story">Copy as story JSON</button>
+        <button type="button" class="key" id="copy-link">Share link</button>
+        <button type="button" class="key" id="clear-saved">Clear saved data</button>
+      </div>
+      <p class="hint" id="output-status" role="status"></p>
+      <label class="vh" for="output">Copied text</label>
+      <textarea id="output" readonly hidden rows="10" spellcheck="false"></textarea>
+    </section>
+
+    <section class="panel talk" aria-labelledby="talk-heading">
+      <h2 id="talk-heading">Conversation</h2>
+      <p class="stats" id="stats"></p>
+      <p class="notice" id="notice" role="status"></p>
+      <ol id="attempts" role="log" aria-live="polite" aria-relevant="additions" aria-label="Attempts"></ol>
+      <form id="try" autocomplete="off">
+        <label class="label" for="line">Try a line</label>
+        <textarea id="line" maxlength="500" rows="2" enterkeyhint="send" aria-describedby="line-hint line-count" placeholder="Say something to them..."></textarea>
+        <div class="try-foot">
+          <span class="count" id="line-hint">Enter to send, Shift+Enter for a new line.</span>
+          <span class="count" id="line-count" aria-live="off">0 / 500</span>
+        </div>
+        <div class="keys" style="margin-top: 0.6rem">
+          <button type="submit" class="key primary" id="send">Try it</button>
+          <button type="button" class="key" id="replay" disabled>Replay</button>
+          <button type="button" class="key" id="reset">Reset</button>
+        </div>
+      </form>
+    </section>
+  </div>
+</main>
+
+<footer class="wrap">
+  <p>Part of <a href="../">Honeytongue</a>. Your draft is saved in this browser only. Nothing you type here is sent anywhere<span id="footer-local"> in this preview</span>.</p>
+</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

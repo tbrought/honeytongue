@@ -1,4 +1,4 @@
-// Copies the browser-safe engine and the demo story into docs/play/lib, because GitHub Pages
+// Copies the browser-safe engine, the demo story, and the preset characters into docs/play/lib, because GitHub Pages
 // only serves the docs folder. Run it after changing src/ or stories/: npm run build:demo
 // (test/demo.test.js fails if the copies are out of date.)
 import { copyFile, mkdir } from "node:fs/promises";
