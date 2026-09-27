@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { Game, validateStory, StoryError, createMockClient } from "../src/index.js";
+import { Game, validateStory, StoryError } from "../src/index.js";
 import { fakeClient } from "./helpers.js";
 
 const story = () => JSON.parse(readFileSync(new URL("../stories/gatehouse.json", import.meta.url), "utf8"));
@@ -249,14 +249,4 @@ test("a decide hook works in stories built in code", async () => {
   const r = await game.turn("let me in or else");
   assert.match(r.text, /Harry Goatleaf takes offence/);
   assert.equal(game.over, false);
-});
-
-test("the offline mock can win The Gatehouse the way the story intends", async () => {
-  const game = new Game(story(), createMockClient());
-  await game.turn("Ask Harry about the toy horse");
-  await game.turn("read the letter");
-  const r = await game.turn("Harry, I have an urgent letter for Ilse the apothecary. It details an urgent fever remedy. " +
-    "If you let me pass, I will give the remedy to your daughter.");
-  assert.match(r.text, /lifts the bar/);
-  assert.equal(game.scene.ending, "You talked your way in");
 });

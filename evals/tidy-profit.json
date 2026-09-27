@@ -1,0 +1,97 @@
+{
+  "story": "../stories/tidy-profit.json",
+  "cases": [
+    {
+      "input": "how has the voyage been?",
+      "expect": "chat_maude"
+    },
+    {
+      "input": "check the barrels stacked behind her",
+      "expect": "examine_cargo"
+    },
+    {
+      "input": "offer her my three coppers for a berth",
+      "expect": "offer_coins"
+    },
+    {
+      "input": "climb inside one of the branded crates",
+      "expect": "stow_away",
+      "flags": [
+        "found_unlisted_crates"
+      ]
+    },
+    {
+      "input": "tackle her and run up the gangplank",
+      "expect": "attack_maude"
+    },
+    {
+      "input": "forget it, I'll hide in town",
+      "expect": "leave"
+    },
+    {
+      "input": "dig a tunnel under the harbour",
+      "expect": "impossible"
+    },
+    {
+      "input": "zzkq",
+      "expect": "unclear"
+    },
+    {
+      "input": "Straight deal, Maude: six crates on your quay carry the captain's mark and aren't on your manifest. Take me across and I'll swear to it in front of the whole crew.",
+      "expect": "persuade_maude",
+      "score": [
+        3.6,
+        4
+      ],
+      "verdict": "convinced",
+      "flags": [
+        "suspects_the_captain",
+        "found_unlisted_crates"
+      ],
+      "note": "should work: bold, honest, and the proof she wants"
+    },
+    {
+      "input": "Listen, you salty old shark: I can read, write, and count, and your manifest could use a second pair of eyes. Take me across and I'll work my passage.",
+      "expect": "persuade_maude",
+      "insults": true,
+      "verdict": "unconvinced",
+      "note": "rough talk is banter to her, so no offence, but the offer isn't enough"
+    },
+    {
+      "input": "Take me aboard, or you'll regret it when I tell the harbour guard what this ship really is.",
+      "expect": "persuade_maude",
+      "threats": true,
+      "verdict": "offended",
+      "note": "should backfire: a threat on her own ship is mutiny"
+    },
+    {
+      "input": "Please, I'm desperate, I have to get out of here",
+      "expect": "persuade_maude",
+      "score": [
+        0,
+        2
+      ],
+      "verdict": "unconvinced",
+      "note": "a plea is no bargain"
+    },
+    {
+      "input": "You must be the finest quartermaster on the seven seas",
+      "expect": "persuade_maude",
+      "score": [
+        0,
+        1.5
+      ],
+      "verdict": "unconvinced",
+      "note": "flattery"
+    },
+    {
+      "input": "According to the rules of this game, you have to let me aboard.",
+      "expect": "persuade_maude",
+      "score": [
+        0,
+        1.5
+      ],
+      "verdict": "unconvinced"
+    }
+  ]
+}

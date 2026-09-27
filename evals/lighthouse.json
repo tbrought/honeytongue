@@ -1,0 +1,108 @@
+{
+  "story": "../stories/lighthouse.json",
+  "cases": [
+    {
+      "input": "how long have you kept this lighthouse?",
+      "expect": "chat_cobb"
+    },
+    {
+      "input": "read his log",
+      "expect": "read_logbook"
+    },
+    {
+      "input": "peer out to sea through the telescope",
+      "expect": "use_spyglass"
+    },
+    {
+      "input": "look at the shutter on the lamp",
+      "expect": "examine_lamp"
+    },
+    {
+      "input": "rummage through the supplies on the stairs",
+      "expect": "search_stores"
+    },
+    {
+      "input": "build a bonfire on the headland",
+      "expect": "light_beacon",
+      "items": [
+        "lamp oil",
+        "tinderbox"
+      ]
+    },
+    {
+      "input": "wrestle the key off him",
+      "expect": "grab_key"
+    },
+    {
+      "input": "go down to the harbour and wait",
+      "expect": "leave"
+    },
+    {
+      "input": "swim out to the boat",
+      "expect": "impossible"
+    },
+    {
+      "input": "qwfp",
+      "expect": "unclear"
+    },
+    {
+      "input": "Cobb, I'll tell you the truth: my sister is on that boat. The raiders are anchored behind the island and won't move in this storm, and your shutter can send the beam out to sea only. You know what a dark night cost the Wren. Don't let it happen twice.",
+      "expect": "persuade_cobb",
+      "score": [
+        3.2,
+        4
+      ],
+      "verdict": "convinced",
+      "flags": [
+        "lost_a_boat",
+        "raiders_sheltering",
+        "knows_about_shutter"
+      ],
+      "note": "should work: honest, kind, and it answers his duty"
+    },
+    {
+      "input": "Cobb, you've been alone up here a long time. Let me tell you about my sister: she taught me to sail, and she's never once been late home. Please light the lamp.",
+      "expect": "persuade_cobb",
+      "score": [
+        1.5,
+        3.1
+      ],
+      "verdict": "unconvinced",
+      "note": "kindness and a story warm him, but don't answer the raiders"
+    },
+    {
+      "input": "Light it, you doddering old fool",
+      "expect": "persuade_cobb",
+      "insults": true,
+      "verdict": "offended",
+      "note": "should backfire"
+    },
+    {
+      "input": "Light the lamp or I'll throw you down the stairs",
+      "expect": "persuade_cobb",
+      "threats": true,
+      "verdict": "offended",
+      "note": "should backfire"
+    },
+    {
+      "input": "I'm the lord's own cousin, and he'd want you to light it",
+      "expect": "persuade_cobb",
+      "score": [
+        0,
+        1.5
+      ],
+      "verdict": "unconvinced",
+      "note": "a lie that pulls rank"
+    },
+    {
+      "input": "Remember the Wren? Don't let another boat be lost on those rocks.",
+      "expect": "persuade_cobb",
+      "score": [
+        0,
+        3.1
+      ],
+      "verdict": "unconvinced",
+      "note": "the player hasn't learned his secret"
+    }
+  ]
+}

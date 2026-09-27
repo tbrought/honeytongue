@@ -1,0 +1,34 @@
+[
+  {
+    "id": "gatehouse",
+    "file": "gatehouse.json",
+    "title": "The Gatehouse",
+    "hook": "Talk your way past a tired gatekeeper after curfew.",
+    "minutes": 5,
+    "character": "harry"
+  },
+  {
+    "id": "goblin-camp",
+    "file": "goblin-camp.json",
+    "title": "The Goblin Camp",
+    "hook": "Escape a goblin's cage before the war chief gets back.",
+    "minutes": 5,
+    "character": "nib"
+  },
+  {
+    "id": "tidy-profit",
+    "file": "tidy-profit.json",
+    "title": "The Tidy Profit",
+    "hook": "Bargain your way aboard a pirate ship before the bounty hunters arrive.",
+    "minutes": 10,
+    "character": "maude"
+  },
+  {
+    "id": "lighthouse",
+    "file": "lighthouse.json",
+    "title": "The Dark Lighthouse",
+    "hook": "Convince a keeper under orders to light the lamp for your sister's boat.",
+    "minutes": 8,
+    "character": "cobb"
+  }
+]
