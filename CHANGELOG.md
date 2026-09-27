@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.1.0-alpha.3 (2026-09-26)
+
+Three new demo scenes, each built around a different kind of character. Like the earlier alphas, this was built and tested with the offline mock only.
+
+### Added
+
+- Three new demo scenes, each about 5 to 10 minutes long, with one main character, one secret to discover, a way through that doesn't involve talking, and three or four endings:
+  - The Goblin Camp: escape a cowardly goblin guard's cage before the war chief gets back (Nib Wortle: easy, offended only by insults, so threats may work on him).
+  - The Tidy Profit: bargain your way aboard a pirate ship before bounty hunters arrive (Maude Keelhaven: hard, offended only by threats; insults are banter to her).
+  - The Dark Lighthouse: convince a keeper under orders to light the lamp for your sister's boat (Cobb Lanterly: default settings, patience 10).
+- `npx honeytongue` with no story path shows a menu of the bundled scenes, with each one's hook and play time. A story path still plays that story.
+- The web demo lists the scenes, and each has its own link, like `play/#goblin-camp`.
+- `stories/index.json` lists the scenes in order, with a title, hook, play time, and character.
+- A "Same words, different people" section on the docs site and in the README: five lines (a threat, an insult, a plea, flattery, and an honest offer) tried on all four characters, with the expected verdicts. The scores shown are illustrative until there are live Jev results.
+- Eval suites for each new scene, covering tactics that should work and ones that should backfire, and `evals/showcase.json` for the grid. `scripts/eval.js` now checks expected verdicts, takes several suites or `--all`, and can set items as well as flags.
+
+### Changed
+
+- Maude Keelhaven's and Cobb Lanterly's presets in `stories/characters.json` now match their scenes. Maude decides who comes aboard as a passenger, rather than guarding a prisoner. Cobb is a lighthouse keeper, rather than a night jailer, with a new goal and secret. Their difficulty, `offendedBy`, and patience are unchanged.
+- The offline mock matches actions more sharply. One clearly better option is no longer read as a toss-up with every option sharing a word. Saying every word of an option's name ("examine the cage") counts strongly, and plurals and -ing forms match the plain word ("crates" and "crate"). If your tests assert the mock's exact `probabilities`, expect different numbers.
+- The Gatehouse's "search along the wall" action now mentions searching in its description, so the mock matches it.
+
+### Fixed
+
+- The docs site, README, and examples loaded Honeytongue from `cdn.jsdelivr.net/npm/honeytongue@0.1/`, which doesn't resolve while only prereleases exist. They now load `@alpha`.
+
 ## 0.1.0-alpha.2 (2026-09-26)
 
 The character playground, and an offline mock that can win The Gatehouse the way the story intends. Like the earlier alphas, this was built and tested with the offline mock only.
