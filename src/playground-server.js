@@ -5,6 +5,7 @@
 
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
+import { readdirSync } from "node:fs";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { spawn } from "node:child_process";
 import process from "node:process";
@@ -31,16 +32,19 @@ const FILES = {
   "/play/lib/mock.js": "src/mock.js",
   "/play/lib/version.js": "src/version.js",
   "/play/lib/characters.json": "stories/characters.json",
+  // The web fonts docs/style.css loads: every file in docs/assets/fonts, as shipped in the package.
+  ...Object.fromEntries(readdirSync(new URL("../docs/assets/fonts/", import.meta.url))
+    .filter((f) => f.endsWith(".woff2")).map((f) => [`/assets/fonts/${f}`, `docs/assets/fonts/${f}`])),
 };
-const TYPES = { html: "text/html; charset=utf-8", js: "text/javascript; charset=utf-8", css: "text/css; charset=utf-8", json: "application/json; charset=utf-8" };
+const TYPES = { html: "text/html; charset=utf-8", js: "text/javascript; charset=utf-8", css: "text/css; charset=utf-8", json: "application/json; charset=utf-8", woff2: "font/woff2" };
 const HEADERS = {
   "Cache-Control": "no-store",
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "no-referrer",
   // As strict as the page's own policy (no inline scripts or styles), and only this server to talk to. A header can
   // also forbid framing, which a page's meta tag can't.
-  "Content-Security-Policy": "default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; " +
-    "font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'; object-src 'none'",
+  "Content-Security-Policy": "default-src 'none'; script-src 'self'; style-src 'self'; " +
+    "font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'; object-src 'none'",
 };
 // The page's placeholder for how to reach this server. Empty on GitHub Pages, which means "preview only".
 const LOCAL_META = '<meta name="honeytongue-local" content="">';
@@ -103,8 +107,9 @@ export async function startPlayground({
     if (path === "/" || path === "/playground") return { status: 302, headers: { Location: "/playground/" } };
     const file = FILES[path];
     if (!file) return { status: 404, type: TYPES.json, body: JSON.stringify({ error: "Not found" }) };
-    let body = await readFile(new URL(file, root), "utf8");
-    if (path === "/playground/") body = body.replace(LOCAL_META, `<meta name="honeytongue-local" content="${escapeAttribute(local)}">`);
+    // Bytes as they are (fonts are binary); only the page itself is edited, to say how to reach this server.
+    let body = await readFile(new URL(file, root));
+    if (path === "/playground/") body = body.toString("utf8").replace(LOCAL_META, `<meta name="honeytongue-local" content="${escapeAttribute(local)}">`);
     return { status: 200, type: TYPES[file.split(".").pop()], body };
   }
 

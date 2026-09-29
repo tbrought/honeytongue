@@ -19,8 +19,8 @@ test("every page has a strict Content Security Policy", () => {
     const csp = policy(read(page));
     assert.deepEqual(csp["default-src"], ["'none'"], page);
     assert.deepEqual(csp["script-src"], ["'self'"], `${page}: scripts only from the site itself`);
-    assert.deepEqual(csp["style-src"], ["'self'", "https://fonts.googleapis.com"], page);
-    assert.deepEqual(csp["font-src"], ["https://fonts.gstatic.com"], page);
+    assert.deepEqual(csp["style-src"], ["'self'"], `${page}: styles only from the site itself`);
+    assert.deepEqual(csp["font-src"], ["'self'"], `${page}: fonts only from the site itself (no Google Fonts)`);
     assert.deepEqual(csp["connect-src"], ["'self'", "https://api.honeytongue.dev"], `${page}: talks only to itself and the demo proxy`);
     assert.deepEqual(csp["object-src"], ["'none'"], page);
     assert.deepEqual(csp["base-uri"], ["'none'"], page);
@@ -47,6 +47,15 @@ test("every local script and stylesheet a page links to exists", () => {
     assert.ok(refs.length >= 2, page);
     for (const ref of refs) assert.ok(existsSync(new URL(`../${dir}${ref}`, import.meta.url)), `${page} links to ${ref}, which doesn't exist`);
   }
+});
+
+test("the web fonts are self-hosted, with their licences, and no page contacts Google Fonts", () => {
+  const css = read("docs/style.css");
+  const fonts = [...css.matchAll(/url\("(assets\/fonts\/[^"]+)"\)/g)].map((m) => m[1]);
+  assert.ok(fonts.length >= 10);
+  for (const font of fonts) assert.ok(existsSync(new URL(`../docs/${font}`, import.meta.url)), `${font} exists`);
+  for (const licence of ["IBMPlexMono-OFL.txt", "VT323-OFL.txt"]) assert.ok(existsSync(new URL(`../docs/assets/fonts/${licence}`, import.meta.url)), licence);
+  for (const page of [...PAGES, "docs/style.css"]) assert.doesNotMatch(read(page), /fonts\.(googleapis|gstatic)\.com/, page);
 });
 
 test("scripts never set a style attribute (CSP blocks it; element.style is allowed)", () => {
