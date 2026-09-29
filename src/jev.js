@@ -12,7 +12,10 @@ const DEFAULT_MODEL = "jev-1.13.0"; // pinned so behaviour doesn't shift under y
 const MAX_RETRY_WAIT = 10_000; // a Retry-After longer than this fails now instead of stalling the game
 const env = globalThis.process?.env ?? {};
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const inBrowser = () => typeof window !== "undefined" && typeof window.document !== "undefined";
+// A page, or a browser's Web Worker (which has no window). Workers on servers (Deno, Bun, Cloudflare) don't report a
+// browser's "Mozilla/" user agent, so they still count as servers.
+const inBrowser = () => (typeof window !== "undefined" && typeof window.document !== "undefined") ||
+  (typeof globalThis.WorkerGlobalScope !== "undefined" && /^Mozilla\//.test(globalThis.navigator?.userAgent ?? ""));
 const isTimeout = (err) => err?.name === "TimeoutError" || err?.name === "AbortError";
 
 const httpError = (message, status, extra) => Object.assign(new HoneytongueError(message), { status }, extra);
@@ -43,28 +46,36 @@ async function failure(url, res, hints) {
   return httpError(`${hint} (${res.status} from ${url}${detail ? `: ${detail}` : ""})`, res.status, why);
 }
 
-/** POST JSON with a timeout, retrying network errors and the statuses `retryOn` accepts. */
-async function postWithRetry(url, { headers, body, timeoutMs, maxRetries, retryOn, hints, fetchImpl }) {
+/**
+ * POST JSON with a timeout, retrying network errors and the statuses `retryOn` accepts. `deadlineMs` bounds the whole
+ * call, retries and waits included: each try gets at most what's left, and a retry that couldn't finish in time isn't made.
+ */
+async function postWithRetry(url, { headers, body, timeoutMs, maxRetries, retryOn, hints, fetchImpl, deadlineMs = Infinity }) {
   if (typeof fetchImpl !== "function") throw new HoneytongueError("No fetch() available here: pass { fetch } in the client options");
+  const started = Date.now();
+  const left = () => deadlineMs - (Date.now() - started);
+  const outOfTime = () => new HoneytongueError(`Request to ${url} ran out of time: no answer within ${deadlineMs}ms, retries included`);
   for (let attempt = 0; ; attempt++) {
+    const budget = Math.min(timeoutMs, left());
+    if (budget <= 0) throw outOfTime();
     let res;
     try {
       res = await fetchImpl(url, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...headers },
         body: JSON.stringify(body),
-        signal: AbortSignal.timeout(timeoutMs),
+        signal: AbortSignal.timeout(budget),
       });
     } catch (err) {
       // A timeout already used the whole budget, so it isn't retried.
-      if (isTimeout(err)) throw new HoneytongueError(`Request to ${url} timed out after ${timeoutMs}ms`);
-      if (attempt < maxRetries) { await sleep(500 * 2 ** attempt); continue; }
+      if (isTimeout(err)) throw budget < timeoutMs ? outOfTime() : new HoneytongueError(`Request to ${url} timed out after ${timeoutMs}ms`);
+      if (attempt < maxRetries && 500 * 2 ** attempt < left()) { await sleep(500 * 2 ** attempt); continue; }
       const reason = [err?.message, err?.cause?.message].filter(Boolean).join(": ");
       throw new HoneytongueError(`Request to ${url} failed: ${reason || "network error"}`);
     }
     if (!res.ok && retryOn(res.status) && attempt < maxRetries) {
       const wait = retryDelay(res, attempt);
-      if (wait <= MAX_RETRY_WAIT) {
+      if (wait <= MAX_RETRY_WAIT && wait < left()) {
         await res.body?.cancel().catch(() => {});
         await sleep(wait);
         continue;
@@ -122,6 +133,7 @@ export function createJevClient({
   model,  // the option, then TYPESAFE_MODEL, then DEFAULT_MODEL
   timeoutMs = 15000,
   maxRetries = 3,
+  deadlineMs = Infinity, // the whole call, retries and waits included; none by default
   dangerouslyAllowBrowser = false,
   fetch: fetchImpl = globalThis.fetch,
 } = {}) {
@@ -138,6 +150,7 @@ export function createJevClient({
     throw new HoneytongueError("The TypeSafe API key contains spaces, line breaks, or hidden characters. Set it again, copying only the key.");
   }
   if (/^["'].*["']$/.test(key)) throw new HoneytongueError("The TypeSafe API key is wrapped in quote marks. Set it again without them.");
+  if (!(deadlineMs > 0)) throw new HoneytongueError(`deadlineMs must be a number of milliseconds above 0 (or leave it out for none), got ${String(deadlineMs)}`);
   const chosenModel = [model, env.TYPESAFE_MODEL].map((m) => (typeof m === "string" ? m.trim() : m)).find(Boolean) ?? DEFAULT_MODEL;
   if (typeof chosenModel !== "string") throw new HoneytongueError(`The Jev model must be a string like "${DEFAULT_MODEL}", got ${String(chosenModel)}`);
   const redact = (err) => {
@@ -151,7 +164,7 @@ export function createJevClient({
         const data = await postWithRetry(url, {
           headers: { Authorization: `Bearer ${key}` },
           body: { model: chosenModel, state, questions },
-          timeoutMs, maxRetries, fetchImpl,
+          timeoutMs, maxRetries, fetchImpl, deadlineMs,
           retryOn: (status) => status === 429 || status >= 500,
           hints: JEV_HINTS,
         });

@@ -56,7 +56,12 @@ async function persuasionApi(client: JevClient) {
   result.score.toFixed(2);
   if (result.score !== null) expectType<number>(result.score);
   expectType<Record<Tell, number> | null>(result.tells);
-  expectType<Attempt[]>(npc.attempts);
+  expectType<readonly Readonly<Attempt>[]>(npc.attempts);
+  expectType<ReadonlySet<string>>(npc.knows);
+  // @ts-expect-error: a Persuadable's state is read-only; its methods change it
+  npc.patienceLeft = 3;
+  // @ts-expect-error: ...including its attempts
+  npc.attempts = [];
   npc.learn("sick_daughter");
   expectType<boolean>(npc.losePatience(-1));
   npc.reset();
@@ -140,7 +145,13 @@ function clientsAndProxy() {
   // @ts-expect-error: allowedStories is an array of stories
   createProxyHandler({ allowedStories: validateStory(gatehouseJson) });
   // @ts-expect-error: rateLimit is settings or false
-  createProxyHandler({ rateLimit: true });
+  createProxyHandler({ allowedCharacters: [harry], rateLimit: true });
+  // @ts-expect-error: a proxy needs allowedStories or allowedCharacters...
+  createProxyHandler({ allowedOrigins: ["https://honeytongue.dev"] });
+  // @ts-expect-error: ...and the options aren't optional
+  createProxyHandler();
+  // ...unless it's told to forward anything, by name.
+  createProxyHandler({ dangerouslyAllowAnyRequest: true });
 
   try {
     throw new HoneytongueError("example");

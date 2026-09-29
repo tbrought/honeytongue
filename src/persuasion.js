@@ -33,6 +33,7 @@ const DEFAULTS = {
   failCost: 1,            // patience lost per unconvinced or repeated attempt
   offendedCost: 2,        // patience lost per offensive attempt
   memory: 10,             // previous attempts sent to Jev as context (4 until 0.1.0-alpha.5: a point could regain full weight once it dropped out)
+  memoryLength: 1500,     // ...or this many characters of them, whichever runs out first (the oldest go first)
   repeatSimilarity: 0.8,  // word overlap (0-1) that counts as repeating yourself
   maxInputLength: 500,    // longer input is truncated before it's sent
 };
@@ -56,6 +57,8 @@ const has = (obj, key) => typeof key === "string" && Object.hasOwn(obj, key);
 const capitalize = (s) => s[0].toUpperCase() + s.slice(1);
 const listWords = (words, joiner) => words.map((w) => `"${w}"`).join(", ").replace(/, ([^,]*)$/, `, ${joiner} $1`);
 const isNumber = (v) => typeof v === "number" && !Number.isNaN(v);
+// How many attempts a Persuadable keeps for spotting repeats: the oldest are forgotten after this.
+const KEPT_ATTEMPTS = 100;
 
 // Numeric settings: [check, what the message says it must be].
 const NUMERIC = {
@@ -65,7 +68,12 @@ const NUMERIC = {
   hostileAt: [(v) => Number.isFinite(v) && v > 0 && v <= 1, "a probability above 0 and at most 1"],
   repeatSimilarity: [(v) => Number.isFinite(v) && v > 0 && v <= 1, "above 0 and at most 1 (1 means only near-exact repeats count)"],
   memory: [(v) => Number.isInteger(v) && v >= 0, "a whole number of 0 or more"],
+  memoryLength: [(v) => Number.isInteger(v) && v >= 0, "a whole number of characters, 0 or more"],
   maxInputLength: [(v) => Number.isInteger(v) && v > 0, "a whole number above 0"],
+};
+// Optional numeric settings, checked only when set.
+const OPTIONAL_NUMERIC = {
+  maxContextLength: [(v) => Number.isInteger(v) && v > 0, "a whole number of characters above 0"],
 };
 
 /** Fill in defaults and validate. Throws HoneytongueError with a readable message. */
@@ -82,6 +90,9 @@ export function defineCharacter(character) {
   for (const [field, [valid, rule]] of Object.entries(NUMERIC)) {
     const got = typeof c[field] === "string" ? JSON.stringify(c[field]) : String(c[field]);
     if (!valid(c[field])) throw new HoneytongueError(`${who}: "${field}" must be ${rule}, got ${got}`);
+  }
+  for (const [field, [valid, rule]] of Object.entries(OPTIONAL_NUMERIC)) {
+    if (c[field] !== undefined && !valid(c[field])) throw new HoneytongueError(`${who}: "${field}" must be ${rule}, got ${describe(c[field])}`);
   }
   if (c.decide !== undefined && typeof c.decide !== "function") {
     throw new HoneytongueError(`${who}: "decide" must be a function (result, context) => verdict, got ${describe(c.decide)}`);
@@ -193,12 +204,35 @@ export function persuasionQuestions(character) {
 }
 
 /**
+ * The previous attempts sent with an attempt: the last `memory` of them, or `memoryLength` characters of them,
+ * whichever runs out first (the oldest go first). Only long conversations of long lines lose anything.
+ */
+function recentAttempts(attempts, { memory, memoryLength }) {
+  const kept = memory > 0 ? attempts.slice(-memory) : [];
+  let total = kept.reduce((n, a) => n + String(a?.said ?? "").length, 0);
+  while (kept.length && total > memoryLength) total -= String(kept.shift()?.said ?? "").length;
+  return kept;
+}
+
+/** Check `context` against the character's maxContextLength, if it has one. */
+function checkContext(c, context) {
+  if (context === undefined || c.maxContextLength === undefined) return;
+  const json = JSON.stringify(context);
+  if (json === undefined) throw new HoneytongueError(`Character "${c.name}": context must be JSON data (an object, array, string, number, or boolean)`);
+  if (json.length > c.maxContextLength) {
+    throw new HoneytongueError(`Character "${c.name}": context is ${json.length} characters as JSON, more than its maxContextLength of ${c.maxContextLength}. ` +
+      "Send less, or raise maxContextLength (and deploy your proxy again)");
+  }
+}
+
+/**
  * The state fields the questions refer to. Only secrets the player has learned are sent: Jev can't credit an
  * argument with a fact it was never told, so an unlearned secret adds nothing (live tests showed that telling Jev
  * "the player doesn't know this" still let such arguments score higher).
  */
 export function persuasionState(character, input, { previousAttempts = [], context, knows = [] } = {}) {
   const c = defineCharacter(character);
+  checkContext(c, context);
   const known = new Set(knows);
   const learned = c.secrets.filter((s) => known.has(s.id));
   return {
@@ -209,7 +243,7 @@ export function persuasionState(character, input, { previousAttempts = [], conte
         secrets: learned.map((s) => ({ fact: s.fact, player_knows: true })),
       }),
     },
-    previous_attempts: previousAttempts,
+    previous_attempts: recentAttempts(previousAttempts, c),
     ...(context !== undefined && { context }),
     player_input: cleanInput(input, c.maxInputLength),
   };
@@ -277,9 +311,17 @@ export async function judgePersuasion(client, character, input, options = {}) {
   });
 }
 
-/** A character that remembers past attempts, notices repeats, and runs out of patience. */
+/**
+ * A character that remembers past attempts, notices repeats, and runs out of patience. Its state can be read
+ * (attempts, knows, patienceLeft, convinced, outOfPatience) but only changed through its methods.
+ */
 export class Persuadable {
+  #attempts;  // { said, outcome }, oldest first: the last KEPT_ATTEMPTS, for spotting repeats
   #triggered; // attempt -> the tells it triggered, kept out of the history sent to Jev
+  #knows;
+  #patienceLeft;
+  #convinced;
+  #queue;
 
   constructor(character, { client } = {}) {
     this.character = defineCharacter(character);
@@ -288,42 +330,63 @@ export class Persuadable {
   }
 
   reset() {
-    this.attempts = [];
+    this.#attempts = [];
     this.#triggered = new WeakMap();
-    this.knows = new Set();
-    this.patienceLeft = this.character.patience;
-    this.convinced = false;
-    this.queue = Promise.resolve();
+    this.#knows = new Set();
+    this.#patienceLeft = this.character.patience;
+    this.#convinced = false;
+    this.#queue = Promise.resolve();
+  }
+
+  /** The attempts so far, oldest first (at most the last 100), as a read-only copy. */
+  get attempts() {
+    return Object.freeze([...this.#attempts]);
+  }
+
+  /** The secret ids the player has learned, as a copy: use learn() to add one. */
+  get knows() {
+    return new Set(this.#knows);
+  }
+
+  get patienceLeft() {
+    return this.#patienceLeft;
+  }
+
+  get convinced() {
+    return this.#convinced;
   }
 
   get outOfPatience() {
-    return this.patienceLeft <= 0;
+    return this.#patienceLeft <= 0;
   }
 
   /** Mark a secret as known to the player, so arguments using it count. */
   learn(secretId) {
-    this.knows.add(secretId);
+    this.#knows.add(secretId);
   }
 
   /** The previous attempt this input closely repeats, if any. */
   findRepeat(input) {
     const said = cleanInput(input, this.character.maxInputLength);
-    return this.attempts.find((a) => a.outcome !== "convinced" &&
+    return this.#attempts.find((a) => a.outcome !== "convinced" &&
       similarity(a.said, said) >= this.character.repeatSimilarity) ?? null;
   }
 
   state(input, { context, knows } = {}) {
     return persuasionState(this.character, input, {
-      previousAttempts: this.attempts.slice(-this.character.memory),
+      previousAttempts: this.#attempts,
       context,
-      knows: knows ?? [...this.knows],
+      knows: knows ?? [...this.#knows],
     });
   }
 
-  /** Attempts run one at a time, in order, even if you call this again before the last one finishes. */
+  /**
+   * Attempts run one at a time, in order, even if you call this again before the last one finishes. It still asks
+   * Jev once the character is convinced or out of patience: check those first if your game shouldn't pay for that.
+   */
   attempt(input, options = {}) {
-    const run = this.queue.then(() => this.#attempt(input, options));
-    this.queue = run.catch(() => {});
+    const run = this.#queue.then(() => this.#attempt(input, options));
+    this.#queue = run.catch(() => {});
     return run;
   }
 
@@ -352,22 +415,23 @@ export class Persuadable {
     result = applyDecide(c, result, {
       input: said,
       character: c,
-      previousAttempts: Object.freeze(this.attempts.map((a) => Object.freeze({ ...a }))),
-      patienceLeft: this.patienceLeft,
+      previousAttempts: this.attempts,
+      patienceLeft: this.#patienceLeft,
     });
 
-    if (result.verdict === "convinced") this.convinced = true;
+    if (result.verdict === "convinced") this.#convinced = true;
     const cost = { offended: c.offendedCost, unconvinced: c.failCost, repeated: c.failCost }[result.verdict] ?? 0;
     this.losePatience(cost);
-    const attempt = { said, outcome: result.verdict };
-    this.attempts.push(attempt);
+    const attempt = Object.freeze({ said, outcome: result.verdict });
+    this.#attempts.push(attempt);
+    if (this.#attempts.length > KEPT_ATTEMPTS) this.#attempts.shift();
     this.#triggered.set(attempt, result.triggered);
-    return { ...result, patienceLeft: this.patienceLeft, outOfPatience: this.outOfPatience };
+    return { ...result, patienceLeft: this.#patienceLeft, outOfPatience: this.outOfPatience };
   }
 
   /** Negative amounts restore patience. Patience never drops below 0. */
   losePatience(amount = 1) {
-    this.patienceLeft = Math.max(0, this.patienceLeft - amount);
+    this.#patienceLeft = Math.max(0, this.#patienceLeft - amount);
     return this.outOfPatience;
   }
 }

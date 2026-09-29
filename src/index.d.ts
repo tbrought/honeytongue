@@ -97,8 +97,13 @@ export interface Character {
   failCost?: number;
   /** Patience lost per offensive attempt. Default 2. */
   offendedCost?: number;
-  /** How many previous attempts are sent as context. Default 10. */
+  /**
+   * The previous attempts sent with each attempt: the last `memory` attempts, or `memoryLength` characters of them,
+   * whichever runs out first (the oldest go first). Default 10. `state()` shows exactly what an attempt sends.
+   */
   memory?: number;
+  /** See `memory`. Default 1500 characters. A proxy's allowedCharacters enforces each character's own value. */
+  memoryLength?: number;
   /** Word overlap (above 0, at most 1) with a failed attempt that counts as repeating. Default 0.8. */
   repeatSimilarity?: number;
   /** Longer input is truncated. Default 500 characters. */
@@ -109,6 +114,11 @@ export interface Character {
   repeatReaction?: string;
   /** Facts the player must discover before they help an argument. */
   secrets?: Secret[];
+  /**
+   * Lets attempt() send `context` through a proxy with allowedCharacters: at most this many characters of it as JSON.
+   * Without it, such a proxy refuses context. attempt() checks the limit too, so you find out before deploying.
+   */
+  maxContextLength?: number;
 }
 
 /**
@@ -116,9 +126,10 @@ export interface Character {
  * is kept (in its canonical spelling) when a word was given. A copy with other changes, like
  * { ...npc.character, patience: 5 }, can be passed back in; if you change its difficulty or levels, leave out `threshold`.
  */
-export type DefinedCharacter = Required<Omit<Character, "repeatReaction" | "decide" | "difficulty">> & {
+export type DefinedCharacter = Required<Omit<Character, "repeatReaction" | "decide" | "difficulty" | "maxContextLength">> & {
   threshold: number;
   difficulty?: Difficulty;
+  maxContextLength?: number;
   repeatReaction?: string;
   decide?: DecideHook;
   maxScore: number;
@@ -146,7 +157,10 @@ export interface AttemptResult extends PersuasionResult {
 }
 
 export interface AttemptOptions {
-  /** Extra game state for Jev to consider, e.g. { player_gold: 12 }. */
+  /**
+   * Extra game state for Jev to consider, e.g. { player_gold: 12 }. JSON data. Through a proxy with allowedCharacters,
+   * the character needs a maxContextLength.
+   */
   context?: unknown;
   /** Secret ids the player has learned. Defaults to those passed to learn(). */
   knows?: string[];
@@ -174,19 +188,29 @@ export function judgePersuasion(
   options?: AttemptOptions & { previousAttempts?: Attempt[] },
 ): Promise<PersuasionResult>;
 
+/**
+ * A character that remembers past attempts, notices repeats, and runs out of patience. Its state can be read, but only
+ * changed through its methods.
+ */
 export class Persuadable {
   constructor(character: Character, options?: { client?: JevClient });
   character: DefinedCharacter;
-  attempts: Attempt[];
-  knows: Set<string>;
-  patienceLeft: number;
-  convinced: boolean;
+  /** The attempts so far, oldest first (at most the last 100), as a read-only copy. */
+  readonly attempts: readonly Readonly<Attempt>[];
+  /** The secret ids the player has learned, as a copy: learn() adds one. */
+  readonly knows: ReadonlySet<string>;
+  readonly patienceLeft: number;
+  readonly convinced: boolean;
   readonly outOfPatience: boolean;
-  /** Attempts run one at a time, in the order they were made. */
+  /**
+   * Attempts run one at a time, in the order they were made. It still asks Jev once the character is convinced or out
+   * of patience: check those first if your game shouldn't pay for that.
+   */
   attempt(input: string, options?: AttemptOptions): Promise<AttemptResult>;
   record(input: string, answers: Record<string, any> | null): AttemptResult;
   learn(secretId: string): void;
   findRepeat(input: string): Attempt | null;
+  /** Exactly the state an attempt with this input would send to Jev. */
   state(input: string, options?: AttemptOptions): Record<string, unknown>;
   /** Negative amounts restore patience. Patience never drops below 0. Returns outOfPatience. */
   losePatience(amount?: number): boolean;
@@ -252,6 +276,12 @@ export interface Story {
   start: string;
   player?: { inventory?: string[]; flags?: string[] };
   scenes: Record<string, Scene>;
+  /**
+   * Recent turns sent with each turn, for words like "it": the last 4 turns, each with up to `recentTurnLength`
+   * characters of what the player typed (default 200, at most 500) and 160 of the reply. A proxy's allowedStories
+   * enforces each story's own value.
+   */
+  recentTurnLength?: number;
 }
 
 export interface TurnDebug {
@@ -348,6 +378,8 @@ export function createJevClient(options?: ClientOptions & {
   url?: string;
   /** The Jev model. Falls back to the TYPESAFE_MODEL environment variable, then the pinned default "jev-1.13.0". */
   model?: string;
+  /** The most time the whole call may take, retries and waits included, in milliseconds. Default: no deadline. */
+  deadlineMs?: number;
   dangerouslyAllowBrowser?: boolean;
 }): JevClient;
 export function createProxyClient(options: ClientOptions & { url: string; headers?: Record<string, string> }): JevClient;
@@ -359,31 +391,65 @@ export interface ProxyEnv {
   [key: string]: unknown;
 }
 
-export interface ProxyHandlerOptions {
+interface ProxyHandlerBaseOptions {
   apiKey?: string;
   /** The Jev model. Falls back to TYPESAFE_MODEL (Worker env, then process env), then "jev-1.13.0". */
   model?: string;
   client?: JevClient;
-  /** Cross-origin pages allowed to call the proxy. Same-origin requests are always allowed. */
+  /**
+   * Cross-origin pages allowed to call the proxy. Same-origin requests are always allowed. This only controls
+   * browsers: scripts and servers send no Origin and aren't affected. allowedStories and allowedCharacters are what
+   * protect your key.
+   */
   allowedOrigins?: string[];
   /** Questions allowed per request. Default 6; the engine sends 4. */
   maxQuestions?: number;
   /** Limit on the whole request body, in bytes. Default 16000. */
   maxStateBytes?: number;
   maxInputLength?: number;
-  /** Per client address, per server instance. false turns it off. */
+  /**
+   * Per client address, per server instance. false turns it off. Clients whose address can't be found (no
+   * CF-Connecting-IP on Cloudflare, no X-Forwarded-For elsewhere) share one "unknown" address: set clientIp.
+   */
   rateLimit?: { requests: number; windowMs: number } | false;
   /** How to find the client's address. Defaults to CF-Connecting-IP on Cloudflare, else the last X-Forwarded-For entry. */
   clientIp?: (request: Request, env?: ProxyEnv) => string;
-  /**
-   * Only judge the requests these stories' scenes send: exactly the engine's questions, and state within the engine's
-   * limits. Anything else gets a 403 with a `reason`. Set this (and/or allowedCharacters) on any public proxy.
-   */
-  allowedStories?: Story[];
-  /** Only judge persuasion attempts (judgePersuasion, Persuadable) on these characters. */
-  allowedCharacters?: Character[];
 }
 
-export function createProxyHandler(options?: ProxyHandlerOptions): (request: Request, env?: ProxyEnv) => Promise<Response>;
+/**
+ * A proxy needs to know which requests are your game's: allowedStories (for the text adventure engine) and/or
+ * allowedCharacters (for Persuadable and judgePersuasion). Anything else gets a 403 with a `reason`.
+ * dangerouslyAllowAnyRequest: true forwards any well-formed request instead: for local tools only, never a public proxy.
+ */
+export type ProxyHandlerOptions = ProxyHandlerBaseOptions & (
+  | { allowedStories: Story[]; allowedCharacters?: Character[]; dangerouslyAllowAnyRequest?: false }
+  | { allowedStories?: Story[]; allowedCharacters: Character[]; dangerouslyAllowAnyRequest?: false }
+  | { allowedStories?: Story[]; allowedCharacters?: Character[]; dangerouslyAllowAnyRequest: true }
+);
+
+export type ProxyHandler = (request: Request, env?: ProxyEnv) => Promise<Response>;
+export function createProxyHandler(options: ProxyHandlerOptions): ProxyHandler;
+
+/** The parts of Node's IncomingMessage that toNodeListener uses. */
+export interface NodeRequestLike extends AsyncIterable<Uint8Array> {
+  method?: string;
+  url?: string;
+  headers: Record<string, string | string[] | undefined>;
+  socket?: { remoteAddress?: string };
+}
+/** The parts of Node's ServerResponse that toNodeListener uses. */
+export interface NodeResponseLike {
+  readonly headersSent: boolean;
+  writeHead(status: number, headers?: Record<string, string>): unknown;
+  end(chunk?: Uint8Array | string): unknown;
+}
+/**
+ * A Node http listener for a proxy handler: http.createServer(toNodeListener(handle)). Bodies over `maxBytes` (default
+ * 16000; match maxStateBytes) are refused as they arrive. The handler's env is `env` plus the socket's `remoteAddress`.
+ */
+export function toNodeListener(
+  handle: ProxyHandler,
+  options?: { maxBytes?: number; env?: ProxyEnv },
+): (req: NodeRequestLike, res: NodeResponseLike) => Promise<void>;
 
 export function createMockClient(): JevClient;

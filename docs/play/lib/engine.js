@@ -13,6 +13,7 @@ const CLARIFY_AT = 0.3;  // between CLARIFY_AT and ACT_AT, ask "did you mean..."
 export const HISTORY = 4;        // recent turns sent to Jev for context
 export const MAX_INPUT = 500;    // longer input is truncated
 export const RESULT_LENGTH = 160; // characters of each recent turn's result
+export const TURN_INPUT_LENGTH = 200; // characters of what the player typed, in each recent turn (a story's recentTurnLength)
 
 const META = {
   unclear: "The input is gibberish, too vague to act on, or not an attempt to do anything",
@@ -101,6 +102,9 @@ export function validateStory(story) {
   else if (!has(scenes, story.start)) problems.push(`"start" points to scene "${story.start}", which doesn't exist`);
   for (const key of ["inventory", "flags"]) {
     if (story.player?.[key] !== undefined && !names(story.player[key])) problems.push(`"player.${key}" must be an array of strings`);
+  }
+  if (story.recentTurnLength !== undefined && !(Number.isInteger(story.recentTurnLength) && story.recentTurnLength > 0 && story.recentTurnLength <= MAX_INPUT)) {
+    problems.push(`"recentTurnLength" must be a whole number of characters from 1 to ${MAX_INPUT}`);
   }
 
   const checkEffect = (effect, where) => {
@@ -199,6 +203,7 @@ function reply(lines, debug) {
 export class Game {
   #judged = null;  // this turn's persuasion outcome, for debug: { verdict, triggered }
   #turnNpc = null; // the scene's character when the turn began (a success may move the player on)
+  #queue = Promise.resolve(); // turns, one at a time
 
   constructor(story, jev) {
     if (typeof jev?.ask !== "function") {
@@ -213,7 +218,6 @@ export class Game {
     this.history = [];
     this.pending = null;
     this.over = Boolean(this.scene.ending);
-    this.queue = Promise.resolve();
   }
 
   get scene() {
@@ -295,8 +299,8 @@ export class Game {
 
   /** Play one turn. Turns run one at a time, in order, even if you call this again before the last one finishes. */
   turn(raw) {
-    const run = this.queue.then(() => this.#turn(raw));
-    this.queue = run.catch(() => {});
+    const run = this.#queue.then(() => this.#turn(raw));
+    this.#queue = run.catch(() => {});
     return run;
   }
 
@@ -398,7 +402,9 @@ export class Game {
 
   finish(lines, input, debug) {
     const result = reply(lines, debug && this.#withOutcome(debug));
-    this.history = [...this.history, { player: input, result: result.text.slice(0, RESULT_LENGTH) }].slice(-HISTORY);
+    // Recent turns are context for words like "it" or "her": the start of what was typed is plenty.
+    const player = cleanInput(input, this.story.recentTurnLength ?? TURN_INPUT_LENGTH);
+    this.history = [...this.history, { player, result: result.text.slice(0, RESULT_LENGTH) }].slice(-HISTORY);
     return result;
   }
 

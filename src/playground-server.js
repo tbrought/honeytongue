@@ -9,7 +9,7 @@ import { readdirSync } from "node:fs";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { spawn } from "node:child_process";
 import process from "node:process";
-import { createProxyHandler } from "./proxy.js";
+import { createProxyHandler, toNodeListener } from "./proxy.js";
 import { createJevClient } from "./jev.js";
 import { createMockClient } from "./mock.js";
 
@@ -96,7 +96,10 @@ export async function startPlayground({
   const judge = key ? "jev" : "mock";
   // Built now, so a malformed key fails here with a readable message rather than on the first line tried.
   const client = key ? createJevClient({ apiKey: key, model, fetch, timeoutMs: 15_000, maxRetries: 2 }) : createMockClient();
-  const handle = createProxyHandler({ client, rateLimit: false });
+  // Any question, on purpose: the designer's own character changes with every keystroke, so there's nothing to allow
+  // in advance. Safe here because only this machine, with this run's token, can reach it.
+  const handle = createProxyHandler({ client, rateLimit: false, dangerouslyAllowAnyRequest: true });
+  const judgeListener = toNodeListener(handle, { maxBytes: 16_000 });
   const token = randomBytes(24).toString("base64url");
   const local = JSON.stringify({ url: JUDGE_PATH, token, judge });
   let hosts = new Set();
@@ -106,7 +109,6 @@ export async function startPlayground({
     // (DNS rebinding) sends its own Host, so it's turned away here.
     if (!hosts.has(req.headers.host)) return { status: 403, type: TYPES.json, body: JSON.stringify({ error: "Unknown host" }) };
     const path = new URL(req.url, "http://localhost").pathname;
-    if (path === JUDGE_PATH) return judgeRequest(req);
     if (req.method !== "GET" && req.method !== "HEAD") return { status: 405, type: TYPES.json, body: JSON.stringify({ error: "Use GET" }) };
     if (path === "/" || path === "/playground") return { status: 302, headers: { Location: "/playground/" } };
     const file = FILES[path];
@@ -117,24 +119,20 @@ export async function startPlayground({
     return { status: 200, type: TYPES[file.split(".").pop()], body };
   }
 
-  async function judgeRequest(req) {
-    // Same-origin only (the proxy handler checks Origin), and only for the page this server handed out.
-    if (req.method === "POST" && !sameToken(req.headers[TOKEN_HEADER.toLowerCase()], token)) {
-      return { status: 403, type: TYPES.json, body: JSON.stringify({ error: "Reload the playground page: this server has restarted." }) };
-    }
-    const chunks = [];
-    for await (const chunk of req) chunks.push(chunk);
-    const request = new Request(`http://${req.headers.host}${req.url}`, {
-      method: req.method,
-      headers: Object.entries(req.headers).map(([k, v]) => [k, Array.isArray(v) ? v.join(", ") : v]),
-      body: ["GET", "HEAD"].includes(req.method) ? undefined : Buffer.concat(chunks),
-    });
-    const response = await handle(request);
-    return { status: response.status, headers: Object.fromEntries(response.headers), body: Buffer.from(await response.arrayBuffer()) };
-  }
-
   const server = createServer(async (req, res) => {
     try {
+      // The judge: only for this machine's names for this server, same-origin only (the proxy handler checks Origin),
+      // and only for the page this server handed out. Its replies get the same headers as every other.
+      if (hosts.has(req.headers.host) && new URL(req.url, "http://localhost").pathname === JUDGE_PATH) {
+        for (const [name, value] of Object.entries(HEADERS)) res.setHeader(name, value);
+        if (req.method === "POST" && !sameToken(req.headers[TOKEN_HEADER.toLowerCase()], token)) {
+          res.writeHead(403, { "Content-Type": TYPES.json });
+          res.end(JSON.stringify({ error: "Reload the playground page: this server has restarted." }));
+          return;
+        }
+        await judgeListener(req, res);
+        return;
+      }
       const { status, type, headers = {}, body } = await respond(req);
       res.writeHead(status, { ...HEADERS, ...(type && { "Content-Type": type }), ...headers });
       res.end(req.method === "HEAD" ? undefined : body);

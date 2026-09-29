@@ -1,2 +1,2 @@
-export { createProxyHandler } from "./index.js";
-export type { ProxyHandlerOptions, ProxyEnv, JevClient } from "./index.js";
+export { createProxyHandler, toNodeListener } from "./index.js";
+export type { ProxyHandlerOptions, ProxyHandler, ProxyEnv, JevClient, NodeRequestLike, NodeResponseLike } from "./index.js";

@@ -76,7 +76,7 @@ npm run play:mock    # play the demo offline
 npm run play         # play with Jev (needs TYPESAFE_API_KEY)
 npm run eval         # evaluation set against Jev (-- --all, --repeats 10, --record, --patch <file>, --mock)
 npm run example      # standalone example
-npm run proxy        # proxy on localhost:8787 (mock without a key)
+npm run proxy        # proxy on 127.0.0.1:8787 (mock without a key): the demo scenes and examples/harry.js
 npm run playground   # character playground on 127.0.0.1:4747 (npx honeytongue playground)
 npm run build:demo   # refresh docs/play/lib after changing src/ or stories/
 ```

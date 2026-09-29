@@ -23,22 +23,12 @@
 
   <script type="module">
     import { Persuadable, createProxyClient } from "../src/index.js";
+    // The same character the proxy allows (allowedCharacters in examples/node-proxy.js).
+    import { harry as character } from "./harry.js";
 
-    const PROXY_URL = "http://localhost:8787";
+    const PROXY_URL = "http://127.0.0.1:8787";
 
-    const harry = new Persuadable(
-      {
-        name: "Harry Goatleaf",
-        persona: "A tired night guard who values honesty and despises flattery and bribes.",
-        goal: "Open the gate after curfew",
-        patience: 4,
-        reactions: [
-          { min: 0, text: "\"Gate's shut till dawn.\"" },
-          { min: 2, text: "He hesitates. \"You'll have to do better than that.\"" },
-        ],
-      },
-      { client: createProxyClient({ url: PROXY_URL }) },
-    );
+    const harry = new Persuadable(character, { client: createProxyClient({ url: PROXY_URL }) });
 
     const form = document.getElementById("talk");
     const input = document.getElementById("line");
