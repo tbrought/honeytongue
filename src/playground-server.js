@@ -23,6 +23,7 @@ const FILES = {
   "/playground/": "docs/playground/index.html",
   "/playground/app.js": "docs/playground/app.js",
   "/playground/designer.js": "docs/playground/designer.js",
+  "/playground/playground.css": "docs/playground/playground.css",
   "/style.css": "docs/style.css",
   "/theme.js": "docs/theme.js",
   "/play/lib/persuasion.js": "src/persuasion.js",
@@ -36,8 +37,10 @@ const HEADERS = {
   "Cache-Control": "no-store",
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "no-referrer",
-  "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-    "font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+  // As strict as the page's own policy (no inline scripts or styles), and only this server to talk to. A header can
+  // also forbid framing, which a page's meta tag can't.
+  "Content-Security-Policy": "default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; " +
+    "font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'; object-src 'none'",
 };
 // The page's placeholder for how to reach this server. Empty on GitHub Pages, which means "preview only".
 const LOCAL_META = '<meta name="honeytongue-local" content="">';

@@ -9,6 +9,14 @@ const TELLS = ["threats", "insults"];
 const isText = (v) => typeof v === "string" && v.trim().length > 0;
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
+/**
+ * JSON for code and story files people copy: "<" is written as \u003c (the same character in JavaScript and JSON),
+ * so text like "</script>" can't close a <script> element if the code is pasted into an HTML page (a Twine story's
+ * JavaScript, for one). U+2028 and U+2029 are escaped too, for older JavaScript engines.
+ */
+const safeJson = (value, ...args) => JSON.stringify(value, ...args)
+  .replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
+
 // ---- Validation ---------------------------------------------------------------
 
 // Fields the form edits, each checked on its own so every problem shows at once, next to its field.
@@ -94,7 +102,7 @@ function literal(value, indent = "") {
     const inner = indent + "  ";
     const entries = Array.isArray(value)
       ? value.map((v) => literal(v, inner))
-      : Object.entries(value).map(([k, v]) => `${IDENTIFIER.test(k) ? k : JSON.stringify(k)}: ${literal(v, inner)}`);
+      : Object.entries(value).map(([k, v]) => `${IDENTIFIER.test(k) ? k : safeJson(k)}: ${literal(v, inner)}`);
     const [open, close] = Array.isArray(value) ? ["[", "]"] : ["{ ", " }"];
     const oneLine = entries.length ? `${open}${entries.join(", ")}${close}` : Array.isArray(value) ? "[]" : "{}";
     // Small records like { id, fact } read best on one line, however long their text.
@@ -102,7 +110,7 @@ function literal(value, indent = "") {
     if ((record || oneLine.length + indent.length <= 80) && !oneLine.includes("\n")) return oneLine;
     return `${open.trim()}\n${entries.map((e) => `${inner}${e},`).join("\n")}\n${indent}${close.trim()}`;
   }
-  return JSON.stringify(value);
+  return safeJson(value);
 }
 
 /** A variable name from the character's first name: "Nib Wortle" -> "nib". */
@@ -122,7 +130,7 @@ export function characterCode(character, { knows = [] } = {}) {
   const c = minimalCharacter(character);
   const name = variableName(c.name);
   const ids = new Set((c.secrets ?? []).map((s) => s.id));
-  const learned = knows.filter((id) => ids.has(id)).map((id) => `${name}.learn(${JSON.stringify(id)});\n`).join("");
+  const learned = knows.filter((id) => ids.has(id)).map((id) => `${name}.learn(${safeJson(id)});\n`).join("");
   return 'import { Persuadable, createJevClient } from "honeytongue";\n\n' +
     "// On a server. In a browser, use createProxyClient({ url }) with your proxy instead.\n" +
     "const client = createJevClient();\n\n" +
@@ -155,7 +163,7 @@ export function storyNpc(character, { id } = {}) {
   };
 }
 
-export const storyJson = (character, options) => JSON.stringify(storyNpc(character, options), null, 2);
+export const storyJson = (character, options) => safeJson(storyNpc(character, options), null, 2);
 
 // ---- Drafts and share links -----------------------------------------------------
 
