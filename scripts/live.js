@@ -91,7 +91,7 @@ const ROUTES = {
   "tidy-profit": {
     talk: ["ask Maude about the voyage", "look over the cargo",
       "Maude, honestly: the captain is skimming the crew's shares. Six of his crates aren't on your manifest. Take me aboard and I'll give you the proof."],
-    plain: ["I can prove the captain is stealing from the crew. Take me with you and the proof is yours."],
+    plain: ["I can prove the captain is stealing from the crew's shares. Give me passage and I'll show you the proof."],
     other: ["examine the crates", "hide in one of the captain's crates"],
   },
   lighthouse: {
@@ -122,7 +122,7 @@ async function playRoute(id, lines, prefix = [], label = "") {
   const all = [...prefix, ...lines];
   for (const [i, line] of all.entries()) {
     if (game.over) break;
-    if (i === all.length - 1 && ROUTE_REPEATS > 1 && game.npc) {
+    if (label && i === all.length - 1 && ROUTE_REPEATS > 1 && game.npc) { // only winning lines are repeated
       const character = game.npc.character;
       const results = [];
       for (let n = 0; n < ROUTE_REPEATS; n++) results.push(readPersuasion(character, (await copyGame(game).interpret(line)).answers));
