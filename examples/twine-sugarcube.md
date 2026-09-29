@@ -2,7 +2,7 @@
 
 > This recipe hasn't been tested in Twine yet. If something doesn't work, please open an issue.
 
-Twine stories run in the player's browser, so you need a proxy to keep your API key private. Deploy `examples/cloudflare-worker.js` first and add your story's published address to `allowedOrigins`. If you're not sure what that address is, try the story once: the error message names the exact origin to add.
+Twine stories run in the player's browser, so you need a proxy to keep your API key private. Deploy `examples/cloudflare-worker.js` first, with your story's published address in `allowedOrigins` and your character in `allowedCharacters` (exactly as the story passes it to `Persuadable`). If you're not sure what that address is, try the story once: the error message names the exact origin to add.
 
 ## 1. Story JavaScript
 

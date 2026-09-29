@@ -5,6 +5,7 @@
 // createProxyClient -> browser-safe, talks to your own proxy (see proxy.js)
 
 import { HoneytongueError } from "./persuasion.js";
+import { VERSION } from "./version.js";
 
 const DEFAULT_URL = "https://api.typesafe.ai/v1/systemone";
 const DEFAULT_MODEL = "jev-1.13.0"; // pinned so behaviour doesn't shift under you
@@ -14,7 +15,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const inBrowser = () => typeof window !== "undefined" && typeof window.document !== "undefined";
 const isTimeout = (err) => err?.name === "TimeoutError" || err?.name === "AbortError";
 
-const httpError = (message, status) => Object.assign(new HoneytongueError(message), { status });
+const httpError = (message, status, extra) => Object.assign(new HoneytongueError(message), { status }, extra);
 
 /** How long to wait before retrying: the server's Retry-After if it sent one, else exponential backoff. */
 function retryDelay(res, attempt) {
@@ -23,15 +24,23 @@ function retryDelay(res, attempt) {
   return Number.isFinite(seconds) ? Math.max(0, seconds * 1000) : 500 * 2 ** attempt;
 }
 
-/** A readable error for a failed response: what probably went wrong, then what the server said. */
+/**
+ * A readable error for a failed response: what probably went wrong, then what the server said. A proxy's
+ * `reason` (why it refused, or why Jev didn't answer) is kept on the error, with the versions it compared.
+ */
 async function failure(url, res, hints) {
   let detail = "";
+  let why = {};
   try { detail = (await res.text()).trim(); } catch { /* body unreadable; the status is enough */ }
-  try { detail = JSON.parse(detail).error ?? detail; } catch { /* not JSON */ }
+  try {
+    const body = JSON.parse(detail);
+    if (typeof body?.reason === "string") why = { reason: body.reason, proxyVersion: body.proxyVersion ?? null, requestVersion: body.requestVersion ?? null };
+    detail = body?.error ?? detail;
+  } catch { /* not JSON */ }
   if (typeof detail !== "string") detail = JSON.stringify(detail);
   if (detail.length > 300) detail = `${detail.slice(0, 300)}...`;
-  const hint = hints[res.status] ?? (res.status >= 500 ? hints[500] : null) ?? "Request failed.";
-  return httpError(`${hint} (${res.status} from ${url}${detail ? `: ${detail}` : ""})`, res.status);
+  const hint = hints.reasons?.[why.reason] ?? hints[res.status] ?? (res.status >= 500 ? hints[500] : null) ?? "Request failed.";
+  return httpError(`${hint} (${res.status} from ${url}${detail ? `: ${detail}` : ""})`, res.status, why);
 }
 
 /** POST JSON with a timeout, retrying network errors and the statuses `retryOn` accepts. */
@@ -162,6 +171,12 @@ const proxyHints = () => ({
   413: "The request was too big for your proxy. Raise maxStateBytes or maxInputLength in createProxyHandler().",
   429: "Too many requests to your proxy. Wait a moment and try again.",
   500: "Your proxy couldn't get an answer from Jev. Check the proxy's logs and its TYPESAFE_API_KEY secret.",
+  reasons: {
+    version: "Your proxy runs a different Honeytongue version from this page. Deploy them together.",
+    "not-allowed": "Your proxy only judges the stories and characters in its allowedStories and allowedCharacters.",
+    state: "Your proxy refused this request's state, which isn't what Honeytongue sends.",
+    unavailable: "Your proxy can't use Jev: check its TYPESAFE_API_KEY secret and your TypeSafe credit.",
+  },
 });
 
 /** Browser-safe client that sends requests to your own proxy endpoint. */
@@ -170,7 +185,8 @@ export function createProxyClient({ url, headers = {}, timeoutMs = 20000, maxRet
   return {
     async ask(state, questions) {
       const data = await postWithRetry(url, {
-        headers, body: { state, questions }, timeoutMs, maxRetries, fetchImpl,
+        // The version lets a proxy with allowedStories or allowedCharacters explain a mismatch.
+        headers, body: { state, questions, honeytongue: VERSION }, timeoutMs, maxRetries, fetchImpl,
         // The proxy already retries Jev, so only its own rate limit and platform hiccups are retried here.
         retryOn: (status) => status === 429 || status === 503,
         hints: proxyHints(),

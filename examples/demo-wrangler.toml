@@ -1,0 +1,17 @@
+# Wrangler config for the public demo's proxy (examples/demo-worker.js). Paths are relative to this file.
+# Deploy from the repository root: npx wrangler deploy --config examples/demo-wrangler.toml
+# The steps, including the rate limiting rule, are in docs/demo-proxy.md.
+name = "honeytongue-demo"
+main = "demo-worker.js"
+compatibility_date = "2026-09-01"
+
+# The proxy's address is https://api.honeytongue.dev/judge. Declared here so every deploy keeps it.
+routes = [{ pattern = "api.honeytongue.dev", custom_domain = true }]
+# No workers.dev address: the rate limiting rule on honeytongue.dev couldn't see requests sent there.
+workers_dev = false
+
+[vars]
+# Pages allowed to call the proxy, comma-separated, with no trailing slash. The demo is on honeytongue.dev;
+# tbrought.github.io stays as a fallback while GitHub redirects it. Deploy again after changing this.
+ALLOWED_ORIGINS = "https://honeytongue.dev,https://tbrought.github.io"
+# The secret TYPESAFE_API_KEY is set with `npx wrangler secret put`, never here.

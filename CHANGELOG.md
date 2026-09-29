@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.1.0-alpha.6 (2026-09-29)
+
+The live demo. The web demo can now play with Jev through a public proxy that only judges its own scenes, and falls back to the offline stand-in when it can't. The demo goes live once its proxy is deployed at `https://api.honeytongue.dev/judge`.
+
+### Added
+
+- **`allowedCharacters` and `allowedStories` on `createProxyHandler`.** The proxy then only judges requests that match what Honeytongue sends for those characters, or those stories' scenes: exactly the library's questions, the characters as written (with only learned secrets), the story's own item and flag names, and every part players control capped at what the library sends (what they typed, previous attempts at the character's `memory`, the engine's last 4 turns, and each entry's length). Anything else gets a 403 with a `reason`: `"not-allowed"`, `"state"`, or `"version"`. Without either option the proxy works as before, so set one on any public proxy.
+- **`VERSION`**, exported from the package. `createProxyClient()` sends it with each request, so a guarded proxy running a different version can say so: "Questions don't match: proxy is 0.1.0-alpha.6, request is from 0.1.0-alpha.7".
+- **Proxy failures carry a `reason`**: a 502 when Jev can't answer says `"busy"`, `"error"`, or `"unavailable"` (a bad key or no credit left). Errors from `createProxyClient()` keep the `reason`, and a 403's `proxyVersion` and `requestVersion`.
+- **The web demo can run live.** With a proxy URL in its `honeytongue-proxy` meta tag, Jev judges, and the offline stand-in takes over when it can't: for the rest of the session if the proxy refuses the page, runs another version, or has no credit; for about a minute if it's busy, erroring, or unreachable. Each tab gets 50 live turns. While live, the banner says that what you type is sent to TypeSafe's Jev model to be judged. A version mismatch gets its own note.
+- `examples/demo-worker.js` and `examples/demo-wrangler.toml`: the demo's own proxy (the Cloudflare Worker `honeytongue-demo` at `https://api.honeytongue.dev/judge`), locked to the four scenes, answering only on `/judge` so one Cloudflare rate limiting rule covers it, with its allowed pages in the `ALLOWED_ORIGINS` variable (`https://honeytongue.dev`, then `https://tbrought.github.io`). `scripts/check-demo-proxy.js` checks a deployed one from outside. `examples/cloudflare-worker.js` now shows `allowedCharacters`.
+- A "Share a playtest" issue template, linked from the demo beside "Save transcript".
+- Transcripts record each turn's `judge`, since a live demo can fall back to the stand-in partway through. The format is still 1: the field is new, and nothing else changed.
+
+### Changed
+
+- **The proxy never logs what players type.** It used to log the whole error when Jev failed, and an error can quote Jev's reply; now it logs only the status.
+- The documentation, demo, and playground links now use https://honeytongue.dev (the old tbrought.github.io addresses redirect there).
+
 ## 0.1.0-alpha.5 (2026-09-29)
 
 Whole conversations, and real play. Multi-turn calibration against live Jev and the author's first playtests changed how memory, patience, and threats work, and added opt-in playtest transcripts. The findings are in `docs/live-results.md`.

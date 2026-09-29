@@ -83,6 +83,21 @@ Whole conversations with each demo character, 5 runs each, as standalone attempt
 
 Final checks for alpha.5: every suite verdict held but one (53 cases; the miss is a documented borderline insult to Nib, which offended him in 10 of 10 scene turns in a separate check), every scripted line was reliable in 10 of 10 repeats (39 suite cases and 8 scene routes), and every spoken threat went to the character.
 
+## The live demo (0.1.0-alpha.6)
+
+The web demo now plays through a public proxy that only accepts the requests Honeytongue itself sends for the four scenes. Two live checks:
+
+- **Nothing real is refused.** Every scene route, 10 times over, went through a proxy guarded like the demo's (`node scripts/live.js routes --repeats 10 --via-proxy`): 112 calls, no refusals, every route reached its ending, and every winning line won 10 of 10 times. The full eval rerun matched alpha.5: verdicts 52 of 52 plus Nib's borderline case, reliable 39 of 39, actions 84 of 86.
+- **End to end in a browser.** The demo in headless Edge, against a local proxy configured like the Worker, with live Jev:
+  - Live turns were judged by Jev, one request each.
+  - A page from another version got the version-mismatch note.
+  - Forced failures behaved as intended. A 429, a 500, or a dropped connection: the stand-in answered that turn, and Jev was tried again after a minute. A refusal or no credit: the stand-in judged for the rest of the session.
+  - The 50-turn cap held.
+
+  The proxy's check script, run against the real Worker module, passed.
+
+The phase used 590 calls and about 757,000 tokens.
+
 ## Reproducing
 
 With `TYPESAFE_API_KEY` set:

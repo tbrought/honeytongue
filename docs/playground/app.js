@@ -11,7 +11,7 @@ import {
 
 const $ = (id) => document.getElementById(id);
 const STORE = "honeytongue-playground";
-const HOSTED = "https://tbrought.github.io/honeytongue/playground/";
+const HOSTED = "https://honeytongue.dev/playground/";
 const MAX_LINE = 500;
 
 /** Build an element. Text is always set as text, never parsed as HTML. */

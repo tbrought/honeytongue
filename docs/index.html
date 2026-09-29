@@ -332,9 +332,11 @@ repeatReaction: "\"You said that already,\" Harry says.",</code></pre>
         <li>
           <p>Create a Cloudflare Worker, install Honeytongue, and use this as its entry file:</p>
 <pre><code>import { createProxyHandler } from "honeytongue/proxy";
+import { harry } from "./characters.js"; <span class="c">// your game's characters</span>
 
 const handle = createProxyHandler({
   allowedOrigins: ["https://your-game.example"],
+  allowedCharacters: [harry], <span class="c">// only judge these (or allowedStories)</span>
 });
 
 export default { fetch: (request, env) =&gt; handle(request, env) };</code></pre>
@@ -354,6 +356,8 @@ const client = createProxyClient({ url: "https://your-proxy.workers.dev" });</co
       </ol>
       <p>The proxy accepts browser requests only from its own origin and the ones you list, caps input and request size, and rate-limits each player's address. If you're not sure of your game's origin (itch.io games, for example, run in a frame on itch's own domain), try it once: the error names the exact origin to add. See <code>examples/browser.html</code> for a complete page, and <code>examples/cloudflare-worker.js</code> for the Worker.</p>
       <ul class="points">
+        <li><strong>Only your characters.</strong> With <code>allowedCharacters</code> (for <code>Persuadable</code> and <code>judgePersuasion</code>) or <code>allowedStories</code> (for the text adventure engine), the proxy only judges requests that match what Honeytongue sends for them: exactly its questions, your characters as you wrote them, and the parts players control (what they typed, earlier attempts, recent turns, items and knowledge) capped at what the library sends. Without them, anyone who finds your proxy's address can use your key for their own Jev questions, so set one on any public proxy. A refusal is a 403 whose <code>reason</code> is <code>"not-allowed"</code>, <code>"state"</code>, or <code>"version"</code>: the client sends its Honeytongue version, and when it differs from the proxy's, the error names both. Deploy the proxy again whenever you change a character, a story, or the Honeytongue version.</li>
+        <li><strong>Nothing players type is logged.</strong> When Jev can't answer, the proxy logs only the status, and replies 502 with a <code>reason</code>: <code>"busy"</code> (try again soon), <code>"error"</code>, or <code>"unavailable"</code> (a bad key or no credit left, which won't fix itself). <code>createProxyClient()</code> keeps the <code>reason</code> on the error it throws, so your game can decide whether to wait or give up.</li>
         <li><strong>Local development.</strong> <code>npm run proxy</code> in a clone of the repository serves the proxy on <code>http://localhost:8787</code>, using the offline mock until you set a key (see <code>examples/node-proxy.js</code>). The proxy only uses the mock when it's passed in as <code>client</code>, as that example does; a deployed proxy with no key returns an error rather than falling back. Every reply says which one answered, <code>"source": "jev"</code> or <code>"mock"</code> beside <code>answers</code>, and the engine passes it on as <code>debug.source</code>.</li>
         <li><strong>Other hosts.</strong> On Cloudflare the proxy trusts <code>CF-Connecting-IP</code>; elsewhere it uses the last <code>X-Forwarded-For</code> entry, which is right for Vercel and most platforms. If your server is reachable directly, pass <code>clientIp: (request, env) =&gt; ...</code> so the rate limit can't be dodged with a forged header.</li>
       </ul>
@@ -546,7 +550,8 @@ npm run eval -- --mock                    <span class="c"># the keyword mock's b
           <tr><td><code>createProxyHandler(options)</code></td><td>Running the proxy, also exported as <code>honeytongue/proxy</code> (options below)</td></tr>
           <tr><td><code>createMockClient()</code></td><td>A keyword-based stand-in for tests and offline development</td></tr>
           <tr><td><code>Game</code>, <code>validateStory()</code></td><td>The text adventure engine (<a href="#engine">Text adventures</a>)</td></tr>
-          <tr><td><code>HoneytongueError</code>, <code>StoryError</code></td><td>Readable errors; <code>status</code> holds the HTTP status for failed requests, and <code>StoryError</code>'s <code>problems</code> lists every problem in a story</td></tr>
+          <tr><td><code>HoneytongueError</code>, <code>StoryError</code></td><td>Readable errors; <code>status</code> holds the HTTP status for failed requests (and <code>reason</code> why, when a proxy said), and <code>StoryError</code>'s <code>problems</code> lists every problem in a story</td></tr>
+          <tr><td><code>VERSION</code></td><td>This copy of Honeytongue's version, which the proxy client sends with each request</td></tr>
         </tbody>
       </table></div>
 
@@ -562,6 +567,7 @@ npm run eval -- --mock                    <span class="c"># the keyword mock's b
           <tr><td><code>fetch</code></td><td><code>globalThis.fetch</code></td><td>Your own fetch function</td></tr>
           <tr><td><code>dangerouslyAllowBrowser</code></td><td><code>false</code></td><td><code>createJevClient</code>: lets it run in a browser, exposing your key</td></tr>
           <tr><td><code>allowedOrigins</code></td><td>None</td><td><code>createProxyHandler</code>: cross-origin pages allowed to call it; same-origin requests are always allowed</td></tr>
+          <tr><td><code>allowedCharacters</code>, <code>allowedStories</code></td><td>None (any request)</td><td><code>createProxyHandler</code>: only judge Honeytongue's own requests for these characters, or these stories' scenes (<a href="#browser">Browser games</a>)</td></tr>
           <tr><td><code>client</code></td><td>Jev</td><td><code>createProxyHandler</code>: another client to answer with, such as the mock</td></tr>
           <tr><td><code>maxQuestions</code>, <code>maxStateBytes</code>, <code>maxInputLength</code></td><td>6, 16000, 500</td><td><code>createProxyHandler</code>: questions per request (the engine sends 4), request body size in bytes, input length</td></tr>
           <tr><td><code>rateLimit</code></td><td><code>{ requests: 30, windowMs: 60000 }</code></td><td><code>createProxyHandler</code>: per client address, per server instance; <code>false</code> turns it off</td></tr>

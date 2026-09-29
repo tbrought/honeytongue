@@ -115,7 +115,7 @@ test("judging needs this server's token and a same-origin request", async () => 
 test("it serves only the playground's files", async () => {
   await withPlayground({ apiKey: "" }, async ({ port }) => {
     for (const path of ["/playground/", "/playground/app.js", "/playground/designer.js", "/style.css", "/theme.js",
-      "/play/lib/persuasion.js", "/play/lib/jev.js", "/play/lib/mock.js", "/play/lib/characters.json"]) {
+      "/play/lib/persuasion.js", "/play/lib/jev.js", "/play/lib/mock.js", "/play/lib/version.js", "/play/lib/characters.json"]) {
       const res = await send(port, { path });
       assert.equal(res.status, 200, path);
       assert.ok(res.headers["content-security-policy"], path);
@@ -129,6 +129,23 @@ test("it serves only the playground's files", async () => {
     assert.equal(root.status, 302);
     assert.equal(root.headers.location, "/playground/");
     assert.equal((await send(port, { method: "POST", path: "/playground/" })).status, 405);
+  });
+});
+
+test("every module the page imports is served, so a new import in the library can't break the playground", async () => {
+  await withPlayground({ apiKey: "" }, async ({ port }) => {
+    const seen = new Set();
+    const visit = async (path) => {
+      if (seen.has(path)) return;
+      seen.add(path);
+      const res = await send(port, { path });
+      assert.equal(res.status, 200, `${path} (imported by the playground) isn't served`);
+      for (const [, spec] of res.body.matchAll(/(?:import|export)\s[^"';]*?from\s*"(\.{1,2}\/[^"]+)"|import\(\s*"(\.{1,2}\/[^"]+)"\s*\)/g)) {
+        if (spec) await visit(new URL(spec, `http://x${path}`).pathname);
+      }
+    };
+    await visit("/playground/app.js");
+    assert.ok(seen.has("/play/lib/version.js"), "the walk reaches the library's imports");
   });
 });
 

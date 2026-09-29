@@ -8,8 +8,10 @@ import { SOURCE } from "./jev.js";
 
 const ACT_AT = 0.6;      // top option probability needed to act immediately
 const CLARIFY_AT = 0.3;  // between CLARIFY_AT and ACT_AT, ask "did you mean..."
-const HISTORY = 4;       // recent turns sent to Jev for context
-const MAX_INPUT = 500;   // longer input is truncated
+// Exported for the proxy's request guard (src/guard.js), which accepts only what the engine sends.
+export const HISTORY = 4;        // recent turns sent to Jev for context
+export const MAX_INPUT = 500;    // longer input is truncated
+export const RESULT_LENGTH = 160; // characters of each recent turn's result
 
 const META = {
   unclear: "The input is gibberish, too vague to act on, or not an attempt to do anything",
@@ -201,6 +203,18 @@ export class Game {
     };
   }
 
+  /**
+   * What this story sends to Jev from each playable scene: the scene description, the exact questions, and the
+   * scene's character (defined), if it has one. The proxy's guard uses it to accept only this story's requests.
+   */
+  static requests(story) {
+    const game = new Game(story, { ask: async () => ({}) });
+    return Object.entries(game.story.scenes).filter(([, s]) => !s.ending).map(([id]) => {
+      game.sceneId = id;
+      return { scene: game.scene.description, questions: game.buildQuestions(), character: game.npc?.character ?? null };
+    });
+  }
+
   /** Ask Jev what the player meant. `ranked` only contains real options, most likely first. */
   async interpret(input) {
     const answers = await this.jev.ask(this.buildState(input), this.buildQuestions());
@@ -320,7 +334,7 @@ export class Game {
 
   finish(lines, input, debug) {
     const text = lines.filter(Boolean).join("\n\n");
-    this.history = [...this.history, { player: input, result: text.slice(0, 160) }].slice(-HISTORY);
+    this.history = [...this.history, { player: input, result: text.slice(0, RESULT_LENGTH) }].slice(-HISTORY);
     return { text, debug: debug && this.#withOutcome(debug) };
   }
 

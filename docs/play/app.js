@@ -6,6 +6,8 @@ import { Game } from "./lib/engine.js";
 import { createProxyClient } from "./lib/jev.js";
 import { createMockClient } from "./lib/mock.js";
 import { createTranscript, snapshot } from "./lib/transcript.js";
+import { VERSION } from "./lib/version.js";
+import { createFallbackClient, TURN_CAP } from "./fallback.js";
 
 const $ = (id) => document.getElementById(id);
 const log = $("log");
@@ -13,7 +15,20 @@ const choices = $("choices");
 const form = $("prompt");
 const input = $("cmd");
 const proxyUrl = document.querySelector('meta[name="honeytongue-proxy"]')?.content.trim();
-const client = proxyUrl ? createProxyClient({ url: proxyUrl }) : createMockClient();
+let tabStorage = null; // for the live turn count; reading sessionStorage can throw when storage is blocked
+try { tabStorage = sessionStorage; } catch { /* the count then lasts as long as the page */ }
+let fallback = null;  // why the mock is judging instead of Jev, when there's a proxy: { mode, why, err }
+let note = null;      // a line about that, shown with the next reply
+// With a proxy, Jev judges and the mock stands in when it can't (see fallback.js). No retries here: a failed
+// turn goes to the mock straight away, and the proxy already retries Jev itself.
+const client = proxyUrl
+  ? createFallbackClient({
+      live: createProxyClient({ url: proxyUrl, maxRetries: 0, timeoutMs: 15_000 }),
+      mock: createMockClient(),
+      storage: tabStorage,
+      onChange: (change) => { fallback = change.mode === "live" ? null : change; note = fallbackNote(change); },
+    })
+  : createMockClient();
 const finePointer = matchMedia("(pointer: fine)").matches;
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -26,7 +41,6 @@ let moves = 0;
 let debug = false;
 // An opt-in playtest transcript for the current scene, saved by the player as a file. Nothing is sent anywhere.
 let transcript = null;
-let version = null; // lib/version.json, for the transcript
 let busy = false;
 const typed = [];      // command history for the up and down arrows
 let typedAt = 0;
@@ -126,7 +140,7 @@ function start() {
   showText(game.scene.description);
   if ($("record").checked) {
     // One transcript per scene; a restart adds another playthrough to it.
-    if (transcript?.data.scene !== scene.id) transcript = createTranscript({ version, scene: scene.id, story });
+    if (transcript?.data.scene !== scene.id) transcript = createTranscript({ version: VERSION, scene: scene.id, story });
     transcript.start();
     line("Recording this playtest. Nothing is sent anywhere: use Save transcript to download it.", "dim");
   }
@@ -136,9 +150,10 @@ function start() {
 $("record").addEventListener("change", () => {
   const on = $("record").checked;
   $("save-transcript").hidden = !on;
+  $("share").hidden = !on;
   if (!on) { transcript = null; line("Stopped recording. The transcript so far is discarded.", "dim"); return settle(); }
   if (!game) return;
-  transcript = createTranscript({ version, scene: scene.id, story });
+  transcript = createTranscript({ version: VERSION, scene: scene.id, story });
   transcript.start();
   line("Recording this playtest from here. Nothing is sent anywhere: use Save transcript to download it.", "dim");
   settle();
@@ -184,12 +199,14 @@ async function submit(raw) {
     transcript?.record(text, before, result, game);
     moves++;
     thinking.remove();
+    showNote();
     showMode(result.debug?.source);
     showDebug(result.debug, threshold);
     showText(result.text);
     if (game.over) line("Type RESTART to play again.", "dim");
   } catch (err) {
     thinking.remove();
+    showNote();
     line(`(Something went wrong talking to Jev: ${err.message})`, "error");
   } finally {
     if (game === playing) {
@@ -224,18 +241,49 @@ for (const button of document.querySelectorAll("[data-say]")) {
 
 // ---- Boot ------------------------------------------------------------------------
 
-/** The banner above the game: live Jev, or the offline mock (directly, or behind a local proxy). */
-let shownSource;
+/** What to tell the player when the live judge steps aside, or comes back. */
+function fallbackNote({ mode, why, err }) {
+  if (mode === "live") return "Jev is back: it judges your turns again.";
+  return {
+    busy: "Jev is busy, so the offline stand-in judged that turn. Jev will be tried again in about a minute.",
+    version: `This page (Honeytongue ${VERSION}) and the live judge (${err?.proxyVersion ?? "another version"}) are on different versions, ` +
+      "so the offline stand-in judges from here on. Reload later: they're usually updated together within minutes.",
+    refused: "The live judge turned this page's request away, so the offline stand-in judges from here on.",
+    unavailable: "The live demo is resting (its Jev credit may have run out), so the offline stand-in judges from here on. Reload later to try Jev again.",
+    cap: `That's this tab's ${TURN_CAP} live turns, so the offline stand-in judges from here on. Thanks for playing so long!`,
+  }[why];
+}
+function showNote() {
+  if (note) line(note, "dim");
+  note = null;
+}
+
+const PRIVACY = "What you type is sent to TypeSafe's Jev model to be judged. Don't type anything personal.";
+const STAND_IN = "Characters here are judged by simple keyword matching, a stand-in for Jev that understands far less. Plain, direct sentences work best.";
+
+/** The banner above the game: live Jev (with the privacy note), or the offline mock, and why if Jev stepped aside. */
+let shown;
 function showMode(source) {
-  if (!source || source === shownSource) return;
-  shownSource = source;
+  const key = `${source}:${fallback?.why ?? ""}`;
+  if (!source || key === shown) return;
+  shown = key;
   const mode = $("mode");
   mode.hidden = false;
-  mode.replaceChildren(source === "jev"
-    ? el("span", {}, el("strong", {}, "Live: "), "Jev judges everything you type, through the Honeytongue proxy.")
-    : el("span", {}, el("strong", {}, "Offline preview. "), "Characters here are judged by simple keyword matching, a stand-in for Jev that understands far less. Plain, direct sentences work best."));
+  const live = source === "jev";
+  const why = !live && fallback && {
+    busy: "Jev is busy, so this turn was judged offline; Jev will be tried again shortly. ",
+    version: "The live judge is on a different Honeytongue version. ",
+    refused: "The live judge turned this page away. ",
+    unavailable: "The live demo is resting. ",
+    cap: `You've used this tab's ${TURN_CAP} live turns. `,
+  }[fallback.why];
+  mode.replaceChildren(live
+    ? el("span", {}, el("strong", {}, "Live: "), "Jev judges everything you type, through the Honeytongue proxy. ", PRIVACY)
+    : el("span", {}, el("strong", {}, proxyUrl ? "Offline stand-in. " : "Offline preview. "), why || "", STAND_IN,
+        ...(fallback?.mode === "paused" ? [" ", PRIVACY] : [])));
 }
-showMode(proxyUrl ? "jev" : "mock");
+if (proxyUrl && client.turnsUsed >= TURN_CAP) fallback = { mode: "off", why: "cap" }; // used up before a reload
+showMode(proxyUrl && !fallback ? "jev" : "mock");
 
 async function fetchJson(path) {
   const res = await fetch(path);
@@ -289,11 +337,6 @@ addEventListener("hashchange", async () => {
   scrollTo(0, 0);
 });
 
-try {
-  version = (await fetchJson("lib/version.json")).version;
-} catch {
-  version = null; // transcripts still work without it
-}
 try {
   scenes = await fetchJson("lib/index.json");
   showScenes();

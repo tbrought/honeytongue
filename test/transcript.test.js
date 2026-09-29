@@ -34,7 +34,9 @@ test("a transcript records each turn: the input, action, verdict, score, thresho
   assert.equal(data.story, "THE GOBLIN CAMP");
   assert.equal(data.judge, "mock");
   const [plea, repeat, chat, win] = data.runs[0].turns;
-  assert.deepEqual(Object.keys(plea).sort(), ["action", "flags", "input", "items", "location", "n", "patienceLeft", "reply", "score", "tells", "threshold", "triggered", "verdict"].sort());
+  assert.deepEqual(Object.keys(plea).sort(), ["action", "flags", "input", "items", "location", "n", "patienceLeft", "reply", "score", "tells", "threshold", "triggered", "verdict", "judge"].sort());
+  assert.equal(plea.judge, "mock");
+  assert.equal(repeat.judge, null, "a repeat is caught locally, so nothing judged it");
   assert.equal(plea.action.id, "persuade_nib");
   assert.equal(plea.verdict, "unconvinced");
   assert.equal(plea.threshold, 2.4);
@@ -83,6 +85,10 @@ test("transcript-to-evals turns judged turns into draft cases, and skips repeats
   assert.equal(suite.cases[1].verdict, undefined, "ordinary actions have no verdict to check");
   assert.deepEqual(suite.cases[2].flags, ["wants_to_be_a_cook"]);
   assert.ok(suite.cases.every((c) => c.note.startsWith("DRAFT from a playtest judged by mock")));
+
+  // A live demo can fall back to the mock mid-game: each case names the judge of its own turn.
+  data.judge = "jev";
+  assert.ok(transcriptToEvals(data, scenes).cases.every((c) => c.note.startsWith("DRAFT from a playtest judged by mock")));
 });
 
 test("transcript-to-evals refuses a transcript format it doesn't know, with a readable message", () => {

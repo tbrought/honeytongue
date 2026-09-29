@@ -4,7 +4,7 @@
 
 **You only need three fields and one method. Everything else is optional.**
 
-> **Alpha, tested against live Jev.** Version 0.1.0-alpha.5 was calibrated with about 5,400 live calls, whole conversations included (see [the results](https://github.com/tbrought/honeytongue/blob/main/docs/live-results.md)). Defaults may still change before 0.1.0.
+> **Alpha, tested against live Jev.** Version 0.1.0-alpha.6 has been calibrated and checked with about 6,000 live calls, whole conversations included (see [the results](https://github.com/tbrought/honeytongue/blob/main/docs/live-results.md)). Defaults may still change before 0.1.0.
 
 ## Quick start
 
@@ -53,10 +53,10 @@ else say(result.reaction ?? "Harry's hand drops to his club.");
 
 ## Where next
 
-- **[Documentation](https://tbrought.github.io/honeytongue/)**: writing personas, difficulty, secrets, patience, and every option, from simple to advanced.
-- **Playground**: tune a character by trying lines against it, with `npx honeytongue playground`, or [in your browser](https://tbrought.github.io/honeytongue/playground/).
-- **Demo**: [four short scenes](https://tbrought.github.io/honeytongue/play/) built with Honeytongue's text adventure engine, or `npx honeytongue` in a terminal.
-- **Browser games and Twine**: keep your key on a small proxy that ships with Honeytongue. See [Browser games](https://tbrought.github.io/honeytongue/#browser).
+- **[Documentation](https://honeytongue.dev/)**: writing personas, difficulty, secrets, patience, and every option, from simple to advanced.
+- **Playground**: tune a character by trying lines against it, with `npx honeytongue playground`, or [in your browser](https://honeytongue.dev/playground/).
+- **Demo**: [four short scenes](https://honeytongue.dev/play/) built with Honeytongue's text adventure engine, or `npx honeytongue` in a terminal.
+- **Browser games and Twine**: keep your key on a small proxy that ships with Honeytongue and only judges your own characters. See [Browser games](https://honeytongue.dev/#browser).
 
 ## License
 

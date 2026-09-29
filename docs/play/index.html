@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Honeytongue Demo Scenes</title>
 <meta name="description" content="Four tiny text adventures where you talk your way past characters who judge what you say. A Honeytongue demo.">
-<!-- Set content to your proxy's URL (see examples/cloudflare-worker.js) to play with Jev. Empty = offline mock. -->
+<!-- Set content to your proxy's URL (the demo's is examples/demo-worker.js) to play with Jev. Empty = offline mock. -->
 <meta name="honeytongue-proxy" content="">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -66,6 +66,7 @@
 .status .pips i.on { background: currentColor; }
 .status .moves { white-space: nowrap; }
 a.key { text-decoration: none; }
+.share { margin: 0.75rem 0 0; font-size: 0.9rem; }
 
 .scenes { list-style: none; padding: 0; margin: 0 0 1.5rem; display: grid; gap: 0.75rem; }
 .scene { display: block; border: 1px solid var(--dim); padding: 0.8rem 1rem; text-decoration: none; color: var(--fg); }
@@ -117,6 +118,7 @@ a.key { text-decoration: none; }
     <label class="key record"><input type="checkbox" id="record"> Record playtest</label>
     <button type="button" class="key" id="save-transcript" hidden>Save transcript</button>
   </div>
+  <p class="share dim" id="share" hidden>Want to help? <a href="https://github.com/tbrought/honeytongue/issues/new?template=playtest.yml" target="_blank" rel="noopener">Share your transcript by opening a GitHub issue</a>.</p>
   </div>
 </main>
 
