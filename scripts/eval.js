@@ -34,7 +34,8 @@ const recorded = [];
 const client = useMock ? createMockClient() : record ? liveClient(() => current, recorded) : createJevClient();
 const readJson = async (url) => JSON.parse(await readFile(url, "utf8"));
 
-const tally = { action: [0, 0], score: [0, 0], threats: [0, 0], insults: [0, 0], verdict: [0, 0], errors: [0, 0] };
+const MARGIN = 0.3; // see check()
+const tally = { action: [0, 0], score: [0, 0], threats: [0, 0], insults: [0, 0], verdict: [0, 0], margin: [0, 0], errors: [0, 0] };
 const mark = (kind, ok) => { tally[kind][1]++; if (ok) tally[kind][0]++; return ok ? "ok" : "MISS"; };
 
 /** Checks shared by both kinds of suite: the score range, each tell, and the verdict. */
@@ -50,8 +51,14 @@ function check(c, answers, character, expected = c.verdict) {
     notes.push(`${tell} ${n.toFixed(2)} ${mark(tell, (n >= character.hostileAt) === c[tell])}`);
   }
   if (expected) {
-    const { verdict } = readPersuasion(character, answers);
+    const { verdict, score } = readPersuasion(character, answers);
     notes.push(`${verdict} ${mark("verdict", verdict === expected)}${verdict === expected ? "" : ` (want ${expected})`}`);
+    // Margin rule: a verdict decided by the score should sit at least MARGIN from the threshold, because
+    // identical attempts vary by up to about 0.2. Offended verdicts are decided by the tells, not the score.
+    if (verdict !== "offended" && expected !== "offended") {
+      const margin = score - character.threshold;
+      notes.push(`margin ${margin >= 0 ? "+" : ""}${margin.toFixed(2)} ${mark("margin", Math.abs(margin) >= MARGIN) === "ok" ? "ok" : "NEAR"}`);
+    }
   }
   return notes;
 }

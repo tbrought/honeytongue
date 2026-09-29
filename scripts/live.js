@@ -106,11 +106,16 @@ async function playRoute(id, lines, prefix = []) {
   const game = new Game(story(id), client);
   for (const line of [...prefix, ...lines]) {
     if (game.over) break;
+    const threshold = game.npc?.character.threshold;
     const r = await game.turn(line);
     const d = r.debug;
     const tells = d ? `threats ${fmt(d.threats?.noul)} insults ${fmt(d.insults?.noul)}` : "";
+    // The margin rule (scripts/eval.js): a scripted persuasion line should sit at least 0.3 from the threshold.
+    const persuading = d && /^persuade/.test(d.ranked[0][0]);
+    const margin = persuading ? d.persuasion.score - threshold : null;
     say(`  > ${line}`);
-    if (d) say(`    [${d.ranked.map(([k, p]) => `${k} ${fmt(p)}`).join(", ")}] persuasion ${fmt(d.persuasion?.score)} ${tells}`);
+    if (d) say(`    [${d.ranked.map(([k, p]) => `${k} ${fmt(p)}`).join(", ")}] persuasion ${fmt(d.persuasion?.score)} ${tells}` +
+      (persuading ? ` | margin ${margin >= 0 ? "+" : ""}${fmt(margin)}${Math.abs(margin) < 0.3 ? " NEAR" : ""}` : ""));
     say(`    ${r.text.replace(/\n+/g, " / ").slice(0, 240)}`);
   }
   say(`  => ${game.scene.ending ?? "(no ending yet)"}`);
