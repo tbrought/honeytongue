@@ -103,6 +103,12 @@
       ],
       "verdict": "unconvinced",
       "note": "the player hasn't learned his secret"
+    },
+    {
+      "input": "Cobb, please light the lamp. My sister's boat is out there in the storm.",
+      "expect": "persuade_cobb",
+      "verdict": "unconvinced",
+      "note": "standing check: an opening plea, with no clue found, must not win"
     }
   ]
 }

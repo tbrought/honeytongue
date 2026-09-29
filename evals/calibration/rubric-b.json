@@ -1,0 +1,10 @@
+{
+  "note": "Candidate default rubric (B): how far an attempt moves this particular person, by their own values and fears, without judging tactics as good or bad in general. Applied to every character that doesn't set its own levels.",
+  "levels": [
+    "Pushes them further from agreeing, given who they are and what they value or fear",
+    "Barely moves them: nothing in it matters much to them",
+    "Moves them a little: a fair point, but not one that weighs much with them",
+    "Moves them a lot: it touches what they value or fear, but not quite enough to agree",
+    "Enough to make them agree: it speaks directly to what they value or fear most"
+  ]
+}

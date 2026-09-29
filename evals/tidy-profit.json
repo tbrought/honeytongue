@@ -92,6 +92,12 @@
         1.5
       ],
       "verdict": "unconvinced"
+    },
+    {
+      "input": "Maude, please take me aboard. Bounty hunters are after me and I'll work for my passage.",
+      "expect": "persuade_maude",
+      "verdict": "unconvinced",
+      "note": "standing check: an opening plea, with no clue found, must not win"
     }
   ]
 }

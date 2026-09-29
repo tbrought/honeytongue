@@ -95,6 +95,12 @@
         1.2
       ],
       "verdict": "unconvinced"
+    },
+    {
+      "input": "Nib, please let me out. I won't tell anyone it was you.",
+      "expect": "persuade_nib",
+      "verdict": "unconvinced",
+      "note": "standing check: an opening plea, with no clue found, must not win"
     }
   ]
 }

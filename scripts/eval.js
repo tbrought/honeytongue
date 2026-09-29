@@ -5,6 +5,7 @@
 //   npm run eval -- evals/goblin-camp.json       one or more suites by path
 //   npm run eval -- --all                        every suite in evals/ (more Jev calls)
 //   npm run eval -- --all --record               also record each call's latency and tokens in live-runs/
+//   npm run eval -- --all --patch <file>         try a candidate rubric or persona first (see scripts/patches.js)
 //
 // A scene suite plays each case in a fresh Game. A character suite (like showcase.json) sends each line
 // to every character in a presets file, with no scene around it.
@@ -16,12 +17,14 @@ import { defineCharacter, judgePersuasion, readPersuasion } from "../src/persuas
 import { createJevClient } from "../src/jev.js";
 import { createMockClient } from "../src/mock.js";
 import { liveClient, summarize } from "./live-recorder.js";
+import { loadPatches, describePatches, patchCharacter, patchStory } from "./patches.js";
 
 const evalsDir = new URL("../evals/", import.meta.url);
 // Suite paths given on the command line are relative to where you ran it (or absolute).
+const patches = loadPatches();
 const files = process.argv.includes("--all")
   ? (await readdir(evalsDir)).filter((f) => f.endsWith(".json")).sort().map((f) => new URL(f, evalsDir))
-  : process.argv.filter((a) => a.endsWith(".json")).map((f) => pathToFileURL(resolve(f)));
+  : process.argv.filter((a, i) => a.endsWith(".json") && process.argv[i - 1] !== "--patch").map((f) => pathToFileURL(resolve(f)));
 if (!files.length) files.push(new URL("gatehouse.json", evalsDir));
 
 const useMock = process.argv.includes("--mock") || !process.env.TYPESAFE_API_KEY;
@@ -54,7 +57,7 @@ function check(c, answers, character, expected = c.verdict) {
 }
 
 async function sceneSuite(suite, url) {
-  const story = await readJson(new URL(suite.story, url));
+  const story = patchStory(await readJson(new URL(suite.story, url)), patches);
   current = `engine ${url.pathname.split("/").pop()}`;
   for (const c of suite.cases) {
     const game = new Game(story, client);
@@ -83,7 +86,7 @@ async function characterSuite(suite, url) {
   for (const line of suite.lines) {
     console.log(`${line.tactic}: "${line.input.slice(0, 60)}"`);
     for (const [id, verdict] of Object.entries(line.expect)) {
-      const character = defineCharacter(characters[id]);
+      const character = defineCharacter(patchCharacter(id, characters[id], patches));
       let answers; // kept from the one call, so the checks read Jev's raw answers
       const recording = { ask: async (...args) => (answers = await client.ask(...args)) };
       try {
@@ -104,7 +107,7 @@ const count = async (url) => {
   return suite.lines ? suite.lines.reduce((n, l) => n + Object.keys(l.expect).length, 0) : suite.cases.length;
 };
 const calls = (await Promise.all(files.map(count))).reduce((a, b) => a + b, 0);
-console.log(`Running ${calls} cases against ${useMock ? "the keyword mock" : "Jev"}`);
+console.log(`Running ${calls} cases against ${useMock ? "the keyword mock" : "Jev"}, patches: ${describePatches(patches)}`);
 
 for (const url of files) {
   const suite = await readJson(url);

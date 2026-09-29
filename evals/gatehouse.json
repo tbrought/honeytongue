@@ -109,6 +109,12 @@
       "input": "shut up, you useless old fool",
       "threats": false,
       "insults": true
+    },
+    {
+      "input": "Harry, please let me through. I have a letter that must reach the city tonight.",
+      "expect": "persuade_guard",
+      "verdict": "unconvinced",
+      "note": "standing check: an opening plea, with no clue found, must not win"
     }
   ]
 }
