@@ -131,6 +131,8 @@ async function connect(wsUrl) {
   const page = {
     /** Console errors, uncaught exceptions, and error log entries (CSP violations among them) since the last clear. */
     problems,
+    /** Any other DevTools protocol command, such as Emulation.setCPUThrottlingRate. */
+    send,
     /** Run a script in every new document before its own scripts (CDP evaluation isn't subject to the page's CSP). */
     onNewDocument: (source) => send("Page.addScriptToEvaluateOnNewDocument", { source }),
     viewport: (width, height) => send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: width < 500 }),

@@ -167,11 +167,30 @@ try {
       sprites: ["player", "troll", "sign"].every((k) => s.textures.exists(k)), speaker: document.querySelector("#dialogue-log p b")?.textContent ?? null,
       verdicts: [...document.querySelectorAll("#dialogue-log p[data-verdict]")].map((p) => p.dataset.verdict) }); })()`));
     const bridge = `__game.scene.getScene("bridge")`;
-    /** Hold a key until the condition on the scene holds (or give up). */
+    /** What the game looks like right now, for a failure message. */
+    const diagnose = () => page.eval(`(() => { const s = ${bridge}, k = s.keys, loop = __game.loop;
+      return "player at " + s.player.x.toFixed(1) + "," + s.player.y.toFixed(1) + "; talking " + s.talking + ", passed " + s.passed + ", ended " + s.ended +
+        "; keys held: " + ["UP", "DOWN", "LEFT", "RIGHT"].filter((n) => k[n].isDown).join(" ") + "; " + loop.actualFps.toFixed(0) + " fps, delta " + loop.delta.toFixed(0) +
+        " ms, loop running " + loop.running + "; page " + document.visibilityState + ", focused " + document.hasFocus() +
+        ", active element " + (document.activeElement?.id || document.activeElement?.tagName); })()`).catch((e) => `(no diagnosis: ${e.message})`);
+    /**
+     * Hold a key until the condition on the scene holds (or give up). The key press is sent again every quarter of a
+     * second, as a held key repeats: Phaser forgets held keys when the window loses focus, which headless browsers on
+     * some systems do on their own.
+     */
     const walk = async (key, until, what) => {
-      await page.key(key, true);
-      try { await page.waitFor(until, { what, timeoutMs: 10_000, every: 30 }); } finally { await page.key(key, false); }
+      const started = Date.now();
+      let pressed = 0;
+      try {
+        // Checked often, so the player stops close to the spot; pressed again every 250 ms.
+        while (!(await page.eval(`Boolean(${until})`))) {
+          if (Date.now() - started > 15_000) throw new Error(`Timed out after 15000 ms waiting for ${what} (${await diagnose()})`);
+          if (Date.now() - pressed >= 250) { await page.key(key, true); pressed = Date.now(); }
+          await sleep(30);
+        }
+      } finally { await page.key(key, false); }
     };
+    const mustGame = async (ok, message) => { if (!ok) throw new Error(`${message} (${await diagnose()})`); };
     const talk = async () => { await page.key("e", true); await page.key("e", false); await page.waitFor(`${bridge}.talking`, { what: "the dialogue box" }); };
     const say = async (line, verdicts) => {
       await page.eval(`(() => { const i = document.getElementById("dialogue-input"); i.value = ${JSON.stringify(line)}; document.getElementById("dialogue-form").requestSubmit(); return true; })()`);
@@ -179,26 +198,26 @@ try {
     };
     const leave = async () => { await page.eval(`document.getElementById("dialogue-close").click(); true`); await page.waitFor(`!${bridge}.talking`, { what: "the box to close" }); };
 
-    must((await state()).sprites, "the sprites didn't load");
+    await mustGame((await state()).sprites, "the sprites didn't load");
     await walk("ArrowUp", `${bridge}.player.y <= 95`, "the player to walk up");
     await walk("ArrowRight", `${bridge}.player.x >= 110`, "the player to reach the sign");
     await talk();
-    must((await state()).speaker === "Sign: ", "the sign wasn't read");
+    await mustGame((await state()).speaker === "Sign: ", "the sign wasn't read");
     await leave();
     await walk("ArrowDown", `${bridge}.player.y >= 134`, "the player to walk down to the bridge");
     await walk("ArrowRight", `${bridge}.player.x >= 180`, "the player to reach the troll");
-    await page.key("ArrowRight", true); await sleep(400); await page.key("ArrowRight", false);
-    must((await state()).x <= 182.5, "the river didn't stop the player");
+    for (let i = 0; i < 3; i++) { await page.key("ArrowRight", true); await sleep(200); } // keep pushing against the river
+    await page.key("ArrowRight", false);
+    await mustGame((await state()).x <= 182.5, "the river didn't stop the player");
     await talk();
-    must((await state()).speaker === "Tolly Underarch: ", "the troll didn't answer");
+    await mustGame((await state()).speaker === "Tolly Underarch: ", "the troll didn't answer");
     await say("Please let me cross the bridge.", 1);
-    must((await state()).verdicts.join() === "unconvinced", "a bare plea should fail");
+    await mustGame((await state()).verdicts.join() === "unconvinced", "a bare plea should fail");
     await say("Please let me cross, and I'll come back and visit you.", 2);
-    must((await state()).passed, "the right argument should convince him (the sign teaches his secret)");
+    await mustGame((await state()).passed, "the right argument should convince him (the sign teaches his secret)");
     await leave();
     await page.waitFor(`${bridge}.troll.y >= 207`, { what: "the troll to step aside" });
-    await page.key("ArrowLeft", true); await sleep(150); await page.key("ArrowLeft", false);
-    must((await state()).flip === true, "walking left should mirror the player");
+    await walk("ArrowLeft", `${bridge}.player.flipX`, "walking left to mirror the player");
     await walk("ArrowRight", `${bridge}.ended`, "the player to cross the bridge");
     const bad = await violations();
     must(bad.length === 0, `CSP violations or console errors: ${bad.join("; ")}`);

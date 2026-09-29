@@ -58,7 +58,12 @@ test("deadlineMs bounds a Jev call, retries and waits included; without it there
   assert.equal(calls, 2, "a retry that couldn't finish in time isn't made");
   assert.ok(Date.now() - started < 1200);
   // A call that hangs is cut off at the deadline, not at the (longer) per-try timeout.
-  const hanging = (url, init) => new Promise((_, reject) => init.signal.addEventListener("abort", () => reject(init.signal.reason)));
+  // Like a real request's open connection, it keeps Node running while it waits: AbortSignal.timeout()'s timer doesn't
+  // on its own (Node 22 then ends the test early, with the promise still pending).
+  const hanging = (url, init) => new Promise((_, reject) => {
+    const open = setTimeout(() => {}, 60_000);
+    init.signal.addEventListener("abort", () => { clearTimeout(open); reject(init.signal.reason); });
+  });
   started = Date.now();
   await assert.rejects(createJevClient({ apiKey: "k", timeoutMs: 10_000, deadlineMs: 300, fetch: hanging }).ask({}, {}), /ran out of time: no answer within 300ms/);
   assert.ok(Date.now() - started < 2000);
