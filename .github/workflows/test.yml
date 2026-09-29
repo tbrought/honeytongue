@@ -1,7 +1,10 @@
 name: test
 
+# Pull requests, and main after a merge. (Pushes to other branches are covered by their pull request, so they
+# don't run the matrix twice.)
 on:
   push:
+    branches: [main]
   pull_request:
 
 permissions:

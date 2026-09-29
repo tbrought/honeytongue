@@ -1,0 +1,11 @@
+# Keeps the workflows' actions current. They're pinned to commit SHAs, which would otherwise go stale silently:
+# Dependabot opens a pull request with the new SHA and version comment. The package has no runtime dependencies,
+# and its dev tooling (TypeScript) is pinned on purpose, so only the actions are watched.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
