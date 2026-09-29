@@ -77,13 +77,15 @@ test("the history sent to Jev holds only what was said and how it went", async (
   assert.deepEqual(npc.state("hello").previous_attempts, [{ said: "open up or else", outcome: "offended" }]);
 });
 
-test("secrets only count once learned", () => {
-  const c = { ...harry, secrets: [{ id: "sick_kid", fact: "Her daughter is sick." }] };
-  assert.equal(persuasionState(c, "hi").character.secrets[0].player_knows, false);
-  assert.equal(persuasionState(c, "hi", { knows: ["sick_kid"] }).character.secrets[0].player_knows, true);
+test("secrets are only sent to Jev once learned", () => {
+  const c = { ...harry, secrets: [{ id: "sick_kid", fact: "Her daughter is sick." }, { id: "debt", fact: "He owes the captain money." }] };
+  assert.equal(persuasionState(c, "hi").character.secrets, undefined, "nothing learned, nothing sent");
+  assert.deepEqual(persuasionState(c, "hi", { knows: ["sick_kid"] }).character.secrets, [{ fact: "Her daughter is sick.", player_knows: true }]);
+  assert.doesNotMatch(JSON.stringify(persuasionState(c, "hi", { knows: ["sick_kid"] })), /owes the captain/);
   const npc = new Persuadable(c);
   npc.learn("sick_kid");
-  assert.equal(npc.state("hi").character.secrets[0].player_knows, true);
+  assert.deepEqual(npc.state("hi").character.secrets.map((s) => s.fact), ["Her daughter is sick."]);
+  assert.doesNotMatch(JSON.stringify(persuasionQuestions(c)), /player_knows/, "the questions don't need to explain unlearned secrets");
 });
 
 test("input is cleaned and capped before sending", async () => {

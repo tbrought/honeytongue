@@ -84,7 +84,11 @@ function secretsClient(mode) {
       const q = structuredClone(questions);
       const s = structuredClone(state);
       const text = q.persuasion.instructions.question;
-      if (!text.includes(TODAY)) throw new Error("The secrets sentence in persuasionQuestions() changed; update calibrate.js");
+      // Since approach (c) was adopted, the library itself leaves unlearned secrets out; (a) and (b) need the old wording.
+      if (!text.includes(TODAY)) {
+        if (mode === "c") return client.ask(s, q);
+        throw new Error("Approaches (a) and (b) need the pre-alpha.4 secrets sentence, which persuasionQuestions() no longer sends");
+      }
       if (mode === "b") q.persuasion.instructions.question = text.replace(TODAY, TIGHTENED);
       if (mode === "c") {
         q.persuasion.instructions.question = text.replace(TODAY, "");
@@ -99,7 +103,8 @@ function secretsClient(mode) {
 
 async function secretsStep() {
   const suite = load("evals/calibration/secrets.json");
-  for (const mode of ["a", "b", "c"]) {
+  const modes = process.argv.includes("--modes") ? process.argv[process.argv.indexOf("--modes") + 1].split(",") : ["a", "b", "c"];
+  for (const mode of modes) {
     current = `standalone calibrate-secrets-${mode} ${describePatches(patches)}`;
     const via = secretsClient(mode);
     say(`\n== approach (${mode}) ${{ a: "today's wording", b: "tightened wording", c: "unlearned secrets not sent" }[mode]}`);

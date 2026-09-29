@@ -5,7 +5,7 @@
 import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createJevClient } from "../src/jev.js";
 
-export const BUDGET = 1_000_000;
+export const BUDGET = 3_000_000; // raised from 1 million by the human for the rubric C validation
 const dir = new URL("../live-runs/", import.meta.url);
 const ledgerFile = new URL("ledger.json", dir);
 const callsFile = new URL("calls.jsonl", dir);
