@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-alpha.8 (2026-09-29)
 
 Demo polish. Stories can mark who and what matters, the engine says what each piece of a reply means, and the web demo and the terminal player each show one way to style it. You bring the styling: nothing in the library says how anything looks.
 
