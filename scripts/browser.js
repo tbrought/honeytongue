@@ -64,6 +64,9 @@ export async function openBrowser({ timeoutMs = 30_000 } = {}) {
     "--disable-extensions", "--hide-scrollbars", "--force-device-scale-factor=1", "--mute-audio",
     // No crash reports: they'd be written to disk and could be uploaded.
     "--disable-breakpad", "--disable-crash-reporter",
+    // Keep timers and frames running at full speed even if the page is treated as hidden or in the background (as
+    // headless browsers on CI runners can be), so games and animations don't slow down or stall mid-check.
+    "--disable-background-timer-throttling", "--disable-renderer-backgrounding", "--disable-backgrounding-occluded-windows",
     // CI containers often can't use the browser's sandbox; only there, turn it off.
     ...(process.env.CI ? ["--no-sandbox", "--disable-dev-shm-usage"] : []), "about:blank"];
   const proc = spawn(findBrowser(), args, { stdio: "ignore", env: browserEnv() });
