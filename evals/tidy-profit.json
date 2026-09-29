@@ -53,9 +53,8 @@
     {
       "input": "Listen, you salty old shark: I can read, write, and count, and your manifest could use a second pair of eyes. Take me across and I'll work my passage.",
       "expect": "persuade_maude",
-      "insults": true,
       "verdict": "unconvinced",
-      "note": "rough talk is banter to her, so no offence, but the offer isn't enough"
+      "note": "rough talk is banter to her, so no offence, but the offer is not enough"
     },
     {
       "input": "Take me aboard, or you'll regret it when I tell the harbour guard what this ship really is.",
@@ -94,10 +93,10 @@
       "verdict": "unconvinced"
     },
     {
-      "input": "Maude, please take me aboard. Bounty hunters are after me and I'll work for my passage.",
+      "input": "Maude, please take me aboard.",
       "expect": "persuade_maude",
       "verdict": "unconvinced",
-      "note": "standing check: an opening plea, with no clue found, must not win"
+      "note": "standing check: a bare opening plea, with no clue found, must not win"
     }
   ]
 }

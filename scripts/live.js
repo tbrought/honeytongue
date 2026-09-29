@@ -95,9 +95,9 @@ const ROUTES = {
     other: ["examine the crates", "hide in one of the captain's crates"],
   },
   lighthouse: {
-    talk: ["look through the spyglass", "ask Cobb about himself",
-      "Cobb, please light the lamp. My sister's fishing boat is out there near the rocks, and you know better than anyone what a dark night costs."],
-    plain: ["Cobb, my sister is out there. Please light the lamp before she hits the rocks."],
+    talk: ["look through the spyglass", "examine the lamp", "ask Cobb about himself",
+      "Cobb, the raiders are anchored behind the island and won't sail in this storm, and the shutter can send the beam out to sea only. You know what a dark night cost the Wren. Please light it for my sister."],
+    plain: ["Cobb, please light the lamp. The raiders are anchored behind the island and won't sail in this storm, and the shutter can turn the beam out to sea. You know what a dark night on the rocks cost the Wren. Don't let my sister's fishing boat be lost the same way."],
     other: ["search the stores", "light a beacon on the headland"],
   },
 };

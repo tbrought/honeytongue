@@ -12,12 +12,14 @@ export class HoneytongueError extends Error {
   }
 }
 
+// Judged against the persona, not against tactics in general: flattery, threats, or bribes land only if this
+// person would fall for them (live calibration, 0.1.0-alpha.4).
 export const DEFAULT_LEVELS = [
-  "Not a real attempt, or counterproductive given who they are: flattery they'd see through, obvious lies, demands",
+  "Not a real attempt, or counterproductive given who they are",
   "Weak: generic pleading or excuses that give them nothing they care about",
   "Reasonable and polite, but no strong reason for them in particular to agree",
-  "Honest and specific, touching something they value, but not quite enough",
-  "Genuinely compelling to them: speaks directly to what they care about most",
+  "Specific, and touches something they value or fear, but not quite enough",
+  "Genuinely compelling to them: speaks directly to what they value or fear most",
 ];
 
 // Signs of hostility Jev looks for in every attempt, each asked as its own yes/no question.

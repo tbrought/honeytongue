@@ -456,11 +456,11 @@ try {
 } catch (err) {
   notice(`Couldn't load the preset characters: ${err.message}`);
 }
-for (const { id, character } of [...presets, { id: "blank", character: null }]) {
+for (const { id, character, note } of [...presets, { id: "blank", character: null }]) {
   const button = el("button", { type: "button", className: "key", textContent: character ? character.name : "Blank" });
   button.addEventListener("click", () => {
     load(character ? { character: structuredClone(character), knows: [] } : structuredClone(BLANK),
-      character ? `Loaded ${character.name}. The player doesn't know any secrets yet: tick "Player knows this" to try arguments that use one.` : "Started a blank character.");
+      character ? `Loaded ${character.name}. ${note ? `${note} ` : ""}The player doesn't know any secrets yet: tick "Player knows this" to try arguments that use one.` : "Started a blank character.");
     fieldInput("name").focus();
   });
   button.dataset.preset = id;

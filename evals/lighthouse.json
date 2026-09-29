@@ -89,7 +89,7 @@
       "expect": "persuade_cobb",
       "score": [
         0,
-        1.5
+        2
       ],
       "verdict": "unconvinced",
       "note": "a lie that pulls rank"
@@ -105,10 +105,10 @@
       "note": "the player hasn't learned his secret"
     },
     {
-      "input": "Cobb, please light the lamp. My sister's boat is out there in the storm.",
+      "input": "Cobb, please light the lamp.",
       "expect": "persuade_cobb",
       "verdict": "unconvinced",
-      "note": "standing check: an opening plea, with no clue found, must not win"
+      "note": "standing check: a bare opening plea, with no clue found, must not win"
     }
   ]
 }

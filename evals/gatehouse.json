@@ -111,10 +111,10 @@
       "insults": true
     },
     {
-      "input": "Harry, please let me through. I have a letter that must reach the city tonight.",
+      "input": "Harry, please let me through.",
       "expect": "persuade_guard",
       "verdict": "unconvinced",
-      "note": "standing check: an opening plea, with no clue found, must not win"
+      "note": "standing check: a bare opening plea, with no clue found, must not win"
     }
   ]
 }

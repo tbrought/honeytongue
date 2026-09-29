@@ -25,6 +25,14 @@ function runSnippet(code, character) {
   return new Function("Persuadable", "createJevClient", body)(Persuadable, () => "client");
 }
 
+test("a preset's note is shown by the playground, and isn't part of the character", () => {
+  const cobb = presets.find((p) => p.id === "cobb");
+  assert.match(cobb.note, /tougher on his own/);
+  assert.equal("note" in cobb.character, false);
+  assert.equal(presets.find((p) => p.id === "harry").note, undefined);
+  assert.throws(() => readPresets({ x: { note: "hi" } }), /Preset "x" is invalid/);
+});
+
 test("generated code round-trips through defineCharacter()", () => {
   for (const { id, character } of presets) {
     const made = runSnippet(characterCode(character), character);
