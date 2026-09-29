@@ -2,7 +2,7 @@
 
 ## 0.1.0-alpha.7 (2026-09-29)
 
-Quality and release tooling. This is the first release published from GitHub Actions with npm trusted publishing, so it carries a provenance statement and no npm token is stored anywhere.
+Quality and release tooling. This is the first release staged from GitHub Actions with npm trusted publishing and approved on npmjs.com with two-factor authentication, so it carries a provenance statement and no npm token is stored anywhere.
 
 ### Breaking
 
