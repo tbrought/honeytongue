@@ -158,6 +158,8 @@ Work through the phases in order. At the start of each phase, send a short plan 
      - Give the human a matching list of GitHub repository topics (up to 20) and an updated one-line repository description, since only they can set those in the repository's About settings.
 4. **Stable `0.1.0`** (not `1.0`; see "Versioning" under "Releasing"). Remove the alpha notice, switch CDN links from `@alpha` to a `0.1` range, point `latest` at `0.1.0`, and follow the launch checklist under "Releasing".
 
+**In the next npm release, whichever phase it comes from:** add "Built on Jev by TypeSafe AI, and not affiliated with TypeSafe" to the README, as the docs site's footer already says (TypeSafe's terms; see the standing rules).
+
 **Anytime:** the human tests the Twine recipe; you fix what they find.
 
 **After Phase G, once people who don't know the scenes have played:** revisit Nib's patience (3). The human's own playtest isn't good evidence for difficulty, since they wrote the scenes; use playtest transcripts from other players (the web demo's "Record playtest").
@@ -170,6 +172,12 @@ Work through the phases in order. At the start of each phase, send a short plan 
 - One branch per phase, started from `main` after the previous phase is merged.
 - Stop points before building: send a plan and wait for approval.
 - Follow "Releasing" for each release.
+- **TypeSafe's terms** (their Master Customer Agreement and Acceptable Use Policy):
+  - Never use Jev's outputs (eval results, `live-runs/` data, transcripts) to train or fine-tune any model. TypeSafe's terms prohibit it. They're for evaluation only.
+  - Never stress-test, probe, or security-test TypeSafe's service itself. Our tests target Honeytongue's own behaviour.
+  - Describe Honeytongue as built on Jev and not affiliated with TypeSafe. Never use TypeSafe's logo or imply endorsement.
+  - Only publish TypeSafe details that are already public, such as their documentation and publicly listed pricing.
+  - The demo proxy's exact-request guard (`src/guard.js`, `allowedStories` in `examples/demo-worker.js`) is a compliance requirement, not just a cost control: TypeSafe's terms forbid offering Jev as a standalone service. Never loosen it.
 
 ## Things only the human can do
 
