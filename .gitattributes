@@ -10,3 +10,6 @@
 *.woff binary
 *.woff2 binary
 *.tgz binary
+
+# Vendored third-party files are kept byte-for-byte as published.
+docs/assets/vendor/** -text

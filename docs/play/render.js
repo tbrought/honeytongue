@@ -68,5 +68,14 @@ export function makeRenderer(doc) {
     return { section, again };
   }
 
-  return { el, hidden, partsNode, paragraph, titleCard, commandLine, endingScreen };
+  /** The privacy note shown while Jev may judge, linking to TypeSafe's privacy policy. */
+  const privacy = () => el("span", {}, "What you type is sent to ",
+    el("a", { href: "https://typesafe.ai/legal/privacy-policy", target: "_blank", rel: "noopener" }, "TypeSafe"),
+    "'s Jev model to be judged, and TypeSafe may store it. Don't type anything personal.");
+
+  /** The banner's contents, from fallback.js's banner(). */
+  const bannerNode = ({ label, detail, privacy: withPrivacy }) =>
+    el("span", {}, el("strong", {}, label), detail, ...(withPrivacy ? [" ", privacy()] : []));
+
+  return { el, hidden, partsNode, paragraph, titleCard, commandLine, endingScreen, bannerNode };
 }

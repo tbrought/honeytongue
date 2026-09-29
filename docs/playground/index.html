@@ -6,13 +6,25 @@
 <title>Character Playground</title>
 <meta name="description" content="Design a Honeytongue character and tune it by trying lines against it, without writing code.">
 <!-- Nothing loads from anywhere but this site and Google Fonts. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.honeytongue.dev; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src 'self' https://api.honeytongue.dev; base-uri 'none'; form-action 'none'; object-src 'none'">
 <!-- Filled in by `npx honeytongue playground` with how to reach its local judge. Empty here = preview only. -->
 <meta name="honeytongue-local" content="">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=VT323&display=swap" rel="stylesheet">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Crect width=%2716%27 height=%2716%27 rx=%272%27 fill=%27%230c0904%27/%3E%3Crect x=%275%27 y=%273%27 width=%276%27 height=%2710%27 fill=%27%23f2b34d%27/%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/honeytongue-logo-32.png">
+<link rel="apple-touch-icon" href="../assets/honeytongue-logo-192.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Honeytongue">
+<meta property="og:title" content="Honeytongue character playground">
+<meta property="og:description" content="Design a Honeytongue character and tune it by trying lines against it, without writing code.">
+<meta property="og:url" content="https://honeytongue.dev/playground/">
+<meta property="og:image" content="https://honeytongue.dev/assets/social-preview.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:image:alt" content="The Honeytongue logo: a pixel-art speech bubble dripping with honey">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Honeytongue character playground">
+<meta name="twitter:description" content="Design a Honeytongue character and tune it by trying lines against it, without writing code.">
+<meta name="twitter:image" content="https://honeytongue.dev/assets/social-preview.png">
+<meta name="twitter:image:alt" content="The Honeytongue logo: a pixel-art speech bubble dripping with honey">
 <link rel="stylesheet" href="../style.css">
 <script src="../theme.js"></script>
 <link rel="stylesheet" href="playground.css">
@@ -20,7 +32,7 @@
 <body>
 <a class="skip" href="#line">Skip to the conversation</a>
 <header class="status">
-  <span class="room"><a href="../">Honeytongue</a> / Playground</span>
+  <span class="room"><a href="../"><img class="logo" src="../assets/honeytongue-logo-32.png" alt="" width="20" height="20">Honeytongue</a> / Playground</span>
   <button type="button" data-theme-toggle>Paper</button>
 </header>
 

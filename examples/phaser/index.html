@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Honeytongue + Phaser: the bridge troll</title>
+<link rel="stylesheet" href="style.css">
+<!-- Phaser from a CDN, pinned to an exact version, with a Subresource Integrity hash so a changed file won't run. -->
+<script src="https://cdn.jsdelivr.net/npm/phaser@4.2.1/dist/phaser.min.js"
+  integrity="sha384-kyUQ5+cxc6+X89xEG6DhcXLcDU9T3Z+o/45VdT6pgAwtG6gxtAzYTEn0Wwj/BKZd" crossorigin="anonymous"></script>
+<script type="module" src="main.js"></script>
+</head>
+<body>
+<main>
+  <h1>The bridge troll</h1>
+  <p>Walk with the arrow keys or WASD (or tap where to go). Press E, Space, or Enter to read the sign or talk to the troll.</p>
+  <div class="stage">
+    <div id="game"></div>
+    <!-- The dialogue box: plain HTML over the game. game.js fills it in, as text only. -->
+    <section id="dialogue" aria-live="polite" hidden>
+      <div id="dialogue-log"></div>
+      <form id="dialogue-form">
+        <label for="dialogue-input" class="vh">What do you say?</label>
+        <input id="dialogue-input" maxlength="500" autocomplete="off" placeholder="Say something...">
+        <button type="submit">Say</button>
+      </form>
+      <button type="button" id="dialogue-close">Leave (Esc)</button>
+    </section>
+  </div>
+</main>
+</body>
+</html>

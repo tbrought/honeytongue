@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { request as httpRequest, createServer } from "node:http";
+import { readFileSync } from "node:fs";
 import { startPlayground, runPlayground, openCommand, JUDGE_PATH, TOKEN_HEADER } from "../src/playground-server.js";
 import { persuasionQuestions, persuasionState } from "../src/index.js";
 
@@ -147,6 +148,22 @@ test("every module the page imports is served, so a new import in the library ca
     };
     await visit("/playground/app.js");
     assert.ok(seen.has("/play/lib/version.js"), "the walk reaches the library's imports");
+  });
+});
+
+test("the web fonts are served as they are, as fonts", async () => {
+  await withPlayground({ apiKey: "" }, async ({ port }) => {
+    const file = "IBMPlexMono-Regular-Latin1.woff2";
+    const bytes = await new Promise((resolve, reject) => {
+      httpRequest({ host: "127.0.0.1", port, path: `/assets/fonts/${file}`, headers: { Host: `127.0.0.1:${port}` } }, (res) => {
+        assert.equal(res.statusCode, 200);
+        assert.equal(res.headers["content-type"], "font/woff2");
+        const chunks = [];
+        res.on("data", (c) => chunks.push(c));
+        res.on("end", () => resolve(Buffer.concat(chunks)));
+      }).on("error", reject).end();
+    });
+    assert.ok(bytes.equals(readFileSync(new URL(`../docs/assets/fonts/${file}`, import.meta.url))), "byte for byte");
   });
 });
 

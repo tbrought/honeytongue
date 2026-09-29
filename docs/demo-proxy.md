@@ -4,7 +4,7 @@ The web demo on honeytongue.dev plays with Jev through a Cloudflare Worker named
 
 - **Code:** `examples/demo-worker.js`, configured in `examples/demo-wrangler.toml`.
 - **Address:** `https://api.honeytongue.dev/judge`. Every other path answers 404, and there's no workers.dev address.
-- **Scope:** it only judges the four demo scenes, and only for the pages listed in `ALLOWED_ORIGINS`: `https://honeytongue.dev` first, with `https://tbrought.github.io` as a fallback.
+- **Scope:** it only judges the four demo scenes and the Phaser example's troll (`examples/phaser/character.js`, played at honeytongue.dev/phaser/), and only for the pages listed in `ALLOWED_ORIGINS`: `https://honeytongue.dev` first, with `https://tbrought.github.io` as a fallback.
 
 Without it, or when it can't answer, the demo falls back to the offline stand-in.
 
@@ -69,7 +69,7 @@ The script acts as the demo's pages, `https://honeytongue.dev` and then `https:/
 - other sites and other characters are refused;
 - the proxy runs this checkout's Honeytongue version.
 
-It then plays one Gatehouse turn, which is one live Jev call. It doesn't need your key. It should end with "All checks passed."
+It then plays one Gatehouse turn and makes one attempt on the Phaser example's troll: two live Jev calls. It doesn't need your key. It should end with "All checks passed."
 
 ## Point the demo at it
 
@@ -87,7 +87,7 @@ When the demo page runs on `localhost` or `127.0.0.1` (for example with `npx ser
 
 ## Later
 
-- **Every release that changes the persuasion questions, the stories, or the personas:** deploy the Worker again from the release's commit, then rerun the check script (Releasing, step 7). Until you do, the demo explains the version mismatch and uses the offline stand-in.
+- **Every release that changes the persuasion questions, the stories, the personas, or the Phaser example's troll:** deploy the Worker again from the release's commit, then rerun the check script (Releasing, step 7). Until you do, the demo explains the version mismatch and uses the offline stand-in.
 - **Another page address:** add it to `ALLOWED_ORIGINS` in `examples/demo-wrangler.toml` (comma-separated, no trailing slash), then run `npx wrangler deploy --config examples/demo-wrangler.toml` again. No code changes are needed. Once GitHub stops redirecting from `tbrought.github.io`, you can remove that address the same way.
 - **Rate limits, all together:**
   - Cloudflare's rule: 10 requests per 10 seconds per IP.

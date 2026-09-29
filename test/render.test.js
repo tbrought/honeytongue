@@ -92,7 +92,7 @@ test("the web demo inserts everything as text: story text, replies, player input
 });
 
 test("the demo's scripts never use an API that parses HTML or runs strings as code", () => {
-  const dirs = ["docs/play", "docs/playground"];
+  const dirs = ["docs/play", "docs/playground", "docs/phaser", "examples/phaser"];
   const files = dirs.flatMap((dir) => readdirSync(new URL(`../${dir}/`, import.meta.url)).filter((f) => f.endsWith(".js")).map((f) => `${dir}/${f}`));
   assert.ok(files.includes("docs/play/app.js") && files.includes("docs/play/render.js") && files.includes("docs/playground/app.js"));
   for (const file of [...files, "docs/theme.js"]) {

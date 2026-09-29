@@ -1,7 +1,7 @@
 {
   "name": "honeytongue",
-  "version": "0.1.0-alpha.8",
-  "description": "Characters players can actually argue with: a persuasion mechanic for games, powered by Jev typed decisions",
+  "version": "0.1.0-alpha.9",
+  "description": "Characters players can actually argue with: a persuasion mechanic for games where players type or speak to NPCs, judged by each character's own values. Powered by Jev.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tbrought/honeytongue.git"
@@ -10,6 +10,7 @@
   "bugs": {
     "url": "https://github.com/tbrought/honeytongue/issues"
   },
+  "author": "Tristan Broughton (https://honeytongue.dev)",
   "type": "module",
   "main": "src/index.js",
   "exports": {
@@ -46,14 +47,26 @@
     "node": ">=22"
   },
   "keywords": [
-    "game-mechanic",
     "persuasion",
     "npc",
+    "npc-dialogue",
     "dialogue",
-    "interactive-fiction",
+    "dialogue-system",
+    "game-mechanics",
+    "gamedev",
+    "rpg",
+    "charisma",
+    "charisma-check",
     "text-adventure",
-    "jev",
-    "typesafe"
+    "text-game",
+    "interactive-fiction",
+    "twine",
+    "sugarcube",
+    "browser-game",
+    "phaser",
+    "ai-npc",
+    "game-ai",
+    "jev"
   ],
   "license": "MIT",
   "types": "src/index.d.ts",
@@ -62,6 +75,9 @@
     "stories",
     "examples",
     "docs/playground",
+    "docs/assets/fonts",
+    "docs/assets/honeytongue-logo-32.png",
+    "docs/assets/honeytongue-logo-192.png",
     "docs/style.css",
     "docs/theme.js",
     "README.md",
