@@ -54,7 +54,7 @@
       "actions": {
         "persuade_maude": {
           "label": "Try to talk Maude into taking you aboard",
-          "description": "Try to convince, bargain with, argue with, or reason with the quartermaster so she takes the player aboard",
+          "description": "Try to convince, bargain with, argue with, threaten, or reason with the quartermaster so she takes the player aboard: anything said to her, threats included",
           "persuade": true
         },
         "chat_maude": {
@@ -90,7 +90,7 @@
         },
         "attack_maude": {
           "label": "Attack Maude",
-          "description": "Physically attack, grab, or shove the quartermaster, or try to force your way aboard",
+          "description": "Physically attack, grab, or shove the quartermaster, or force your way aboard, actually doing it now; words alone, even threats, are never this",
           "text": "Maude sidesteps without getting up, and two deckhands take it from there.",
           "goto": "harbour"
         },
