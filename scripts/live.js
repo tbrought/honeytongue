@@ -4,10 +4,14 @@
 //   node scripts/live.js routes         each scene's talking and non-talking routes, played through the engine
 //   node scripts/live.js consistency    ten lines, ten times each, as standalone attempts on Harry
 //   node scripts/live.js engine-consistency   three lines, ten times each, as full engine turns
+//
+// --via-proxy sends every call through a proxy guarded like the demo's (allowedStories: the four scenes, in this
+// process), so a request the guard would refuse fails the run.
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { Game } from "../src/engine.js";
 import { judgePersuasion, readPersuasion } from "../src/persuasion.js";
-import { SOURCE } from "../src/jev.js";
+import { SOURCE, createProxyClient } from "../src/jev.js";
+import { createProxyHandler } from "../src/proxy.js";
 import { liveClient, summarize, mean, sd } from "./live-recorder.js";
 import { loadPatches, describePatches, patchStory } from "./patches.js";
 
@@ -18,7 +22,13 @@ const patches = loadPatches(); // --patch <file>: try a candidate rubric or pers
 const story = (id) => patchStory(load(`stories/${scenes.find((s) => s.id === id).file}`), patches);
 const recorded = [];
 let current = "";
-const client = liveClient(() => current, recorded);
+const jev = liveClient(() => current, recorded);
+const client = process.argv.includes("--via-proxy")
+  ? createProxyClient({ url: "https://demo-proxy.local/", maxRetries: 0, timeoutMs: 60_000, fetch: (() => {
+      const handle = createProxyHandler({ client: jev, allowedStories: scenes.map((s) => story(s.id)), rateLimit: false });
+      return (url, init) => handle(new Request(url, init));
+    })() })
+  : jev;
 const out = [];
 const say = (line = "") => { console.log(line); out.push(line); };
 const fmt = (n) => (Number.isFinite(n) ? n.toFixed(2) : String(n));

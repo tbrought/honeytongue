@@ -1,0 +1,11 @@
+# Wrangler config for the public demo's proxy (examples/demo-worker.js). Paths are relative to this file.
+# Deploy from the repository root: npx wrangler deploy --config examples/demo-wrangler.toml
+name = "honeytongue-demo"
+main = "demo-worker.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+# Pages allowed to call the proxy, comma-separated, with no trailing slash. Add a custom domain here later,
+# for example "https://tbrought.github.io,https://honeytongue.dev", then deploy again.
+ALLOWED_ORIGINS = "https://tbrought.github.io"
+# The secret TYPESAFE_API_KEY is set with `npx wrangler secret put`, never here.

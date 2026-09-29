@@ -56,7 +56,7 @@ else say(result.reaction ?? "Harry's hand drops to his club.");
 - **[Documentation](https://tbrought.github.io/honeytongue/)**: writing personas, difficulty, secrets, patience, and every option, from simple to advanced.
 - **Playground**: tune a character by trying lines against it, with `npx honeytongue playground`, or [in your browser](https://tbrought.github.io/honeytongue/playground/).
 - **Demo**: [four short scenes](https://tbrought.github.io/honeytongue/play/) built with Honeytongue's text adventure engine, or `npx honeytongue` in a terminal.
-- **Browser games and Twine**: keep your key on a small proxy that ships with Honeytongue. See [Browser games](https://tbrought.github.io/honeytongue/#browser).
+- **Browser games and Twine**: keep your key on a small proxy that ships with Honeytongue and only judges your own characters. See [Browser games](https://tbrought.github.io/honeytongue/#browser).
 
 ## License
 
