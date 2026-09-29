@@ -1,5 +1,9 @@
 # Honeytongue
 
+[![CI](https://github.com/tbrought/honeytongue/actions/workflows/test.yml/badge.svg)](https://github.com/tbrought/honeytongue/actions/workflows/test.yml)
+[![npm (alpha)](https://img.shields.io/npm/v/honeytongue/alpha?label=npm%20alpha)](https://www.npmjs.com/package/honeytongue)
+[![License: MIT](https://img.shields.io/npm/l/honeytongue)](LICENSE)
+
 **Characters your players can actually argue with.** Give a character a name, a persona, and a goal, pass in whatever the player typed, and Honeytongue tells you whether they were convinced, judged by *that character's* values. The same line can win over a greedy merchant and offend an honest guard. It's powered by [Jev](https://docs.typesafe.ai), TypeSafe's typed decision model, and works in any JavaScript game: Node, the browser, Twine, or a Discord bot. It has no dependencies and ships TypeScript types (TypeScript 5.9 or later).
 
 **You only need three fields and one method. Everything else is optional.**
@@ -60,4 +64,4 @@ else say(result.reaction ?? "Harry's hand drops to his club.");
 
 ## License
 
-MIT
+MIT. Built on Jev by TypeSafe AI, and not affiliated with TypeSafe.
