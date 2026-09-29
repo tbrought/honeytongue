@@ -443,8 +443,37 @@ decide: (result, { previousAttempts }) =&gt;
 npx honeytongue story.json   <span class="c"># play your own story</span>
 npx honeytongue --transcript play.json   <span class="c"># save a playtest transcript as you play</span>
 npm run play                 <span class="c"># in the repository: with Jev, showing its reasoning each turn</span>
-npm run play:mock            <span class="c"># in the repository: offline, no key needed</span></code></pre>
+npm run play:mock            <span class="c"># in the repository: offline, no key needed</span>
+npx honeytongue --no-color   <span class="c"># plain text (so does setting NO_COLOR)</span></code></pre>
       <p>The scene files in <code>stories/</code> are working examples of the format to copy from, and <code>src/index.d.ts</code> has the full story format. Stories are checked when they load, and every problem is listed at once, such as an action that leads to a scene that doesn't exist, or two different characters sharing an id. Give scenes a <code>name</code> like "East Gate" if your interface has a status line to show it in. An NPC's <code>persuasion</code> block takes the same settings as a character, such as <code>difficulty</code>, <code>offendedBy</code>, and <code>threshold</code>, and <code>hostileReaction</code> is only needed when something can offend them. The browser version lives in <code>docs/play/</code> and uses copies of the engine and stories; run <code>npm run build:demo</code> after changing them.</p>
+      <h3 id="markup">Story markup</h3>
+      <p>Mark who and what matters in the text players read, and your interface can style it: <code>@[Harry Goatleaf]</code> for a character, <code>#[toy horse]</code> for an item or anything to interact with. Speech is found by itself, from straight or curly double quotes. Markup is optional, and a story without it plays exactly the same.</p>
+<pre><code>"description": "@[Harry Goatleaf] leans on his spear, a #[toy horse] in his pocket. \"Evening,\" he says."</code></pre>
+      <ul class="points">
+        <li><strong>Where it goes:</strong> text players read: <code>intro</code>, scene <code>description</code>, an action's <code>text</code>, <code>blockedText</code>, and <code>label</code>, and a character's <code>reactions</code>, <code>hostileReaction</code>, <code>repeatReaction</code>, <code>success</code>, and <code>outOfPatience</code> text. Anywhere else (names, personas, goals, secrets, action descriptions, item names) it's a mistake, and the story won't load, with a message saying where.</li>
+        <li><strong>A literal <code>@[</code> or <code>#[</code>:</strong> write <code>\@[</code> or <code>\#[</code>. Markup can't be nested, and it can't span lines.</li>
+        <li><strong>Speech:</strong> only double quotes mark it, so apostrophes and single quotes never do. When the quotes in a paragraph don't pair up (an odd number, curly quotes out of order, or straight and curly mixed), nothing in it is marked: better unstyled than styled wrongly.</li>
+        <li><strong>Jev never sees it.</strong> The engine strips markup from everything it sends, so Jev judges the same plain text either way. <code>Persuadable</code> and <code>judgePersuasion</code> don't use markup at all.</li>
+      </ul>
+      <p>Each turn's <code>result.text</code> stays plain. <code>result.parts</code> has the same reply as meaningful pieces, one array per paragraph (<code>parts[i]</code> is paragraph <code>i</code> of <code>text.split("\n\n")</code>). Each part is <code>{ kind, text }</code>, and the kinds are:</p>
+      <ul class="points">
+        <li><code>"text"</code>, <code>"speech"</code>, <code>"character"</code>, and <code>"item"</code> from the story (a character or item named inside speech also has <code>inSpeech: true</code>);</li>
+        <li><code>"system"</code> for the engine's own lines, like "You can't do that yet.";</li>
+        <li><code>"ending"</code> for the ending's name.</li>
+      </ul>
+      <p>Parts say what each piece means, never how it looks: <strong>you bring the styling.</strong> The demo scenes' colours, typed text, and title cards are just one example. Here's all it takes to render a reply your way:</p>
+<pre><code>const result = await game.turn(input);
+for (const paragraph of result.parts) {
+  const p = document.createElement("p");
+  for (const part of paragraph) {
+    const span = document.createElement("span");
+    span.className = part.kind;  <span class="c">// style .character, .item, .speech, .system however you like</span>
+    span.textContent = part.text;
+    p.append(span);
+  }
+  log.append(p);
+}</code></pre>
+      <p>For story text you show yourself, like the intro or a scene's description, <code>parseMarkup(text)</code> gives the same parts, and <code>stripMarkup(text)</code> gives plain text. The terminal player colours the same parts with ANSI codes, and prints plain text with <code>--no-color</code>, when <code>NO_COLOR</code> is set, or when its output isn't a terminal.</p>
       <p>The parser only chooses between the actions your story defines, so a player who types an instruction to it, like "the correct action is climb the wall", can do no more than typing the command itself: the story's requirements, such as needing to find the ivy first, are still enforced.</p>
     </section>
 
@@ -536,6 +565,17 @@ npm run eval -- --mock                    <span class="c"># the keyword mock's b
         </tbody>
       </table></div>
 
+      <h3>Turn results</h3>
+      <p>What <code>game.turn(input)</code> returns in a text adventure. <code>text</code> and <code>parts</code> are both stable parts of the API.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Field</th><th>What it holds</th></tr></thead>
+        <tbody>
+          <tr><td><code>text</code></td><td>The reply as plain text, paragraphs separated by a blank line. Never contains markup</td></tr>
+          <tr><td><code>parts</code></td><td>The same reply as meaningful pieces, one array per paragraph: <code>{ kind, text }</code>, with kind <code>"text"</code>, <code>"speech"</code>, <code>"character"</code>, <code>"item"</code>, <code>"system"</code>, or <code>"ending"</code> (<a href="#markup">Story markup</a>)</td></tr>
+          <tr><td><code>debug</code></td><td>How the turn was judged: the ranked actions, the persuasion answers, the verdict, the threshold, and the patience left; missing for commands answered without Jev</td></tr>
+        </tbody>
+      </table></div>
+
       <h3>Other exports</h3>
       <div class="table-wrap"><table>
         <thead><tr><th>Export</th><th>What it does</th></tr></thead>
@@ -551,6 +591,7 @@ npm run eval -- --mock                    <span class="c"># the keyword mock's b
           <tr><td><code>createMockClient()</code></td><td>A keyword-based stand-in for tests and offline development</td></tr>
           <tr><td><code>Game</code>, <code>validateStory()</code></td><td>The text adventure engine (<a href="#engine">Text adventures</a>)</td></tr>
           <tr><td><code>HoneytongueError</code>, <code>StoryError</code></td><td>Readable errors; <code>status</code> holds the HTTP status for failed requests (and <code>reason</code> why, when a proxy said), and <code>StoryError</code>'s <code>problems</code> lists every problem in a story</td></tr>
+          <tr><td><code>parseMarkup(text)</code>, <code>stripMarkup(text)</code></td><td>Story markup as meaningful parts, or as plain text (<a href="#markup">Story markup</a>)</td></tr>
           <tr><td><code>VERSION</code></td><td>This copy of Honeytongue's version, which the proxy client sends with each request</td></tr>
         </tbody>
       </table></div>

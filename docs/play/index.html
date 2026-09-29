@@ -26,9 +26,55 @@
 #log .cmd { margin-top: 1.4rem; }
 #log .debug { color: var(--dim); font-size: 0.85rem; margin: 0 0 0.6rem; }
 #log .debug .readout { margin: 0.15rem 0; }
-#log .room-name { color: var(--bright); font-weight: 600; margin-bottom: 0.2rem; }
-#log .ending { color: var(--bright); text-align: center; letter-spacing: 0.08em; margin: 1.5rem 0; text-shadow: var(--glow-strong); }
-#log .ending::before, #log .ending::after { content: " *** "; white-space: pre; color: var(--dim); }
+/* A scene's title card */
+#log .card { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; margin: 1.6rem 0 1.4rem; font-weight: 400; }
+#log .card-rule { color: var(--dim); font: 1rem/1 var(--mono); letter-spacing: 0.15em; text-shadow: none; }
+#log .card-title { font: 400 2.3rem/1 var(--pixel); color: var(--bright); letter-spacing: 0.06em; text-transform: uppercase; text-shadow: var(--glow-strong); }
+
+/* A judged reply: a word first, and a matching rule down the side. Never colour alone. */
+#log .reply { margin: 0 0 0.9rem; }
+#log .reply[class*="v-"] { border-left: 3px solid var(--mark); padding-left: 0.75rem; }
+#log .reply p:last-child { margin-bottom: 0; }
+#log .v-convinced { --mark: var(--good); }
+#log .v-unconvinced { --mark: var(--warn); }
+#log .v-offended { --mark: var(--bad); }
+#log .v-repeated { --mark: var(--system); }
+#log .chip { display: inline-block; font: 400 1.05rem/1 var(--pixel); letter-spacing: 0.08em; padding: 0.1rem 0.4rem; margin-right: 0.5rem;
+  border: 1px solid currentColor; color: var(--mark); vertical-align: 0.1em; text-shadow: none; }
+
+/* The ending screen */
+#log .end-screen { border: 3px double var(--line); background: var(--screen); padding: 1.25rem 1.1rem 1.1rem; margin: 1.5rem 0 0; text-align: center; }
+#log .ending-mark { color: var(--dim); margin: 0; }
+#log .ending-title { font: 400 2.2rem/1.05 var(--pixel); color: var(--bright); margin: 0.3rem 0 0.4rem; }
+#log .ending-title:focus { outline: none; }
+#log .ending-stats { color: var(--dim); margin: 0 0 1.1rem; }
+#log .end-screen h3 { text-align: left; margin: 0 0 0.5rem; }
+#log .end-screen ol { text-align: left; margin: 0 0 1.2rem; padding-left: 1.5rem; }
+#log .end-screen li { margin: 0 0 0.5rem; white-space: normal; }
+#log .end-screen li .dim { display: block; font-size: 0.85rem; }
+#log .end-screen .again { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
+
+/* Motion, only when the system allows it: the debug meter moves, and a lost patience pip pulses. */
+@media (prefers-reduced-motion: no-preference) {
+  .meter > i { transition: width 600ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .status .pips i { transition: background-color 300ms; }
+  .status .pips i.lost { animation: lose 600ms ease-out; }
+  @keyframes lose { 35% { transform: scaleY(1.4); background: var(--bad); } }
+}
+
+/* Optional CRT mode, off by default, on this page only: stronger scanlines, glow, and a curved glass edge.
+   Everything here is still. Nothing flickers or flashes, and it's dropped when the system asks for more contrast. */
+body.crt { --glow: 0 0 6px rgb(255 168 48 / 0.55), 0 0 1px rgb(255 200 120 / 0.8); }
+body.crt::after {
+  background:
+    repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.32) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, transparent 50%, rgb(0 0 0 / 0.6) 100%);
+}
+body.crt .game { border-radius: 18px; box-shadow: inset 0 0 60px rgb(0 0 0 / 0.5); }
+@media (prefers-contrast: more) {
+  body.crt { --glow: none; }
+  body.crt .game { box-shadow: none; }
+}
 #log .error { color: var(--bright); border-left: 3px solid var(--dim); padding-left: 0.75rem; }
 #log .thinking::after { content: "..."; }
 @media (prefers-reduced-motion: no-preference) {
@@ -55,7 +101,10 @@
   background: transparent; border: 0; padding: 0; outline: none;
 }
 #prompt:focus-within { border-bottom-color: var(--dim); }
+#prompt[hidden] { display: none; }
 #cmd::placeholder { color: var(--dim); opacity: 0.8; }
+/* A block cursor, like a real terminal, where the browser supports it. */
+@supports (caret-shape: block) { #cmd { caret-shape: block; } }
 #cmd[readonly] { opacity: 0.6; }
 .shortcuts { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0 0; }
 .key.record { display: inline-flex; align-items: center; gap: 0.4rem; }
@@ -115,6 +164,8 @@ a.key { text-decoration: none; }
     <button type="button" class="key" data-say="debug" id="debug-key" aria-pressed="false">Debug</button>
     <button type="button" class="key" data-say="restart">Restart</button>
     <a class="key" href="#">Scenes</a>
+    <button type="button" class="key" id="typed-key" aria-pressed="true">Typed text: on</button>
+    <button type="button" class="key" id="crt-key" aria-pressed="false">CRT: off</button>
     <label class="key record"><input type="checkbox" id="record"> Record playtest</label>
     <button type="button" class="key" id="save-transcript" hidden>Save transcript</button>
   </div>

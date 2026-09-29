@@ -1,4 +1,6 @@
 // The demo scenes in a browser: the same Game the terminal player uses, with an old-school screen around it.
+// Its look (colours for each kind of part, typed text, title cards, the ending screen) is one example of styling
+// Honeytongue's result.parts; the library only says what each part means.
 // The files in ./lib are copies of src/ and stories/, refreshed by `npm run build:demo`,
 // because GitHub Pages only serves the docs folder. The address's hash picks the scene (#goblin-camp);
 // with none, the page lists them.
@@ -7,7 +9,9 @@ import { createProxyClient } from "./lib/jev.js";
 import { createMockClient } from "./lib/mock.js";
 import { createTranscript, snapshot } from "./lib/transcript.js";
 import { VERSION } from "./lib/version.js";
+import { parseMarkup, stripMarkup } from "./lib/markup.js";
 import { createFallbackClient, TURN_CAP } from "./fallback.js";
+import { VERDICT_LABELS, spokenLabel, typingSpeed, endingSummary, scoreLine } from "./present.js";
 
 const $ = (id) => document.getElementById(id);
 const log = $("log");
@@ -44,6 +48,15 @@ let transcript = null;
 let busy = false;
 const typed = [];      // command history for the up and down arrows
 let typedAt = 0;
+let judged = [];       // this playthrough's judged turns, for the ending screen
+let lastNpc = null;    // the character the player last spoke to, for the ending screen's patience
+let lastScore = 0;     // the debug meter's last reading (%), so the next one moves from there
+
+/** Display settings, per browser. Storage can be blocked, so reads and writes are guarded. */
+const setting = (key, fallback) => { try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; } };
+const saveSetting = (key, value) => { try { localStorage.setItem(key, value); } catch { /* kept for this page only */ } };
+let typedText = setting("honeytongue-typed-text", "on") === "on";
+let crt = setting("honeytongue-crt", "off") === "on";
 
 /** Build an element. Text is always set as text, never parsed as HTML. */
 function el(tag, props = {}, ...children) {
@@ -53,10 +66,15 @@ function el(tag, props = {}, ...children) {
   return node;
 }
 const line = (text, className = "") => log.appendChild(el("p", { className }, text));
+const hidden = (node) => { node.setAttribute("aria-hidden", "true"); return node; };
 
 function meter(score, max, threshold) {
   const m = el("span", { className: "meter", ariaHidden: "true" }, el("i"), el("b"));
-  m.style.setProperty("--score", `${Math.max(0, Math.min(100, (score / max) * 100))}%`);
+  // Start at the last reading and move to this one, so a change is easy to see (instant under reduced motion).
+  const pct = Math.max(0, Math.min(100, (score / max) * 100));
+  m.style.setProperty("--score", `${lastScore}%`);
+  requestAnimationFrame(() => requestAnimationFrame(() => m.style.setProperty("--score", `${pct}%`)));
+  lastScore = pct;
   if (threshold !== undefined) m.style.setProperty("--mark", `${(threshold / max) * 100}%`);
   else m.lastChild.remove();
   return m;
@@ -64,14 +82,90 @@ function meter(score, max, threshold) {
 
 // ---- Output ----------------------------------------------------------------------
 
-/** Engine text: paragraphs separated by blank lines. Room descriptions get their room name first. */
-function showText(text) {
-  for (const paragraph of text.split("\n\n")) {
-    const ending = paragraph.match(/^— (.+) —$/);
-    if (ending) { line(ending[1], "ending"); continue; }
-    if (paragraph === game.scene.description && game.scene.name) line(game.scene.name, "room-name");
-    line(paragraph);
+/** A paragraph's parts as spans, one class per kind: part-character, part-item, part-speech, part-system. */
+function partsNode(parts) {
+  const span = el("span");
+  for (const part of parts) {
+    if (part.kind === "text") span.append(part.text);
+    else span.append(el("span", { className: `part-${part.kind}${part.inSpeech ? " part-in-speech" : ""}` }, part.text));
   }
+  return span;
+}
+
+/**
+ * One paragraph. When it will type out, screen readers get the whole text at once from a hidden copy, and the
+ * typing copy is hidden from them. A verdict label goes first, spoken as a word ("Not yet.").
+ */
+function paragraph(parts, { verdict, animate, className = "" } = {}) {
+  const p = el("p", { className });
+  const plain = parts.map((x) => x.text).join("");
+  const spoken = verdict ? `${spokenLabel(verdict)} ` : "";
+  const body = partsNode(parts);
+  if (animate) { hidden(body); p.append(el("span", { className: "vh" }, spoken + plain)); }
+  else if (spoken) p.append(el("span", { className: "vh" }, spoken));
+  if (verdict) p.append(hidden(el("span", { className: "chip" }, VERDICT_LABELS[verdict])));
+  p.append(body);
+  return { p, body };
+}
+
+/** A title card for a named scene, as a heading. */
+function titleCard(name) {
+  const rule = () => hidden(el("span", { className: "card-rule" }, "════════════════"));
+  return el("h2", { className: "card" }, rule(), el("span", { className: "card-title" }, name), rule());
+}
+
+// ---- Typed text: never in the way. A click, any key, or a new command shows the rest at once. ----
+let typing = null;
+function skipTyping() { typing?.finish(); }
+const nearBottom = () => innerHeight + scrollY >= document.documentElement.scrollHeight - 120;
+
+function typeOut(bodies) {
+  const nodes = [];
+  for (const body of bodies) {
+    const walker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) nodes.push([walker.currentNode, walker.currentNode.data]);
+  }
+  const total = nodes.reduce((n, [, t]) => n + t.length, 0);
+  const cps = typingSpeed(total, { typed: typedText, reducedMotion: reducedMotion.matches });
+  if (!cps) return;
+  skipTyping();
+  for (const [node] of nodes) node.data = "";
+  const follow = nearBottom();
+  const job = { finish() { for (const [node, text] of nodes) node.data = text; if (typing === job) typing = null; if (follow) form.scrollIntoView({ block: "end" }); } };
+  typing = job;
+  const started = performance.now();
+  const frame = (now) => {
+    if (typing !== job) return;
+    let left = Math.floor(((now - started) / 1000) * cps);
+    if (left >= total) return job.finish();
+    for (const [node, text] of nodes) { node.data = text.slice(0, Math.max(0, left)); left -= text.length; }
+    if (follow) form.scrollIntoView({ block: "end" });
+    requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+}
+addEventListener("keydown", (event) => { if (typing && !event.ctrlKey && !event.metaKey && !event.altKey) skipTyping(); }, true);
+addEventListener("pointerdown", () => skipTyping(), true);
+
+/**
+ * A turn's reply from result.parts: the verdict label on its first paragraph, a title card before a new named
+ * scene, the engine's own lines in the system style, and the ending left to the ending screen.
+ */
+function showReply(result, { verdict, entered } = {}) {
+  const shown = (result.parts ?? []).filter((parts) => !(parts.length === 1 && parts[0].kind === "ending"));
+  const animate = typingSpeed(result.text.length, { typed: typedText, reducedMotion: reducedMotion.matches }) > 0;
+  const block = el("div", { className: verdict ? `reply v-${verdict}` : "reply" });
+  const bodies = [];
+  shown.forEach((parts, i) => {
+    if (entered?.name && parts.map((x) => x.text).join("") === stripMarkup(entered.description)) block.append(titleCard(entered.name));
+    const system = parts.every((x) => x.kind === "system");
+    const { p, body } = paragraph(parts, { verdict: i === 0 ? verdict : null, animate, className: system ? "system" : "" });
+    block.append(p);
+    bodies.push(body);
+  });
+  if (!block.childElementCount) return;
+  log.append(block);
+  if (animate) typeOut(bodies);
 }
 
 /** The same view as the terminal player's --debug. */
@@ -103,22 +197,31 @@ function updateStatus() {
   if (patience.hidden) return;
   const { patienceLeft } = npc;
   const total = npc.character.patience;
-  const pips = el("span", { className: "pips", role: "img", ariaLabel: `${patienceLeft} of ${total}` },
-    ...Array.from({ length: total }, (_, i) => el("i", { className: i < patienceLeft ? "on" : "" })));
-  patience.replaceChildren(el("span", { className: "label" }, `${npc.character.name.split(" ")[0]}'s patience`), pips);
+  let pips = patience.querySelector(".pips");
+  if (!pips || pips.childElementCount !== total || patience.dataset.npc !== npc.character.name) {
+    pips = el("span", { className: "pips", role: "img" }, ...Array.from({ length: total }, () => el("i")));
+    patience.replaceChildren(el("span", { className: "label" }, `${npc.character.name.split(" ")[0]}'s patience`), pips);
+    patience.dataset.npc = npc.character.name;
+  }
+  pips.setAttribute("aria-label", `${patienceLeft} of ${total}`);
+  [...pips.children].forEach((pip, i) => {
+    const on = i < patienceLeft;
+    if (pip.classList.contains("on") && !on) {
+      pip.classList.add("lost");
+      pip.addEventListener("animationend", () => pip.classList.remove("lost"), { once: true });
+    }
+    pip.classList.toggle("on", on);
+  });
 }
 
 /** Buttons for "Did you mean", and for starting again at the end. */
 function updateChoices() {
   const key = (label, say) => el("button", { type: "button", className: "key", onclick: () => submit(say) }, label);
   choices.replaceChildren();
-  if (game.over) {
-    choices.append(key("Restart", "restart"), el("a", { href: "#", className: "key" }, "Choose another scene"),
-      el("a", { href: "../", className: "key" }, "Back to the docs"));
-  } else if (game.pending) {
+  if (!game.over && game.pending) {
     game.pending.options.forEach((id, i) => {
       const action = game.scene.actions[id];
-      choices.append(key(el("span", {}, el("b", {}, `${i + 1}) `), action.label ?? action.description), String(i + 1)));
+      choices.append(key(el("span", {}, el("b", {}, `${i + 1}) `), stripMarkup(action.label ?? action.description)), String(i + 1)));
     });
   }
 }
@@ -126,18 +229,49 @@ function updateChoices() {
 function settle(scroll = true) {
   updateStatus();
   updateChoices();
+  $("prompt").hidden = game.over;
+  if (game.over) return;
   if (scroll) form.scrollIntoView({ block: "end", behavior: reducedMotion.matches ? "auto" : "smooth" });
   if (finePointer) input.focus({ preventScroll: true });
+}
+
+/** The ending screen: the ending, the turns taken, the arguments that landed and the closest misses, and what next. */
+function showEnding() {
+  const { attempts, landed, closest } = endingSummary(judged);
+  const who = lastNpc?.character.name.split(" ")[0];
+  const stats = [`${moves} ${moves === 1 ? "turn" : "turns"}`, `${attempts} ${attempts === 1 ? "attempt" : "attempts"}`];
+  if (lastNpc && Number.isFinite(lastNpc.character.patience)) stats.push(`${who}'s patience ${lastNpc.patienceLeft} of ${lastNpc.character.patience} left`);
+  const quote = (t, note) => el("li", {}, `"${t.input}"`, el("span", { className: "dim" }, note));
+  const again = el("button", { type: "button", className: "key", onclick: () => start() }, "Play again");
+  const section = el("section", { className: "end-screen", ariaLabel: "The end" },
+    hidden(el("p", { className: "ending-mark" }, "*** THE END ***")),
+    el("h2", { className: "ending-title", tabIndex: -1 }, game.scene.ending),
+    el("p", { className: "ending-stats" }, stats.join(" · ")),
+    ...(landed.length ? [el("h3", {}, "Arguments that landed"), el("ol", {}, ...landed.map((t) => quote(t, `Convinced ${who}: ${scoreLine(t)}`)))] : []),
+    ...(closest.length ? [el("h3", {}, "Closest misses"), el("ol", {}, ...closest.map((t) => quote(t, scoreLine(t))))] : []),
+    el("div", { className: "again" }, again,
+      el("a", { href: "#", className: "key" }, "Try another scene"),
+      ...(transcript ? [el("button", { type: "button", className: "key", onclick: () => $("save-transcript").click() }, "Save transcript")] : []),
+      el("a", { href: "../", className: "key" }, "Back to the docs")));
+  log.append(section);
+  section.scrollIntoView({ block: "start", behavior: reducedMotion.matches ? "auto" : "smooth" });
+  again.focus({ preventScroll: true });
 }
 
 // ---- Input -----------------------------------------------------------------------
 
 function start() {
+  skipTyping();
   game = new Game(story, client);
   moves = 0;
+  judged = [];
+  lastNpc = null;
+  lastScore = 0;
   log.replaceChildren();
-  if (story.intro) line(story.intro);
-  showText(game.scene.description);
+  // The opening shows at once: only replies type out.
+  if (story.intro) log.append(paragraph(parseMarkup(story.intro)).p);
+  if (game.scene.name) log.append(titleCard(game.scene.name));
+  log.append(paragraph(parseMarkup(game.scene.description)).p);
   if ($("record").checked) {
     // One transcript per scene; a restart adds another playthrough to it.
     if (transcript?.data.scene !== scene.id) transcript = createTranscript({ version: VERSION, scene: scene.id, story });
@@ -170,6 +304,7 @@ $("save-transcript").addEventListener("click", () => {
 });
 
 async function submit(raw) {
+  skipTyping();
   if (busy || !game) return;
   const text = String(raw).trim();
   line(text, "cmd");
@@ -192,6 +327,8 @@ async function submit(raw) {
   const thinking = line("Thinking", "dim thinking");
   const threshold = game.npc?.character.threshold;
   const playing = game;
+  const npcBefore = game.npc;
+  const sceneBefore = game.sceneId;
   try {
     const before = snapshot(game);
     const result = await game.turn(text);
@@ -199,11 +336,17 @@ async function submit(raw) {
     transcript?.record(text, before, result, game);
     moves++;
     thinking.remove();
+    const d = result.debug;
+    if (d?.verdict) {
+      judged.push({ input: text, verdict: d.verdict, score: d.persuasion?.score ?? null, threshold: d.threshold, maxScore: d.maxScore ?? 4 });
+      lastNpc = npcBefore;
+    }
     showNote();
-    showMode(result.debug?.source);
-    showDebug(result.debug, threshold);
-    showText(result.text);
-    if (game.over) line("Type RESTART to play again.", "dim");
+    showMode(d?.source);
+    showDebug(d, threshold);
+    const entered = game.sceneId !== sceneBefore && !game.scene.ending ? game.scene : null;
+    showReply(result, { verdict: d?.verdict ?? null, entered });
+    if (game.over) showEnding();
   } catch (err) {
     thinking.remove();
     showNote();
@@ -238,6 +381,27 @@ input.addEventListener("keydown", (event) => {
 for (const button of document.querySelectorAll("[data-say]")) {
   button.addEventListener("click", () => submit(button.dataset.say));
 }
+
+// ---- Settings: typed text (on by default, always instant under reduced motion) and CRT mode (off by default) ----
+function showSettings() {
+  $("typed-key").textContent = `Typed text: ${typedText ? "on" : "off"}`;
+  $("typed-key").setAttribute("aria-pressed", String(typedText));
+  $("crt-key").textContent = `CRT: ${crt ? "on" : "off"}`;
+  $("crt-key").setAttribute("aria-pressed", String(crt));
+  document.body.classList.toggle("crt", crt);
+}
+$("typed-key").addEventListener("click", () => {
+  typedText = !typedText;
+  saveSetting("honeytongue-typed-text", typedText ? "on" : "off");
+  if (!typedText) skipTyping();
+  showSettings();
+});
+$("crt-key").addEventListener("click", () => {
+  crt = !crt;
+  saveSetting("honeytongue-crt", crt ? "on" : "off");
+  showSettings();
+});
+showSettings();
 
 // ---- Boot ------------------------------------------------------------------------
 
