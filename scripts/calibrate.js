@@ -18,6 +18,8 @@ const presets = load("stories/characters.json");
 // A rubric patch can't change a character with its own levels (Harry), so rerunning it would only repeat a result.
 const unaffected = (id) => patches.some((p) => p.levels) && !patches.some((p) => p.characters?.[id]) && Boolean(presets[id]?.levels);
 const character = (id, extra = {}) => defineCharacter(patchCharacter(id, presets[id] ?? extra[id], patches));
+// --only nib,maude limits the arguments step to those characters.
+const only = process.argv.includes("--only") ? process.argv[process.argv.indexOf("--only") + 1].split(",") : null;
 const recorded = [];
 let current = "";
 const client = liveClient(() => current, recorded);
@@ -45,6 +47,7 @@ async function argumentsStep() {
   for (const [id, set] of Object.entries(suite.sets)) {
     if (unaffected(id)) { say(`
 == ${id}: skipped, it has its own levels so the rubric patch doesn't apply`); continue; }
+    if (only && !only.includes(id)) continue;
     const c = character(id);
     const scored = {};
     for (const kind of ["compelling", "middling", "weak"]) {
