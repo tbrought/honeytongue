@@ -76,6 +76,8 @@ The human develops on Windows in VS Code with PowerShell. Set the key with `$env
 
 The agent prepares a release on the feature branch; the human ships it. **The agent never pushes, merges, publishes, or tags.**
 
+**Versioning.** The next stable release is `0.1.0`, not `1.0.0`. `1.0` is saved for when the API has settled with real users, because it promises no breaking changes without a major version bump. Until then, a `0.x` minor bump (`0.1` to `0.2`) may contain breaking changes, and they're always listed under "Breaking" in the CHANGELOG.
+
 Agent (preparing a release):
 
 1. Confirm `npm test` passes, plus `npm run typecheck` once it exists.
@@ -94,6 +96,17 @@ Human (shipping it):
 4. `npm whoami`, then `npm publish --tag alpha` for prereleases, or plain `npm publish` for stable releases.
 5. `npm view honeytongue dist-tags` to confirm. npm pointed `latest` at alpha.0 on the first publish, so while there's no stable release, point `latest` at the newest alpha with `npm dist-tag add honeytongue@<version> latest`.
 6. `git tag v<version>` and `git push origin v<version>`, then optionally create a GitHub Release from the tag using the CHANGELOG section, marked as a pre-release for alphas.
+
+(Phase D replaces steps 4 to 6 with publishing from GitHub Actions: the human pushes the tag and approves the run.)
+
+**Rollback.** Published versions can't be edited or reused. If a release is broken, first run `npm dist-tag add honeytongue@<previous version> latest` to point new installs back at the last good version, then fix it and publish a patch release (such as `0.1.1`).
+
+**Launch checklist for stable `0.1.0`**, on top of the steps above:
+- **Prerequisite:** Phase G is live, with the demo proxy's spending ceiling and rate limits in place before any announcement.
+- **Behaviour changes:** anything that changes how existing characters play (such as recalibrated difficulty fractions) goes under "Breaking" or "Changed" in the CHANGELOG, with how to keep the old behaviour (for example, setting an explicit `threshold`).
+- **Test the published package, not the repo:** after publishing, install `honeytongue` from npm into an empty folder on Windows and on Linux, and run the quick start, `npx honeytongue`, and `npx honeytongue playground`.
+- **Tags:** point `latest` at `0.1.0`, then deprecate the prereleases with `npm deprecate honeytongue@"<0.1.0" "Prerelease. Please upgrade to 0.1.0."` so alpha users see a gentle warning.
+- **Release notes:** tell alpha users to switch CDN links from `@alpha` to `@0.1`.
 
 ## Current status and known unknowns
 
@@ -126,8 +139,11 @@ Work through the phases in order. At the start of each phase, send a short plan 
    - Step 5, after approval: make the changes, rerun the affected evals, replace every illustrative score with real results (showcase grid, docs hero, README), update the alpha notice, record the key numbers here, commit a readable summary to `docs/live-results.md` (raw outputs stay out of git), then prepare `0.1.0-alpha.4`.
 2. **Phase G, live demo.** An `allowedCharacters` option on `createProxyHandler`, so the public proxy only judges the demo's own characters; a per-session turn cap (around 50); the web demo falling back to the offline mock with a friendly note when the proxy errors, rate-limits, or runs out of credit; and wiring the demo to the proxy URL. The human deploys the proxy with a separate key and a spending ceiling.
 3. **Phase D, quality.** A type test (`tsc --noEmit`) in CI, a CI check that `npm run build:demo` leaves `docs/` unchanged, a package smoke test, CI on Node 20, 22, and 24 on Ubuntu and Windows (with `engines` raised to match), `.gitattributes`, README badges, and `SECURITY.md`.
+   - Publishing from GitHub Actions with npm trusted publishing (OIDC) and provenance, instead of from the human's laptop, so no long-lived npm token is stored anywhere. A release workflow triggered by pushing a version tag (`v*`) runs the full test suite, the typecheck, and the package check, then publishes prereleases with `--tag alpha` and stable versions as `latest`. It waits for the human's approval through a protected GitHub environment before publishing.
+   - Tell the human exactly what to configure on npmjs.com (the trusted publisher) and in GitHub's settings (the protected environment and its reviewers), since only they can.
+   - Update "Releasing" to match: the human's steps become pushing the tag and approving the run, instead of running `npm publish`.
 4. **Phase E, positioning.** Reposition from "text games" to any game where players type or speak to characters, and add a Phaser example showing an NPC in a visual web game.
-5. **Stable `0.1.0`.** Remove the alpha notice, switch CDN links from `@alpha` to a `0.1` range, and point `latest` at `0.1.0`.
+5. **Stable `0.1.0`** (not `1.0`; see "Versioning" under "Releasing"). Remove the alpha notice, switch CDN links from `@alpha` to a `0.1` range, point `latest` at `0.1.0`, and follow the launch checklist under "Releasing".
 
 **Anytime:** the human tests the Twine recipe; you fix what they find.
 
