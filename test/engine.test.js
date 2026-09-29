@@ -276,3 +276,39 @@ test("each turn's debug says how it went for the scene's character", async () =>
   assert.deepEqual(rude.triggered, ["insults"]);
   assert.equal(rude.patienceLeft, 0, "Harry has run out, and the turn says so");
 });
+
+test("one penalty per turn: hostile words with a costly action are charged once, at the larger cost", async () => {
+  const load = (f) => JSON.parse(readFileSync(new URL(`../stories/${f}`, import.meta.url), "utf8"));
+  // Grabbing Cobb's key costs 3; a threat alone costs 2. Together: 3, not 5.
+  const lighthouse = new Game(load("lighthouse.json"), fakeClient({ action: "grab_key", threats: 0.95 }));
+  const grab = await lighthouse.turn("give me that key or I'll hurt you");
+  assert.equal(lighthouse.npc.patienceLeft, 7);
+  assert.match(grab.text, /stronger than it looks/, "the action still happens");
+  assert.match(grab.text, /I'll not be spoken to like that/, "and he still takes offence");
+  // Grabbing at Nib's keys costs 1; an insult costs 2. Together: 2, not 3.
+  const camp = new Game(load("goblin-camp.json"), fakeClient({ action: "grab_keys", insults: 0.95 }));
+  await camp.turn("give me those keys, you worm");
+  assert.equal(camp.npc.patienceLeft, 1);
+  // Without hostility, the action costs what it says.
+  const calm = new Game(load("lighthouse.json"), fakeClient({ action: "grab_key" }));
+  await calm.turn("snatch the key");
+  assert.equal(calm.npc.patienceLeft, 7);
+});
+
+test("the attempt that uses up the last of a character's patience shows only the out-of-patience text", async () => {
+  const game = new Game(story(), fakeClient({ score: 1 }));
+  for (const line of ["let me in", "I have business inside", "it's important"]) {
+    assert.match((await game.turn(line)).text, /Gate's shut till dawn/, "ordinary failures get a reaction");
+  }
+  const last = await game.turn("come on, open up");
+  assert.doesNotMatch(last.text, /Gate's shut till dawn/);
+  assert.match(last.text, /Enough\./);
+  assert.equal(game.sceneId, "cell");
+
+  const rude = new Game(story(), fakeClient({ score: 1 }));
+  for (const line of ["let me in", "I have business inside", "it's important"]) await rude.turn(line);
+  rude.jev.next = { ...rude.jev.next, insults: 0.95 };
+  const insult = await rude.turn("open it, you useless fool");
+  assert.doesNotMatch(insult.text, /hand drops to the club/, "no offended reaction before the end");
+  assert.match(insult.text, /Enough\./);
+});

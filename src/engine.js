@@ -307,8 +307,13 @@ export class Game {
     } else {
       // The NPC reacts to what was said before the action moves the player anywhere else.
       lines.push(action.text);
-      this.react(lines, answers);
-      this.apply(action, lines);
+      // One penalty per turn: hostile words with a costly action (a threat while grabbing the key) are charged once,
+      // at the larger of the two costs, not both.
+      const actionCost = Math.max(0, -(action.patience ?? 0));
+      const offendedCost = this.npc?.character.offendedCost ?? 0;
+      const both = actionCost > 0 && this.isHostile(answers);
+      this.react(lines, answers, both && actionCost > offendedCost ? 0 : offendedCost);
+      this.apply(action, lines, { skipPatience: both && offendedCost >= actionCost });
     }
     return this.finish(lines, input, debug);
   }
@@ -325,11 +330,17 @@ export class Game {
   }
 
   /** NPCs react to threats and insults whatever the player was doing, not just when persuading. */
-  react(lines, answers) {
+  react(lines, answers, cost = this.npc?.character.offendedCost ?? 0) {
     if (this.over || !this.isHostile(answers)) return;
     this.#judged = { verdict: "offended", triggered: readPersuasion(this.npc.character, answers).triggered };
-    lines.push(this.hostileReaction());
-    this.drain(this.npc.character.offendedCost, lines);
+    // If this uses up the last of their patience, the out-of-patience text says it all.
+    if (!this.#exhausts(cost)) lines.push(this.hostileReaction());
+    this.drain(cost, lines);
+  }
+
+  /** Whether losing this much patience now would use up the last of it. */
+  #exhausts(cost) {
+    return cost > 0 && !this.npc.outOfPatience && this.npc.patienceLeft - cost <= 0;
   }
 
   /** A decide() hook can make an NPC offended even when nothing in offendedBy can. */
@@ -353,9 +364,12 @@ export class Game {
     if (result.verdict === "convinced") {
       lines.push(npc.persuasion.success.text);
       this.apply(npc.persuasion.success, lines);
+    } else if (result.outOfPatience) {
+      // The attempt that uses up the last of their patience gets only the out-of-patience text, not an
+      // encouraging reaction followed by the end of the scene.
+      this.runOutOfPatience(lines);
     } else {
       lines.push(result.verdict === "offended" ? this.hostileReaction() : result.reaction);
-      if (result.outOfPatience) this.runOutOfPatience(lines);
     }
   }
 
@@ -379,11 +393,11 @@ export class Game {
       (req.items ?? []).every((i) => this.inventory.includes(i));
   }
 
-  apply(effect, lines) {
+  apply(effect, lines, { skipPatience = false } = {}) {
     for (const f of effect.setFlags ?? []) this.flags.add(f);
     for (const i of effect.takeItems ?? []) this.inventory = this.inventory.filter((x) => x !== i);
     for (const i of effect.giveItems ?? []) if (!this.inventory.includes(i)) this.inventory.push(i);
-    if (effect.patience && this.npc && !this.over) this.drain(-effect.patience, lines);
+    if (effect.patience && !skipPatience && this.npc && !this.over) this.drain(-effect.patience, lines);
     if (effect.goto && !this.over) {
       this.sceneId = effect.goto;
       this.pending = null;
