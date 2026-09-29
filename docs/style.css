@@ -12,6 +12,14 @@
   --line: #cbbd9c;
   --link: #8a4600;
   --lit: #2b2216;           /* lit meter segments */
+  /* Colours with meaning, for story text and verdicts. Each meets WCAG AA contrast on --bg and --screen. */
+  --speech: #5b2a86;
+  --name: #0b5d57;
+  --item: #1f4f94;
+  --system: #6a583a;
+  --good: #2c6a2c;
+  --warn: #7d4a00;
+  --bad: #a1281c;
   --inverse-bg: #2b2216;
   --inverse-fg: #f3ecdc;
   --glow: none;
@@ -33,6 +41,13 @@
     --line: #3d2e15;
     --link: #ffd07a;
     --lit: #f2b34d;
+    --speech: #ffe0a3;
+    --name: #7fd8c4;
+    --item: #9fc3ff;
+    --system: #b88b45;
+    --good: #9bdc8a;
+    --warn: #f2b34d;
+    --bad: #ff8f7a;
     --inverse-bg: #f2b34d;
     --inverse-fg: #0c0904;
     --glow: 0 0 5px rgb(255 168 48 / 0.35);
@@ -43,6 +58,13 @@
   }
 }
 :root[data-theme="dark"] {
+  --speech: #ffe0a3;
+  --name: #7fd8c4;
+  --item: #9fc3ff;
+  --system: #b88b45;
+  --good: #9bdc8a;
+  --warn: #f2b34d;
+  --bad: #ff8f7a;
   --bg: #0c0904;
   --screen: #130e06;
   --fg: #f2b34d;
@@ -136,6 +158,13 @@ h3 { font: 600 1rem/1.45 var(--mono); color: var(--bright); margin: 2rem 0 0.5re
 p { margin: 0 0 1rem; }
 strong { color: var(--bright); font-weight: 600; }
 .dim { color: var(--dim); }
+
+/* Story text by kind of part (see "Story markup" in the docs). Names and items also differ in weight and
+   underline, so colour is never the only difference. */
+.part-speech { color: var(--speech); }
+.part-character { color: var(--name); font-weight: 600; }
+.part-item { color: var(--item); text-decoration: underline dotted 1px; text-underline-offset: 0.2em; }
+.part-system, .system { color: var(--system); font-style: italic; }
 .bright { color: var(--bright); }
 
 code, pre, kbd { font-family: var(--mono); font-size: 0.9rem; }

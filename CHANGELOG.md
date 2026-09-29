@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.1.0-alpha.8 (2026-09-29)
+
+Demo polish. Stories can mark who and what matters, the engine says what each piece of a reply means, and the web demo and the terminal player each show one way to style it. You bring the styling: nothing in the library says how anything looks.
+
+### Added
+
+- **Story markup:** `@[Harry Goatleaf]` for a character and `#[toy horse]` for an item or anything to interact with, in the text players read. Speech is found from straight or curly double quotes; when they don't pair up, nothing is marked. `\@[` and `\#[` write a literal. Markup is optional, and `validateStory` explains any that's badly formed, or used where it can't be (names, personas, goals, secrets, action descriptions, item names).
+- **`result.parts`** on every turn: the reply as meaningful pieces, one array per paragraph, with kinds `text`, `speech`, `character`, `item`, `system` (the engine's own lines), and `ending`. `result.text` stays plain. `parseMarkup()` and `stripMarkup()` are exported for story text you show yourself.
+- **The terminal player uses colour** for characters, items, speech, and its own messages, labels each judged reply (`[convinced]`, `[not yet]`, `[offended]`, `[repeated]`), and shows a title card for a named scene. `--no-color`, `NO_COLOR`, or output that isn't a terminal gives plain text.
+- **The web demo:**
+  - colours with meaning, meeting WCAG AA contrast in both themes;
+  - verdict labels on every judged reply (CONVINCED, NOT YET, OFFENDED, REPEATED);
+  - title cards;
+  - text that types out, and shows at once on a click, a key, or a new command, or under reduced motion (a setting turns it off, and screen readers get each reply whole);
+  - an optional CRT mode, still and never flashing;
+  - the meter and patience pips animate when they change;
+  - an ending screen with the turns taken, the arguments that landed, and the closest misses.
+
+  Everything the demo shows (story text, replies, what players type, title cards, the ending screen) is inserted as text, never as HTML; a test plays hostile input such as `<img src=x onerror=alert(1)>` through to the ending screen to check it.
+
+### Changed
+
+- Markup never reaches Jev: the engine strips it from the story text it sends, in one place. What players type is never read as markup, and reaches Jev exactly as typed. The four demo scenes are marked up, and stripped they're exactly as before, so Jev, the evals, and the deployed demo proxy see the same requests.
+- **A local preview of the web demo judges offline.** On localhost or 127.0.0.1 the page uses the offline stand-in, with a "Local preview: judged offline" note, instead of calling the live proxy (which refuses local pages). Add `?live` to the address to use the proxy anyway.
+- `Game.intro()` returns plain text, and no longer leaves an extra blank line when a story has no intro.
+- The terminal player's output now includes the verdict labels and title cards, as text, even without colour.
+
 ## 0.1.0-alpha.7 (2026-09-29)
 
 Quality and release tooling. This is the first release staged from GitHub Actions with npm trusted publishing and approved on npmjs.com with two-factor authentication, so it carries a provenance statement and no npm token is stored anywhere.

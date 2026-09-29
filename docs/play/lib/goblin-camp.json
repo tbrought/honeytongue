@@ -9,7 +9,7 @@
   "scenes": {
     "cage": {
       "name": "The Prisoner Cage",
-      "description": "You're crouched in a wicker cage at the edge of the goblin camp. Outside the bars, a skinny young goblin stirs a bubbling stew pot, and jabs his spear in your direction whenever he remembers to. This is Nib Wortle, your guard. His bedroll lies in a heap by the fire. The rest of the camp is empty, and the moon isn't up yet.",
+      "description": "You're crouched in a wicker #[cage] at the edge of the goblin camp. Outside the #[bars], a skinny young goblin stirs a bubbling #[stew pot], and jabs his spear in your direction whenever he remembers to. This is @[Nib Wortle], your guard. His #[bedroll] lies in a heap by the fire. The rest of the camp is empty, and the moon isn't up yet.",
       "npc": {
         "id": "nib",
         "name": "Nib Wortle",
@@ -21,9 +21,9 @@
           }
         ],
         "patience": 3,
-        "hostileReaction": "Nib's ears droop, then go flat. \"That's what the big ones say.\" He turns his back on you and stirs the stew very hard.",
+        "hostileReaction": "@[Nib]'s ears droop, then go flat. \"That's what the big ones say.\" He turns his back on you and stirs the stew very hard.",
         "outOfPatience": {
-          "text": "\"I'm telling!\" Nib snatches up a stick and bangs the camp gong. Far off in the trees, something much bigger than Nib roars back.",
+          "text": "\"I'm telling!\" @[Nib] snatches up a stick and bangs the camp gong. Far off in the trees, something much bigger than @[Nib] roars back.",
           "goto": "chief_returns"
         },
         "persuasion": {
@@ -33,40 +33,40 @@
           "reactions": [
             {
               "min": 0,
-              "text": "Nib jabs his spear at the bars without much conviction. \"No talking to the prisoner!\""
+              "text": "@[Nib] jabs his spear at the #[bars] without much conviction. \"No talking to the prisoner!\""
             },
             {
               "min": 1.5,
-              "text": "Nib chews his lip and glances toward the war chief's tent. \"I'd get in so much trouble...\""
+              "text": "@[Nib] chews his lip and glances toward the war chief's tent. \"I'd get in so much trouble...\""
             }
           ],
           "success": {
-            "text": "Nib looks at the war chief's empty tent, then back at you. With trembling claws, he fumbles the key into the lock. \"Quick, before I change my mind!\" He scoops up his bedroll and scurries after you into the trees.",
+            "text": "@[Nib] looks at the war chief's empty tent, then back at you. With trembling claws, he fumbles the key into the lock. \"Quick, before I change my mind!\" He scoops up his #[bedroll] and scurries after you into the trees.",
             "goto": "talked_out"
           }
         },
-        "repeatReaction": "\"You said that one,\" Nib mutters. \"Say a different thing.\""
+        "repeatReaction": "\"You said that one,\" @[Nib] mutters. \"Say a different thing.\""
       },
       "actions": {
         "persuade_nib": {
-          "label": "Try to talk Nib into letting you go",
+          "label": "Try to talk @[Nib] into letting you go",
           "description": "Try to convince, plead with, bargain with, threaten, or reason with the goblin guard so he unlocks the cage and lets the player go: anything said to him, threats included",
           "persuade": true
         },
         "chat_nib": {
-          "label": "Chat with Nib",
+          "label": "Chat with @[Nib]",
           "description": "Make small talk with the goblin, or ask about himself, his stew, or cooking, without asking to be let out",
-          "text": "Nib brightens. \"Mushroom and turnip. The big ones call it slop.\" He lowers his voice. \"In a town kitchen they'd call it a stew. And they'd call me a cook.\"",
+          "text": "@[Nib] brightens. \"Mushroom and turnip. The big ones call it slop.\" He lowers his voice. \"In a town kitchen they'd call it a stew. And they'd call me a cook.\"",
           "setFlags": ["wants_to_be_a_cook"]
         },
         "examine_bedroll": {
-          "label": "Look at Nib's bedroll",
+          "label": "Look at @[Nib]'s #[bedroll]",
           "description": "Look at, examine, or peer at the goblin's bedroll or belongings by the fire",
           "text": "A battered book pokes out from under the blanket: Hearty Suppers for Town and Tavern. Its pages are spattered with gravy. Inside the cover, someone has written NIB'S, then crossed it out in a panic.",
           "setFlags": ["wants_to_be_a_cook"]
         },
         "examine_cage": {
-          "label": "Examine the cage",
+          "label": "Examine the #[cage]",
           "description": "Look at, examine, or test the bars and lashings of the cage",
           "text": "The wicker is newer than the rope that binds it. At the back corner, the lashing on one bar has rotted almost through.",
           "setFlags": ["found_rotten_lashing"]
@@ -77,20 +77,20 @@
           "requires": {
             "flags": ["found_rotten_lashing"]
           },
-          "blockedText": "You rattle the bars. They're lashed tight, and the rattling only makes Nib jump.",
-          "text": "You wait until Nib bends over the stew pot, then twist the bar. The old rope gives with a soft snap, and you squeeze out and slip away into the trees.",
+          "blockedText": "You rattle the #[bars]. They're lashed tight, and the rattling only makes @[Nib] jump.",
+          "text": "You wait until @[Nib] bends over the #[stew pot], then twist the bar. The old rope gives with a soft snap, and you squeeze out and slip away into the trees.",
           "goto": "slipped_out"
         },
         "shout": {
           "label": "Shout for help",
           "description": "Shout, yell, or call out for help",
-          "text": "Your shout echoes off the trees. Nobody friendly answers, and Nib nearly drops his spoon.",
+          "text": "Your shout echoes off the trees. Nobody friendly answers, and @[Nib] nearly drops his spoon.",
           "patience": -1
         },
         "grab_keys": {
-          "label": "Grab Nib's keys",
+          "label": "Grab @[Nib]'s #[keys]",
           "description": "Reach through the bars to grab, hit, or attack the goblin, or snatch the key from his belt, actually doing it now; words alone, even threats, are never this",
-          "text": "You lunge for the key on his belt. Nib squeals and skitters back out of reach.",
+          "text": "You lunge for the key on his belt. @[Nib] squeals and skitters back out of reach.",
           "patience": -1
         },
         "wait": {
@@ -103,12 +103,12 @@
     },
     "talked_out": {
       "name": "The Forest Road",
-      "description": "By moonrise you're back on the forest road, with a goblin trotting at your heels and a recipe book under his arm. \"The town,\" Nib says. \"With the kitchens. You'll show me the way?\"",
+      "description": "By moonrise you're back on the forest road, with a goblin trotting at your heels and a recipe book under his arm. \"The town,\" @[Nib] says. \"With the kitchens. You'll show me the way?\"",
       "ending": "You talked your way out"
     },
     "slipped_out": {
       "name": "The Dark Trees",
-      "description": "Behind you, a thin wail goes up as Nib finds the empty cage. You don't stop running until the camp fires are out of sight.",
+      "description": "Behind you, a thin wail goes up as @[Nib] finds the empty #[cage]. You don't stop running until the camp fires are out of sight.",
       "ending": "You slipped the cage"
     },
     "chief_returns": {

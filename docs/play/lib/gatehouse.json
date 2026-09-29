@@ -1,6 +1,6 @@
 {
   "title": "THE GATEHOUSE",
-  "intro": "Curfew fell an hour ago. You carry a sealed letter that must reach the city tonight, and one tired guard stands between you and the gate.",
+  "intro": "Curfew fell an hour ago. You carry a #[sealed letter] that must reach the city tonight, and one tired guard stands between you and the gate.",
   "start": "gate",
   "player": {
     "inventory": [
@@ -12,7 +12,7 @@
   "scenes": {
     "gate": {
       "name": "East Gate",
-      "description": "Rain drips from the arch of the east gate. Harry Goatleaf, the gatekeeper, leans on his spear under the lantern, a small wooden toy horse poking out of his coat pocket. To your left, the city wall disappears into darkness.",
+      "description": "Rain drips from the arch of the east gate. @[Harry Goatleaf], the gatekeeper, leans on his spear under the lantern, a small wooden #[toy horse] poking out of his coat pocket. To your left, the city wall disappears into darkness.",
       "npc": {
         "id": "harry",
         "name": "Harry Goatleaf",
@@ -24,9 +24,9 @@
           }
         ],
         "patience": 4,
-        "hostileReaction": "Harry's hand drops to the club at his belt. \"Say that again and you'll see the inside of a cell.\"",
+        "hostileReaction": "@[Harry]'s hand drops to the club at his belt. \"Say that again and you'll see the inside of a cell.\"",
         "outOfPatience": {
-          "text": "\"Enough.\" Harry puts a whistle to his lips. Two more guards jog out of the gatehouse.",
+          "text": "\"Enough.\" @[Harry] puts a whistle to his lips. Two more guards jog out of the gatehouse.",
           "goto": "cell"
         },
         "persuasion": {
@@ -42,40 +42,40 @@
           "reactions": [
             {
               "min": 0,
-              "text": "Harry doesn't even look up. \"Gate's shut till dawn.\""
+              "text": "@[Harry] doesn't even look up. \"Gate's shut till dawn.\""
             },
             {
               "min": 1.5,
-              "text": "\"Everyone's got a reason,\" Harry says. \"Mine's keeping this job.\""
+              "text": "\"Everyone's got a reason,\" @[Harry] says. \"Mine's keeping this job.\""
             },
             {
               "min": 2.5,
-              "text": "Harry hesitates, thumb brushing the toy horse in his pocket. \"You'll have to do better than that.\""
+              "text": "@[Harry] hesitates, thumb brushing the #[toy horse] in his pocket. \"You'll have to do better than that.\""
             }
           ],
           "success": {
-            "text": "Harry lets out a long breath and lifts the bar. \"Lantern Street. Ask for Ilse, and tell her Harry sent you. And if you meant what you said, don't make me regret it.\"",
+            "text": "@[Harry] lets out a long breath and lifts the bar. \"Lantern Street. Ask for @[Ilse], and tell her @[Harry] sent you. And if you meant what you said, don't make me regret it.\"",
             "goto": "city_welcome"
           }
         },
-        "repeatReaction": "\"You said that already,\" Harry says, not unkindly. \"Saying it louder won't open the gate.\""
+        "repeatReaction": "\"You said that already,\" @[Harry] says, not unkindly. \"Saying it louder won't open the gate.\""
       },
       "actions": {
         "persuade_guard": {
-          "label": "Try to talk your way past Harry",
+          "label": "Try to talk your way past @[Harry]",
           "description": "Try to convince, plead with, argue with, threaten, or reason with the gatekeeper so he lets the player through the gate: anything said to him, threats included",
           "persuade": true
         },
         "chat_guard": {
-          "label": "Chat with Harry",
+          "label": "Chat with @[Harry]",
           "description": "Make small talk or ask the gatekeeper about himself, his shift, or the toy in his pocket, without asking to be let through",
-          "text": "Harry eyes you, then shrugs. \"Third double shift this week. My girl's had a fever three days, and the apothecary won't open after curfew.\" He tucks the toy horse deeper into his pocket.",
+          "text": "@[Harry] eyes you, then shrugs. \"Third double shift this week. My girl's had a fever three days, and the apothecary won't open after curfew.\" He tucks the #[toy horse] deeper into his pocket.",
           "setFlags": [
             "knows_daughter_is_sick"
           ]
         },
         "bribe_guard": {
-          "label": "Offer Harry money",
+          "label": "Offer @[Harry] money",
           "description": "Offer the gatekeeper money, a coin, or a gift in exchange for passage",
           "requires": {
             "items": [
@@ -83,13 +83,13 @@
             ]
           },
           "blockedText": "You pat your pockets. You have nothing to offer.",
-          "text": "Harry looks at the coin, then at you. \"Put that away before I decide I saw it.\"",
+          "text": "@[Harry] looks at the coin, then at you. \"Put that away before I decide I saw it.\"",
           "patience": -1
         },
         "read_letter": {
-          "label": "Examine the letter",
+          "label": "Examine the #[letter]",
           "description": "Read, examine, or look at the sealed letter the player is carrying",
-          "text": "The wax seal is unbroken. The address reads: Ilse Varga, Apothecary, Lantern Street. Underneath, someone has scrawled: urgent, fever remedy enclosed.",
+          "text": "The wax seal is unbroken. The address reads: @[Ilse Varga], Apothecary, Lantern Street. Underneath, someone has scrawled: urgent, fever remedy enclosed.",
           "setFlags": [
             "knows_letter_is_for_apothecary"
           ]
@@ -97,7 +97,7 @@
         "inspect_wall": {
           "label": "Search along the wall",
           "description": "Search or look around the wall or surroundings for another way into the city",
-          "text": "Out of the lantern's reach, thick ivy climbs the old stones all the way to the parapet.",
+          "text": "Out of the lantern's reach, thick #[ivy] climbs the old stones all the way to the parapet.",
           "setFlags": [
             "found_ivy"
           ]
@@ -111,11 +111,11 @@
             ]
           },
           "blockedText": "The stones by the gate are sheer and slick with rain. You'd need something to climb.",
-          "text": "You wait until Harry turns to trim the lantern wick, then haul yourself up the ivy, soaked and scraped.",
+          "text": "You wait until @[Harry] turns to trim the lantern wick, then haul yourself up the #[ivy], soaked and scraped.",
           "goto": "city_sneak"
         },
         "attack_guard": {
-          "label": "Attack Harry",
+          "label": "Attack @[Harry]",
           "description": "Physically attack, fight, or shove past the gatekeeper, actually doing it now; words alone, even threats, are never this",
           "text": "It goes about as well as fighting an armed guard ever goes.",
           "goto": "cell"
@@ -135,12 +135,12 @@
     },
     "city_sneak": {
       "name": "Muddy Alley",
-      "description": "You drop into a muddy alley inside the walls. Nobody saw you, and nobody will know why the letter arrived.",
+      "description": "You drop into a muddy alley inside the walls. Nobody saw you, and nobody will know why the #[letter] arrived.",
       "ending": "You snuck in"
     },
     "cell": {
       "name": "Gatehouse Cell",
-      "description": "The gatehouse cell smells of wet straw. The letter will have to wait until morning.",
+      "description": "The gatehouse cell smells of wet straw. The #[letter] will have to wait until morning.",
       "ending": "You spent the night in a cell"
     },
     "walked_away": {

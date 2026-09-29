@@ -5,6 +5,7 @@
 
 import { Persuadable, persuasionQuestions, readPersuasion, cleanInput, defineCharacter, HoneytongueError } from "./persuasion.js";
 import { SOURCE } from "./jev.js";
+import { parseMarkup, stripMarkup, stripMarkupDeep, markupProblems, hasMarkup } from "./markup.js";
 
 const ACT_AT = 0.6;      // top option probability needed to act immediately
 const CLARIFY_AT = 0.3;  // between CLARIFY_AT and ACT_AT, ask "did you mean..."
@@ -18,6 +19,13 @@ const META = {
   impossible: "A clear intention, but it matches none of the other options available here",
 };
 const MAX_ACTIONS = 255 - Object.keys(META).length; // Jev allows 255 options per Choice
+// State fields holding what the player typed: sent exactly as typed, never read as markup. (recent_turns also holds
+// the engine's replies, which are already plain: turns keep result.text.)
+const PLAYER_TEXT = new Set(["player_input", "previous_attempts", "recent_turns"]);
+
+/** A request's state for Jev: story text with its markup stripped, and what the player typed left exactly as it is. */
+const stateForJev = (state) =>
+  Object.fromEntries(Object.entries(state).map(([key, value]) => [key, PLAYER_TEXT.has(key) ? value : stripMarkupDeep(value)]));
 
 // Answers to "Did you mean: 1) ... 2) ...?"
 const PICKS = [
@@ -44,6 +52,40 @@ const toCharacter = (npc) => ({
   secrets: npc.secrets,
   repeatReaction: npc.repeatReaction,
 });
+
+// Story text players read, where markup (@[name], #[thing]) is allowed. "*" matches any scene or action id, and "#"
+// any list position. Every other string (names, personas, goals, secrets, action descriptions, item and flag names)
+// is sent to Jev or used as a name, so markup there is a mistake.
+const DISPLAY_TEXT = [
+  ["intro"],
+  ["scenes", "*", "description"],
+  ["scenes", "*", "actions", "*", "text"],
+  ["scenes", "*", "actions", "*", "blockedText"],
+  ["scenes", "*", "actions", "*", "label"],
+  ["scenes", "*", "npc", "hostileReaction"],
+  ["scenes", "*", "npc", "repeatReaction"],
+  ["scenes", "*", "npc", "outOfPatience", "text"],
+  ["scenes", "*", "npc", "persuasion", "success", "text"],
+  ["scenes", "*", "npc", "persuasion", "reactions", "#", "text"],
+];
+const isDisplayText = (path) => DISPLAY_TEXT.some((pattern) => pattern.length === path.length &&
+  pattern.every((p, i) => (p === "*" ? typeof path[i] === "string" : p === "#" ? typeof path[i] === "number" : p === path[i])));
+
+/** Markup problems anywhere in a story: badly formed in text players read, or present where it can't be. */
+function checkMarkup(story, problems) {
+  const where = (path) => (path[0] === "scenes" && path.length > 2 ? `Scene "${path[1]}", ${path.slice(2).join(".")}` : path.join("."));
+  const walk = (value, path) => {
+    if (typeof value === "string") {
+      if (isDisplayText(path)) for (const p of markupProblems(value)) problems.push(`${where(path)}: ${p}`);
+      else if (hasMarkup(value)) {
+        problems.push(`${where(path)}: markup (@[...] or #[...]) only works in text players read, like descriptions and replies. ` +
+          "This is sent to Jev or used as a name, so write it plainly");
+      }
+    } else if (Array.isArray(value)) value.forEach((v, i) => walk(v, [...path, i]));
+    else if (value && typeof value === "object") for (const [k, v] of Object.entries(value)) walk(v, [...path, k]);
+  };
+  walk(story, []);
+}
 
 /** Check a story for mistakes before playing. Throws StoryError listing every problem found. */
 export function validateStory(story) {
@@ -134,8 +176,24 @@ export function validateStory(story) {
       checkEffect(action, where);
     }
   }
+  checkMarkup(story, problems);
   if (problems.length) throw new StoryError(problems);
   return story;
+}
+
+/** A line the engine writes itself (not story text), or the ending's name. They carry no markup. */
+const system = (text) => ({ kind: "system", text });
+const endingLine = (name) => ({ kind: "ending", text: `— ${name} —` });
+
+/**
+ * A turn's reply from its lines: `text`, plain and in paragraphs as always, and `parts`, the same paragraphs as
+ * meaningful pieces (see parseMarkup) for interfaces that style them. Paragraph i of text.split("\n\n") is parts[i].
+ */
+function reply(lines, debug) {
+  const paragraphs = lines.filter((l) => (typeof l === "string" ? l : l?.text)).flatMap((l) =>
+    typeof l === "string" ? l.split("\n\n").map((p) => parseMarkup(p)) : [[{ kind: l.kind, text: l.text }]]);
+  const text = paragraphs.map((p) => p.map((part) => part.text).join("")).join("\n\n");
+  return debug === undefined ? { text, parts: paragraphs } : { text, parts: paragraphs, debug };
 }
 
 export class Game {
@@ -170,8 +228,9 @@ export class Game {
     return this.npcs.get(npc.id);
   }
 
+  /** The title, intro, and first scene as plain text. To style them, use parseMarkup on story.intro and scene.description. */
   intro() {
-    return `${this.story.title}\n\n${this.story.intro ?? ""}\n\n${this.scene.description}`.trim();
+    return stripMarkup([this.story.title, this.story.intro, this.scene.description].filter(Boolean).join("\n\n"));
   }
 
   // ---- The one Jev call per turn: action Choice + persuasion questions ----
@@ -211,13 +270,17 @@ export class Game {
     const game = new Game(story, { ask: async () => ({}) });
     return Object.entries(game.story.scenes).filter(([, s]) => !s.ending).map(([id]) => {
       game.sceneId = id;
-      return { scene: game.scene.description, questions: game.buildQuestions(), character: game.npc?.character ?? null };
+      // The same stripping interpret() does, so the proxy expects exactly what the engine sends.
+      const { scene, questions } = stripMarkupDeep({ scene: game.scene.description, questions: game.buildQuestions() });
+      return { scene, questions, character: game.npc?.character ?? null };
     });
   }
 
   /** Ask Jev what the player meant. `ranked` only contains real options, most likely first. */
   async interpret(input) {
-    const answers = await this.jev.ask(this.buildState(input), this.buildQuestions());
+    // The one place the engine talks to Jev. Markup is for display only, so it's stripped from all the story text
+    // sent: Jev judges the same plain text with or without it. What the player typed goes exactly as typed.
+    const answers = await this.jev.ask(stateForJev(this.buildState(input)), stripMarkupDeep(this.buildQuestions()));
     const known = (id) => has(this.scene.actions, id) || has(META, id);
     const action = answers?.action;
     const ranked = Object.entries(action?.probabilities ?? {})
@@ -238,14 +301,14 @@ export class Game {
   }
 
   async #turn(raw) {
-    if (this.over) return { text: "The story has ended. Start a new game to play again." };
+    if (this.over) return reply([system("The story has ended. Start a new game to play again.")]);
     const input = cleanInput(raw, MAX_INPUT);
-    if (!input) return { text: "" };
+    if (!input) return reply([]);
     this.#judged = null;
     this.#turnNpc = this.npc;
 
     const fast = this.fastPath(input);
-    if (fast) return { text: fast };
+    if (fast) return reply(fast);
 
     // Player answering a "did you mean 1 or 2?" prompt.
     if (this.pending) {
@@ -271,12 +334,12 @@ export class Game {
       this.react(lines, answers);
       return this.finish(lines, input, debug);
     }
-    if (unclear) return { text: "You're not sure how to do that. Try saying it another way.", debug: this.#withOutcome(debug) };
-    if (top === "impossible") return { text: "That isn't something you can do here.", debug: this.#withOutcome(debug) };
+    if (unclear) return reply([system("You're not sure how to do that. Try saying it another way.")], this.#withOutcome(debug));
+    if (top === "impossible") return reply([system("That isn't something you can do here.")], this.#withOutcome(debug));
     if (ambiguous) {
       this.pending = { options: [top, second], input, answers };
-      const d = (id) => this.scene.actions[id].label ?? this.scene.actions[id].description;
-      return { text: `Did you mean:\n  1) ${d(top)}\n  2) ${d(second)}`, debug: this.#withOutcome(debug) };
+      const d = (id) => stripMarkup(this.scene.actions[id].label ?? this.scene.actions[id].description);
+      return reply([system(`Did you mean:\n  1) ${d(top)}\n  2) ${d(second)}`)], this.#withOutcome(debug));
     }
     return this.perform(top, input, answers, debug);
   }
@@ -296,15 +359,16 @@ export class Game {
     });
   }
 
+  /** The lines for commands answered without Jev (look, inventory, help), or null. */
   fastPath(input) {
     const t = input.toLowerCase();
-    if (/^(l|look|look around)$/.test(t)) return this.scene.description;
+    if (/^(l|look|look around)$/.test(t)) return [this.scene.description];
     if (/^(i|inv|inventory)$/.test(t)) {
-      return this.inventory.length ? `You're carrying: ${this.inventory.join(", ")}.` : "You're empty-handed.";
+      return [system(this.inventory.length ? `You're carrying: ${this.inventory.join(", ")}.` : "You're empty-handed.")];
     }
     if (/^(h|help|\?)$/.test(t)) {
-      return "Type what you want to do in plain English. Talk your way through if you can.\n" +
-        "Shortcuts: look, inventory, debug (show Jev's reasoning), quit.";
+      return [system("Type what you want to do in plain English. Talk your way through if you can.\n" +
+        "Shortcuts: look, inventory, debug (show Jev's reasoning), quit.")];
     }
     return null;
   }
@@ -314,7 +378,7 @@ export class Game {
     const lines = [];
 
     if (!this.meetsRequirements(action)) {
-      lines.push(action.blockedText ?? "You can't do that yet.");
+      lines.push(action.blockedText ?? system("You can't do that yet."));
       this.react(lines, answers);
     } else if (action.persuade && this.npc) {
       this.persuade(input, answers, lines);
@@ -333,9 +397,9 @@ export class Game {
   }
 
   finish(lines, input, debug) {
-    const text = lines.filter(Boolean).join("\n\n");
-    this.history = [...this.history, { player: input, result: text.slice(0, RESULT_LENGTH) }].slice(-HISTORY);
-    return { text, debug: debug && this.#withOutcome(debug) };
+    const result = reply(lines, debug && this.#withOutcome(debug));
+    this.history = [...this.history, { player: input, result: result.text.slice(0, RESULT_LENGTH) }].slice(-HISTORY);
+    return result;
   }
 
   /** Whether this turn's tells would offend the NPC: the same rule persuasion uses. */
@@ -360,7 +424,7 @@ export class Game {
   /** A decide() hook can make an NPC offended even when nothing in offendedBy can. */
   hostileReaction() {
     const npc = this.scene.npc;
-    return npc.hostileReaction ?? `${npc.name} takes offence.`;
+    return npc.hostileReaction ?? system(`${npc.name} takes offence.`);
   }
 
   // ---- Persuasion: the module judges, the story narrates --------------------
@@ -369,7 +433,7 @@ export class Game {
     const npc = this.scene.npc;
     // Only reachable when success or outOfPatience doesn't move the player on.
     if (this.npc.convinced || this.npc.outOfPatience) {
-      lines.push(this.npc.convinced ? `${npc.name} has already agreed.` : `${npc.name} has stopped listening.`);
+      lines.push(system(this.npc.convinced ? `${npc.name} has already agreed.` : `${npc.name} has stopped listening.`));
       return;
     }
 
@@ -418,7 +482,7 @@ export class Game {
       lines.push(this.scene.description);
       if (this.scene.ending) {
         this.over = true;
-        lines.push(`— ${this.scene.ending} —`);
+        lines.push(endingLine(this.scene.ending));
       }
     }
   }

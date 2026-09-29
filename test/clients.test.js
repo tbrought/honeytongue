@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createJevClient, createProxyClient, createProxyHandler, createMockClient, Game } from "../src/index.js";
 import { fakeClient } from "./helpers.js";
+import { stripMarkupDeep } from "../src/markup.js";
 
 const ok = (body) => new Response(JSON.stringify(body), { status: 200 });
 const SOURCE = Symbol.for("honeytongue.source");
@@ -252,7 +253,7 @@ test("a worst-case Gatehouse turn fits the proxy's default size limit", () => {
   game.history = Array.from({ length: 4 }, () => ({ player: long("p"), result: "r".repeat(160) }));
   game.npc.attempts = Array.from({ length: 10 }, (_, i) => ({ said: long(String(i)), outcome: "unconvinced" }));
   game.flags.add("knows_daughter_is_sick");
-  const body = JSON.stringify({ state: game.buildState(long("x")), questions: game.buildQuestions() });
+  const body = JSON.stringify(stripMarkupDeep({ state: game.buildState(long("x")), questions: game.buildQuestions() }));
   const bytes = new TextEncoder().encode(body).length;
   assert.ok(bytes < 16_000, `worst case is ${bytes} bytes`);
 });

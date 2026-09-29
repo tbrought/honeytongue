@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createProxyClient, createProxyHandler, createMockClient, Game, VERSION, judgePersuasion, Persuadable, persuasionQuestions, persuasionState } from "../src/index.js";
 import { fakeClient } from "./helpers.js";
+import { stripMarkupDeep } from "../src/markup.js";
 
 const load = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), "utf8"));
 const scenes = load("stories/index.json");
@@ -15,11 +16,11 @@ const post = (body) => new Request("https://proxy.test/", { method: "POST", head
 const guarded = (options = {}) => createProxyHandler({ client: createMockClient(), rateLimit: false,
   allowedStories: Object.values(stories), allowedCharacters: Object.values(presets), ...options });
 
-/** The body the engine would send for this input, with the version the client adds. */
+/** The body the engine would send for this input (markup stripped, as interpret() does), with the version the client adds. */
 function engineBody(story, input = "hello there", setup = () => {}) {
   const game = new Game(story, createMockClient());
   setup(game);
-  return { state: game.buildState(input), questions: game.buildQuestions(), honeytongue: VERSION };
+  return { ...stripMarkupDeep({ state: game.buildState(input), questions: game.buildQuestions() }), honeytongue: VERSION };
 }
 
 test("a guarded proxy accepts every turn the demo scenes send, including learned secrets and long games", async () => {

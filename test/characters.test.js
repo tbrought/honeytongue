@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { defineCharacter } from "../src/index.js";
+import { stripMarkupDeep } from "../src/markup.js";
 
 const load = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), "utf8"));
 const characters = load("stories/characters.json");
@@ -26,7 +27,8 @@ test("each scene's character matches its preset", () => {
     const story = load(`stories/${scene.file}`);
     const npc = Object.values(story.scenes).find((s) => s.npc?.id === scene.character).npc;
     const { success, ...persuasion } = npc.persuasion;
-    const fromStory = { name: npc.name, persona: npc.persona, patience: npc.patience, secrets: npc.secrets, repeatReaction: npc.repeatReaction, ...persuasion };
+    // Presets are for Persuadable, which has no markup: the scene's reactions match once it's stripped.
+    const fromStory = stripMarkupDeep({ name: npc.name, persona: npc.persona, patience: npc.patience, secrets: npc.secrets, repeatReaction: npc.repeatReaction, ...persuasion });
     assert.deepEqual(defineCharacter(withoutNote(characters[scene.character])), defineCharacter(fromStory), scene.id);
   }
   assert.deepEqual(scenes.map((s) => s.character).sort(), Object.keys(characters).sort(), "every preset has a scene");
