@@ -28,6 +28,7 @@ const FILES = {
   "/play/lib/persuasion.js": "src/persuasion.js",
   "/play/lib/jev.js": "src/jev.js",
   "/play/lib/mock.js": "src/mock.js",
+  "/play/lib/version.js": "src/version.js",
   "/play/lib/characters.json": "stories/characters.json",
 };
 const TYPES = { html: "text/html; charset=utf-8", js: "text/javascript; charset=utf-8", css: "text/css; charset=utf-8", json: "application/json; charset=utf-8" };
