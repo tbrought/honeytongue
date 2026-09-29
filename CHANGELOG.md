@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.1.0-alpha.7 (2026-09-29)
+
+Quality and release tooling. This is the first release published from GitHub Actions with npm trusted publishing, so it carries a provenance statement and no npm token is stored anywhere.
+
+### Breaking
+
+- **Node 22 or later is required** (`engines` is now `>=22`, up from `>=18`). Node 18 and 20 have reached end of life. Honeytongue is tested on Node 22, 24, and 26, on Linux and Windows.
+
+### Changed
+
+- **`validateStory()` takes any value and returns a `Story`** in the TypeScript types (it was `validateStory<T>(story: T): T`). A story imported from JSON can now be passed in without a cast: TypeScript widens JSON strings like `"hard"` to `string`, so on its own it can't tell they're a valid `difficulty`. At runtime nothing changed.
+- In the types, `Game.requests()` returns defined characters (`DefinedCharacter`), as it always did at runtime.
+
+### Added
+
+- The TypeScript types are tested against TypeScript 7.0 and 5.9, the oldest version supported, including the `honeytongue/persuasion` and `honeytongue/proxy` subpaths.
+- The README has badges, and says Honeytongue is built on Jev by TypeSafe AI and not affiliated with TypeSafe.
+- `SECURITY.md`: report vulnerabilities privately through GitHub.
+
 ## 0.1.0-alpha.6 (2026-09-29)
 
 The live demo. The web demo can now play with Jev through a public proxy that only judges its own scenes, and falls back to the offline stand-in when it can't. The demo goes live once its proxy is deployed at `https://api.honeytongue.dev/judge`.
