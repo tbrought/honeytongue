@@ -1,0 +1,12 @@
+# Text files are stored with LF line endings and checked out with LF on every platform, whatever core.autocrlf
+# says, so Windows and Linux (and CI on both) see byte-identical files.
+* text=auto eol=lf
+
+# Never converted.
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.tgz binary

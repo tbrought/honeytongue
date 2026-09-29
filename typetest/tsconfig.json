@@ -1,0 +1,16 @@
+{
+  // The type test: `npm run typecheck` compiles api.ts against the published types, as a TypeScript user would
+  // (strict, Node's module rules, the package imported by name through its "exports"). Nothing is emitted.
+  "compilerOptions": {
+    "strict": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "target": "es2022",
+    "lib": ["es2022", "dom"],
+    "types": [],
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "noUnusedLocals": false
+  },
+  "include": ["*.ts"]
+}

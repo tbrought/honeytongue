@@ -14,17 +14,53 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 18 is the oldest version package.json promises; 22 and 24 are the current LTS lines.
+        # 22 is the oldest version package.json promises; 24 is the active LTS line and 26 the current release.
         # Windows too, since that's where Honeytongue is developed.
-        node: [18, 20, 22, 24]
+        node: [22, 24, 26]
         os: [ubuntu-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      # Third-party actions are pinned to a full commit SHA; the comment says which version it is.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ matrix.node }}
-      # Zero runtime dependencies and no lockfile, so there is nothing to install.
+          cache: npm
+      # Dev tooling only (TypeScript); the package itself has no dependencies.
+      - run: npm ci
       - run: npm test
+      - run: npm run typecheck
       # The scripts aren't covered by unit tests; make sure they still run end to end.
       - run: npm run example
       - run: npm run eval -- --mock
+
+  checks:
+    name: Oldest TypeScript, demo copies, and package on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Typecheck with the oldest supported TypeScript (5.9)
+        run: npm run typecheck:oldest
+      - name: The demo's copies in docs/ are up to date
+        shell: bash
+        run: |
+          npm run build:demo
+          if [ -n "$(git status --porcelain -- docs)" ]; then
+            git status --short -- docs
+            echo "::error::docs/play/lib is out of date. Run npm run build:demo and commit the result."
+            exit 1
+          fi
+      - name: Pack, install, and smoke-test the package
+        run: npm run check:package

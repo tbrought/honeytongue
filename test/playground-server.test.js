@@ -100,7 +100,8 @@ test("judging needs this server's token and a same-origin request", async () => 
     const { token } = await localConfig(port);
     assert.equal((await judge(port, "")).status, 403);
     assert.equal((await judge(port, "wrong-token")).status, 403);
-    assert.equal((await judge(port, token.slice(0, -1) + "x")).status, 403);
+    // A token one character off (never the same character, or it would be the right token).
+    assert.equal((await judge(port, token.slice(0, -1) + (token.endsWith("x") ? "y" : "x"))).status, 403);
     assert.equal((await judge(port, token, { Origin: "https://evil.example" })).status, 403);
     assert.equal((await judge(port, token, { Origin: `http://127.0.0.1:${port}` })).status, 200);
     // Each start gets a new token, so a page from an earlier run is told to reload.

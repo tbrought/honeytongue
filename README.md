@@ -1,14 +1,18 @@
 # Honeytongue
 
-**Characters your players can actually argue with.** Give a character a name, a persona, and a goal, pass in whatever the player typed, and Honeytongue tells you whether they were convinced, judged by *that character's* values. The same line can win over a greedy merchant and offend an honest guard. It's powered by [Jev](https://docs.typesafe.ai), TypeSafe's typed decision model, and works in any JavaScript game: Node, the browser, Twine, or a Discord bot. It has no dependencies and ships TypeScript types.
+[![CI](https://github.com/tbrought/honeytongue/actions/workflows/test.yml/badge.svg)](https://github.com/tbrought/honeytongue/actions/workflows/test.yml)
+[![npm (alpha)](https://img.shields.io/npm/v/honeytongue/alpha?label=npm%20alpha)](https://www.npmjs.com/package/honeytongue)
+[![License: MIT](https://img.shields.io/npm/l/honeytongue)](LICENSE)
+
+**Characters your players can actually argue with.** Give a character a name, a persona, and a goal, pass in whatever the player typed, and Honeytongue tells you whether they were convinced, judged by *that character's* values. The same line can win over a greedy merchant and offend an honest guard. It's powered by [Jev](https://docs.typesafe.ai), TypeSafe's typed decision model, and works in any JavaScript game: Node, the browser, Twine, or a Discord bot. It has no dependencies and ships TypeScript types (TypeScript 5.9 or later).
 
 **You only need three fields and one method. Everything else is optional.**
 
-> **Alpha, tested against live Jev.** Version 0.1.0-alpha.6 has been calibrated and checked with about 6,000 live calls, whole conversations included (see [the results](https://github.com/tbrought/honeytongue/blob/main/docs/live-results.md)). Defaults may still change before 0.1.0.
+> **Alpha, tested against live Jev.** Version 0.1.0-alpha.7 has been calibrated and checked with about 6,000 live calls, whole conversations included (see [the results](https://github.com/tbrought/honeytongue/blob/main/docs/live-results.md)). Defaults may still change before 0.1.0.
 
 ## Quick start
 
-You need Node 18 or later. In an empty folder:
+You need Node 22 or later. In an empty folder:
 
 ```bash
 npm install honeytongue
@@ -60,4 +64,4 @@ else say(result.reaction ?? "Harry's hand drops to his club.");
 
 ## License
 
-MIT
+MIT. Built on Jev by TypeSafe AI, and not affiliated with TypeSafe.

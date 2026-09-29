@@ -51,11 +51,14 @@ Jev is TypeSafe AI's "System One" decision model, released September 2026. It do
 | `docs/live-results.md` | Readable summary of the live calibration; raw outputs stay in `live-runs/` |
 | `test/` | `node:test` unit tests using a scripted fake client. `scenes.test.js` plays every scene's talking and non-talking routes on the mock. `demo.test.js` fails if `docs/play/lib` is stale |
 | `CHANGELOG.md` | Unreleased changes, for the release notes |
+| `typetest/` | The type test (`npm run typecheck` with TypeScript 7.0.2, `npm run typecheck:oldest` with 5.9.3, the oldest supported): `api.ts` imports the package by name (strict, nodenext) and has `@ts-expect-error` lines for code that must not compile. Outside `test/`, because `node --test` would run `.ts` files there |
+| `scripts/check-package.js` | `npm run check:package`: packs, checks the version and file list (nothing git doesn't track), installs the tarball into a scratch project, and smoke-tests the entry points, a guarded proxy, the installed types, and the CLI |
+| `.github/workflows/` | `test.yml`: tests and typecheck on Node 22, 24, and 26 on Ubuntu and Windows, plus the oldest-TypeScript typecheck, the demo sync check, and the package check. `release.yml`: publishes on a `v*` tag with trusted publishing after the checks and the maintainer's approval (see "Releasing"). Actions are pinned to commit SHAs |
 
 ## Principles (do not break these)
 
 1. **Jev judges, code decides.** Jev only classifies input and scores persuasion. All state changes and all narration come from code or the story file. Never make Jev generate text.
-2. **Zero runtime dependencies.** Plain ESM JavaScript, Node 18+. Dev tooling is fine if it earns its place, but ask first.
+2. **Zero runtime dependencies.** Plain ESM JavaScript, Node 22+. Dev tooling is fine if it earns its place, but ask first (so far: TypeScript 7.0.2 and 5.9.3, for the type test, pinned exactly with a lockfile).
 3. **Everything in `src/` except `cli.js` and `playground-server.js` must run in a browser.** No `node:` imports, no bare `process` (use `globalThis.process?.env`). Those two are Node only and never exported from `index.js`.
 4. **API keys never reach the browser, the repo, or logs.** The key comes from the `TYPESAFE_API_KEY` environment variable. Never write it to a file, never print it.
 5. **Keep types, README, and docs in sync** with any API change, and run `npm run build:demo` after changing `src/` or `stories/`.
@@ -85,26 +88,35 @@ The agent prepares a release on the feature branch; the human ships it. **The ag
 
 Agent (preparing a release):
 
-1. Confirm `npm test` passes, plus `npm run typecheck` once it exists.
+1. Confirm `npm test`, `npm run typecheck`, and `npm run typecheck:oldest` pass.
 2. Run `npm run build:demo` and commit any changes to `docs/`.
 3. Bump the version in `package.json`, `src/version.js` (`test/version.test.js` checks they match), and everywhere else it appears (README, docs site, CDN links). Prereleases follow the pattern `0.1.0-alpha.1`, `alpha.2`, and so on; stable releases drop the suffix.
    CDN links (docs site, README, `examples/`) load `honeytongue@alpha` while only prereleases exist, because jsDelivr can't resolve a range like `@0.1` to a prerelease. **When `0.1.0` ships, switch them back to a version range such as `@0.1`.**
 4. Move the CHANGELOG's Unreleased entries under a heading with the version and today's UTC date, keeping a "Breaking" heading where needed.
-5. Run `npm pack --dry-run` and check the version and file list (no tests, evals, secrets, or stray files).
+5. Run `npm run check:package` (the version, the file list, and a smoke test of the installed tarball; CI and the release workflow run it too).
    **If the release changes stories, personas, or scene logic, run a full live rerun first**: `npm run eval -- --all --repeats 10` and `node scripts/live.js routes --repeats 10`, fixing anything that fails. Unit tests run on the mock, so they can't catch a change in how Jev routes or scores a line.
 6. Hand over with a summary and the exact commands for the human's steps.
 
-Human (shipping it):
+Human (shipping it). Releases are staged from GitHub Actions (`.github/workflows/release.yml`) with npm trusted publishing, then approved on npmjs.com: no npm token is stored anywhere, npm adds a provenance statement, and nothing goes public without the maintainer's two-factor authentication.
 
-1. Review: `npm test`, `npm run play:mock`, and `npx serve docs`.
+1. Review: `npm test`, `npm run typecheck`, `npm run play:mock`, and `npx serve docs`.
 2. `git push -u origin <branch>`, open a pull request on GitHub, and wait for the checks to pass.
 3. Merge on GitHub, delete the branch, then `git checkout main` and `git pull`.
-4. `npm whoami`, then `npm publish --tag alpha` for prereleases, or plain `npm publish` for stable releases.
-5. `npm view honeytongue dist-tags` to confirm. npm pointed `latest` at alpha.0 on the first publish, so while there's no stable release, point `latest` at the newest alpha with `npm dist-tag add honeytongue@<version> latest`.
-6. `git tag v<version>` and `git push origin v<version>`, then optionally create a GitHub Release from the tag using the CHANGELOG section, marked as a pre-release for alphas.
-7. **If the release changes the persuasion questions, the stories, or the personas, redeploy the demo Worker** (`honeytongue-demo`) with the new version: `npx wrangler deploy --config examples/demo-wrangler.toml` from `main`, then `node scripts/check-demo-proxy.js https://api.honeytongue.dev/judge`. It only accepts requests that match its own copy of the library exactly, so an old Worker refuses the new demo's requests, and the demo falls back to the offline mock with a note about the version mismatch.
+4. **Push the tag and approve the GitHub run:** `git tag v<version>` and `git push origin v<version>`. The release workflow checks that the tag matches `package.json` and is on `main`, and runs every check. Then on GitHub, Actions > release > the run for the tag > Review deployments > tick `npm` > Approve and deploy. It stages the version on npm (`npm stage publish`), with `--tag alpha` for prereleases and `latest` for stable versions.
+5. **Approve the staged version on npmjs.com:** sign in with two-factor authentication, open the Staged Packages tab, review `honeytongue@<version>`, and click Approve (npm asks for 2FA again). It goes public with the tag it was staged with.
+6. **While still signed in, move `latest` for alphas.** Trusted publishing only covers publishing, so while there's no stable release, point `latest` at the newest alpha by hand. The `npm` command has its own login, but it goes through the browser, so the npmjs.com session from step 5 makes it quick: `npm login` (confirm with 2FA if asked), `npm dist-tag add honeytongue@<version> latest`, `npm view honeytongue dist-tags` to confirm, then `npm logout`. Stable versions are staged as `latest`, so they don't need this.
+7. Optionally create a GitHub Release from the tag using the CHANGELOG section, marked as a pre-release for alphas.
+8. **If the release changes the persuasion questions, the stories, or the personas, redeploy the demo Worker** (`honeytongue-demo`) with the new version: `npx wrangler deploy --config examples/demo-wrangler.toml` from `main`, then `node scripts/check-demo-proxy.js https://api.honeytongue.dev/judge`. It only accepts requests that match its own copy of the library exactly, so an old Worker refuses the new demo's requests, and the demo falls back to the offline mock with a note about the version mismatch.
 
-(Phase D replaces steps 4 to 6 with publishing from GitHub Actions: the human pushes the tag and approves the run.)
+**If the release workflow fails:**
+- **In the checks, before publishing:** nothing was published. Fix it on a branch and merge it, then move the tag to the fixed commit on `main`: `git tag -d v<version>`, `git push origin :refs/tags/v<version>`, then step 4 again.
+- **At the staging step, or if staging is unavailable, as a fallback:** publish by hand from the tagged commit, signing in interactively with two-factor authentication rather than with a stored token: `git checkout v<version>`, `npm login`, `npm publish --tag alpha` (plain `npm publish` for stable; npm asks for a one-time code), `npm logout`, `git checkout main`. Then steps 6 onward.
+
+**One-time setup (the human, already done if a release has gone through the workflow):**
+- **npmjs.com:** the package's Settings > Trusted publishing: GitHub Actions, organization or user `tbrought`, repository `honeytongue`, workflow filename `release.yml`, environment `npm`, with "publish directly" left unchecked, as npm recommends, so the workflow can only stage. Once a release has published through the workflow, Settings > Publishing access > "Require two-factor authentication and disallow tokens" (interactive `npm login` with 2FA still works for the fallback).
+- **GitHub, environment:** Settings > Environments > New environment `npm`. Required reviewers: the maintainer (leave "Prevent self-review" off, since the maintainer also pushes the tag). Deployment branches and tags: selected, with a tag rule `v*`.
+- **GitHub, tag ruleset:** Settings > Rules > Rulesets > New ruleset > New tag ruleset: name `Release tags`, enforcement Active, bypass list Repository admin (always), target tags matching `v*`, rules Restrict creations, Restrict updates, Restrict deletions, and Block force pushes. Only the maintainer (the repository admin) can then create or delete `v*` tags.
+- **GitHub, security:** Settings > Advanced Security > Private vulnerability reporting: Enable (`SECURITY.md` points to it).
 
 **Rollback.** Published versions can't be edited or reused. If a release is broken, first run `npm dist-tag add honeytongue@<previous version> latest` to point new installs back at the last good version, then fix it and publish a patch release (such as `0.1.1`).
 
@@ -112,12 +124,12 @@ Human (shipping it):
 - **Prerequisite:** Phase G is live, with the demo proxy's spending ceiling and rate limits in place before any announcement.
 - **Behaviour changes:** anything that changes how existing characters play (such as recalibrated difficulty fractions) goes under "Breaking" or "Changed" in the CHANGELOG, with how to keep the old behaviour (for example, setting an explicit `threshold`).
 - **Test the published package, not the repo:** after publishing, install `honeytongue` from npm into an empty folder on Windows and on Linux, and run the quick start, `npx honeytongue`, and `npx honeytongue playground`.
-- **Tags:** point `latest` at `0.1.0`, then deprecate the prereleases with `npm deprecate honeytongue@"<0.1.0" "Prerelease. Please upgrade to 0.1.0."` so alpha users see a gentle warning.
+- **Tags:** the release workflow publishes `0.1.0` as `latest` by itself. Then deprecate the prereleases (after `npm login` with two-factor authentication) with `npm deprecate honeytongue@"<0.1.0" "Prerelease. Please upgrade to 0.1.0."` so alpha users see a gentle warning.
 - **Release notes:** tell alpha users to switch CDN links from `@alpha` to `@0.1`.
 
 ## Current status and known unknowns
 
-- Local verification and CI are done (2026-09-25): unit tests pass on Node 18, 20, 22, and 24 (`node --test` counts every file under `test/`, including `test/helpers.js`).
+- CI (Phase D, 2026-09-29): tests and the TypeScript 7 typecheck run on Node 22, 24, and 26 on Ubuntu and Windows; the TypeScript 5.9 typecheck, the demo sync check, and the package check run on both platforms. `node --test` counts every file under `test/`, including `test/helpers.js`. The repository uses LF line endings (`.gitattributes`).
 - **Live Jev validation is done (Phase F, 2026-09-28; details in `docs/live-results.md`).** 2,626 calls, about $0.11. On the final defaults: scene and showcase suite verdicts 43/43, scores 18/18, threats 8/8, insults 7/7, actions 64/67; every scripted line reliable in 10 of 10 repeats; no injection attempt won (over 50 tried); identical attempts vary by a standard deviation of 0.09 at most. An attempt is about 780 tokens (723 input), an engine turn about 1,400 (1,237 input), about 100 ms median and 150 ms at the 95th percentile. The keyword mock's baseline: action 57/67, verdict 41/43.
 - **Defaults after calibration:** `DEFAULT_LEVELS` is rubric C, which judges an attempt only by how it moves the persona (the old rubric, quoted in the CHANGELOG, called flattery, lies, and demands counterproductive in general, so cowards couldn't fold). Unlearned secrets aren't sent to Jev at all (`persuasionState` includes only learned ones), because marking them unknown didn't stop them helping. The difficulty shares (easy 0.6, normal 0.8, hard 0.9, very hard 0.95) were kept: they match their meanings on rubric C (easy: a reasonable argument wins without the secret; normal: an argument that speaks to what they care about wins; hard: about 2 in 3 compelling arguments; very hard: about 1 in 3). `hostileAt` 0.7 and the parser's `ACT_AT` 0.6 and `CLARIFY_AT` 0.3 were kept.
 - **Multi-turn calibration (2026-09-29, `scripts/multiturn.js`):** building an argument helps (+0.3 to +0.8 over fresh); no grudges (an honest offer after flattery and a threat scores as fresh); reworded points count for less for Harry and Maude (−0.3 to −0.8) but reassurance helps Cobb (+0.25 to +1.36); word-for-word repeats after learning a secret are caught locally, and letting them through to Jev ("fix B") didn't help, since Jev's memory discounts them anyway, so it wasn't adopted. A point regained full weight once it left a 4-attempt memory, so the default `memory` is now 10. A remark belittling Nib's situation registers as an insult (a documented borderline case in his suite). Patience values for Maude and Nib wait on the human's playtests.
@@ -127,7 +139,7 @@ Human (shipping it):
 - The public web demo is live with Jev but falls back to the mock (when the proxy is busy, refuses, or runs out of credit, and after 50 turns per tab), and the hosted playground runs on the mock, so the mock must be able to win each scene the way the story intends. `test/scenes.test.js` plays each scene's talking route to its success ending, and its non-talking route to its ending, on the mock; keep mock changes generic, never tuned to one story's wording or the eval set.
 - The Twine recipe (`examples/twine-sugarcube.md`) is untested inside Twine.
 - **Harry Goatleaf keeps his name.** It's a deliberate nod to Tolkien, and the human has settled it: don't rename him or suggest renaming him. Every other character, place, and line should be original; web-search any new character's full name before proposing it.
-- The repository is github.com/tbrought/honeytongue. The site is https://honeytongue.dev (GitHub Pages with a custom domain, `docs/CNAME`; tbrought.github.io/honeytongue redirects there). The human owns honeytongue.dev on Cloudflare. The latest release is `0.1.0-alpha.6` (prepared 2026-09-29: the live demo's proxy guard, fallback, turn cap, and Worker; alpha.5 is published).
+- The repository is github.com/tbrought/honeytongue. The site is https://honeytongue.dev (GitHub Pages with a custom domain, `docs/CNAME`; tbrought.github.io/honeytongue redirects there). The human owns honeytongue.dev on Cloudflare. The latest release is `0.1.0-alpha.7` (prepared 2026-09-29: Phase D, the first release through the release workflow; alpha.6 is published).
 - **The live demo is on (2026-09-29).** The Worker `honeytongue-demo` serves `https://api.honeytongue.dev/judge` with the `honeytongue-demo-proxy` key, a spending ceiling, and a Cloudflare rate limiting rule (steps in `docs/demo-proxy.md`), and `docs/play/index.html`'s `honeytongue-proxy` meta tag points to it. After any redeploy, run `node scripts/check-demo-proxy.js https://api.honeytongue.dev/judge`. How TypeSafe reports running out of credit isn't documented; the proxy treats Jev's 401, 402, and 403 as `unavailable`.
 - Character settings: `difficulty` maps a word to a share of the top rubric level (`DIFFICULTY` in `persuasion.js`). `offendedBy` picks which tells offend; tells not in it are left to the persona. Results carry `tells` and `triggered`. `decide(result, context)` is a synchronous character hook applied in `record()` and `judgePersuasion()`, not `readPersuasion()`. Don't add stages, extra or custom tells, or closeness labels until multi-turn results and users call for them.
 ## Roadmap
@@ -140,14 +152,20 @@ Work through the phases in order. At the start of each phase, send a short plan 
 - Phase C, scenes and the "Same words, different people" showcase (`0.1.0-alpha.3`).
 - Phase F, live Jev validation (`0.1.0-alpha.4`): calibration, rubric C, secrets sent only once learned, the reliability rule, and the docs restructured from simple to advanced. See `docs/live-results.md`.
 - Multi-turn calibration and playtest tooling (`0.1.0-alpha.5`): opt-in transcripts, memory 10, one penalty per turn, the out-of-patience text alone on the last turn, spoken threats judged as speech, patience shown in the terminal, and Maude's patience and banter.
+- Phase D, quality (`0.1.0-alpha.7`): the type test (TypeScript 7.0.2 and 5.9.3), the demo sync and package checks in CI, Node 22+ on Ubuntu and Windows, LF line endings, README badges, `SECURITY.md`, and publishing through `release.yml` with trusted publishing.
 - Phase G, live demo (`0.1.0-alpha.6`): the proxy's exact-request guard (`allowedStories`, `allowedCharacters`, `VERSION`), the demo's fallback and 50-turn cap, and the demo Worker. Live since 2026-09-29, after a one-line website pull request.
 
 **In order from here:**
 
-1. **Phase D, quality.** A type test (`tsc --noEmit`) in CI, a CI check that `npm run build:demo` leaves `docs/` unchanged, a package smoke test, CI on Node 20, 22, and 24 on Ubuntu and Windows (with `engines` raised to match), `.gitattributes`, README badges, and `SECURITY.md`.
-   - Publishing from GitHub Actions with npm trusted publishing (OIDC) and provenance, instead of from the human's laptop, so no long-lived npm token is stored anywhere. A release workflow triggered by pushing a version tag (`v*`) runs the full test suite, the typecheck, and the package check, then publishes prereleases with `--tag alpha` and stable versions as `latest`. It waits for the human's approval through a protected GitHub environment before publishing.
-   - Tell the human exactly what to configure on npmjs.com (the trusted publisher) and in GitHub's settings (the protected environment and its reviewers), since only they can.
-   - Update "Releasing" to match: the human's steps become pushing the tag and approving the run, instead of running `npm publish`.
+
+1. **Demo polish**, released as its own alpha. Make the web demo feel like a polished retro text game, in keeping with the site's Infocom style. **Stop for the human's OK on a plan with mockups or screenshots before building.**
+   - **Story markup:** simple inline markup in story files for character names, items and interactable things, and speech, so any author's stories get styling. Strip it before any text is sent to Jev, with a test proving the requests are unchanged, and keep plain text working. The CLI renders it with terminal colours (and respects `NO_COLOR`).
+   - **Colour with meaning:** distinct colours for speech, character names, items, system messages, and verdict feedback (convinced, unconvinced, offended), readable in both themes and meeting contrast guidelines.
+   - **Animated text:** narration and replies type out, skippable with a click or key, instant when the system's reduce-motion setting is on, with a setting to turn it off. Screen readers get the whole text at once.
+   - **Atmosphere:** a blinking cursor, scene title cards, and an optional CRT mode (scanlines and glow), off by default.
+   - **Endings:** an ending screen with the turns taken and the arguments that landed, plus "play again" and "try another scene".
+   - The persuasion meter and patience pips animate subtly when they change.
+   - No sound for now. Check at phone and desktop widths in both themes, with keyboard only, and with reduce-motion on. All golden-path tests and eval suites must pass unchanged.
 2. **Phase E, positioning.** Reposition from "text games" to any game where players type or speak to characters, and add a Phaser example showing an NPC in a visual web game.
    - **Discoverability.** npm search weighs the name, description, and keywords, so expand `package.json`'s `keywords` and update its `description` to match the new positioning at the same time.
      - Keep the list relevant and honest: only terms for things Honeytongue supports at that release. Around 20 keywords at most, all lowercase and hyphenated.

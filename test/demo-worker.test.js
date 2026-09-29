@@ -3,20 +3,19 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { Game, createProxyClient, createMockClient, persuasionQuestions, persuasionState, VERSION } from "../src/index.js";
 
-// The Worker imports the stories as JSON modules, which Node supports from 18.20.
-const worker = await import("../examples/demo-worker.js").catch(() => null);
-const skip = worker ? false : "this Node can't import JSON modules";
+import * as worker from "../examples/demo-worker.js";
+
 const load = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), "utf8"));
 const config = readFileSync(new URL("../examples/demo-wrangler.toml", import.meta.url), "utf8");
 const configOrigins = config.match(/^ALLOWED_ORIGINS = "([^"]*)"$/m)?.[1];
 const URL_ = "https://api.honeytongue.dev/judge";
 
-test("the demo Worker bundles exactly the scenes the demo lists", { skip }, () => {
+test("the demo Worker bundles exactly the scenes the demo lists", () => {
   const titles = load("stories/index.json").map((s) => load(`stories/${s.file}`).title);
   assert.deepEqual(worker.DEMO_STORIES.map((s) => s.title), titles);
 });
 
-test("the demo Worker's config: honeytongue.dev first, api.honeytongue.dev as its only address", { skip }, () => {
+test("the demo Worker's config: honeytongue.dev first, api.honeytongue.dev as its only address", () => {
   assert.match(config, /^name = "honeytongue-demo"$/m);
   assert.deepEqual(worker.parseOrigins(configOrigins), ["https://honeytongue.dev", "https://tbrought.github.io"]);
   assert.match(config, /^routes = \[\{ pattern = "api\.honeytongue\.dev", custom_domain = true \}\]$/m);
@@ -26,7 +25,7 @@ test("the demo Worker's config: honeytongue.dev first, api.honeytongue.dev as it
   assert.deepEqual(worker.parseOrigins(undefined), []);
 });
 
-test("the demo Worker judges the demo's turns from its pages, only at /judge, and refuses anything else", { skip }, async () => {
+test("the demo Worker judges the demo's turns from its pages, only at /judge, and refuses anything else", async () => {
   // The Worker makes its handler on the first request, from these variables.
   const env = { ALLOWED_ORIGINS: configOrigins, TYPESAFE_API_KEY: "test-key-not-real" };
   const fetchVia = (origin) => async (url, init) => worker.default.fetch(new Request(url, { ...init, headers: { ...init.headers, Origin: origin } }), env);

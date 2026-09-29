@@ -278,7 +278,11 @@ export interface TurnResult {
   debug?: TurnDebug | null;
 }
 
-export function validateStory<T>(story: T): T;
+/**
+ * Checks a story and returns it, typed as a Story. Throws StoryError listing every problem. Takes any value, so a
+ * story imported from JSON (where TypeScript widens "hard" to string) can be passed in without a cast.
+ */
+export function validateStory(story: unknown): Story;
 
 export class Game {
   constructor(story: Story, client: JevClient);
@@ -297,7 +301,7 @@ export class Game {
   turn(input: string): Promise<TurnResult>;
   interpret(input: string): Promise<{ answers: Record<string, any>; ranked: [string, number][] }>;
   /** What a story sends to Jev from each playable scene (used by the proxy's allowedStories). */
-  static requests(story: Story): { scene: string; questions: Record<string, any>; character: Character | null }[];
+  static requests(story: Story): { scene: string; questions: Record<string, any>; character: DefinedCharacter | null }[];
 }
 
 // ---- Clients and the proxy -----------------------------------------------------
