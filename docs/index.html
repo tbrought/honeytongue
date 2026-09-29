@@ -157,7 +157,7 @@ table.grid td .dim { display: block; }
       <p><strong>You only need three fields and one method. Everything else is optional.</strong> A character needs a <code>name</code>, a <code>persona</code>, and a <code>goal</code>, and <code>attempt()</code> judges whatever the player typed. Honeytongue runs on <a href="https://docs.typesafe.ai">Jev</a>, a model from TypeSafe that makes typed judgements instead of writing text. It has no dependencies and ships TypeScript types.</p>
       <ol class="steps">
         <li>
-          <p>You need Node 18 or later. In an empty folder, install the package:</p>
+          <p>You need Node 22 or later. In an empty folder, install the package:</p>
 <pre><code>npm install honeytongue</code></pre>
         </li>
         <li>
@@ -574,7 +574,7 @@ npm run eval -- --mock                    <span class="c"># the keyword mock's b
           <tr><td><code>clientIp</code></td><td><code>CF-Connecting-IP</code>, else the last <code>X-Forwarded-For</code></td><td><code>createProxyHandler</code>: <code>(request, env) =&gt; address</code>, for the rate limit</td></tr>
         </tbody>
       </table></div>
-      <p>TypeScript types are included for every export, including the story format.</p>
+      <p>TypeScript types are included for every export, including the story format. They're tested with TypeScript 5.9 and 7.0 (strict, with <code>"module": "nodenext"</code>), and 5.9 is the oldest version supported. To use a story imported from JSON, pass it through <code>validateStory()</code>: it checks the story and types it as a <code>Story</code>, which TypeScript can't do from the JSON alone.</p>
     </section>
 
     <section id="faq" class="faq">

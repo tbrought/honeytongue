@@ -55,7 +55,7 @@ Jev is TypeSafe AI's "System One" decision model, released September 2026. It do
 ## Principles (do not break these)
 
 1. **Jev judges, code decides.** Jev only classifies input and scores persuasion. All state changes and all narration come from code or the story file. Never make Jev generate text.
-2. **Zero runtime dependencies.** Plain ESM JavaScript, Node 18+. Dev tooling is fine if it earns its place, but ask first.
+2. **Zero runtime dependencies.** Plain ESM JavaScript, Node 22+. Dev tooling is fine if it earns its place, but ask first (so far: TypeScript 7.0.2 and 5.9.3, for the type test, pinned exactly with a lockfile).
 3. **Everything in `src/` except `cli.js` and `playground-server.js` must run in a browser.** No `node:` imports, no bare `process` (use `globalThis.process?.env`). Those two are Node only and never exported from `index.js`.
 4. **API keys never reach the browser, the repo, or logs.** The key comes from the `TYPESAFE_API_KEY` environment variable. Never write it to a file, never print it.
 5. **Keep types, README, and docs in sync** with any API change, and run `npm run build:demo` after changing `src/` or `stories/`.
