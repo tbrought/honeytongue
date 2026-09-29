@@ -250,3 +250,29 @@ test("a decide hook works in stories built in code", async () => {
   assert.match(r.text, /Harry Goatleaf takes offence/);
   assert.equal(game.over, false);
 });
+
+test("each turn's debug says how it went for the scene's character", async () => {
+  const client = fakeClient({ score: 1 });
+  const game = new Game(story(), client);
+  const judged = (await game.turn("an honest but weak plea")).debug;
+  assert.equal(judged.verdict, "unconvinced");
+  assert.equal(judged.threshold, 3.2);
+  assert.deepEqual(judged.triggered, []);
+  assert.equal(judged.patienceLeft, 3);
+
+  const repeat = (await game.turn("an honest but weak plea")).debug;
+  assert.deepEqual(repeat.ranked, [], "a repeat is caught locally");
+  assert.equal(repeat.verdict, "repeated");
+  assert.equal(repeat.patienceLeft, 2);
+
+  client.next = { ...client.next, action: "read_letter" };
+  const plain = (await game.turn("read the letter")).debug;
+  assert.equal(plain.verdict, null, "an ordinary action isn't judged");
+  assert.equal(plain.threshold, 3.2);
+
+  client.next = { ...client.next, action: "chat_guard", insults: 0.95 };
+  const rude = (await game.turn("how's your shift, idiot")).debug;
+  assert.equal(rude.verdict, "offended");
+  assert.deepEqual(rude.triggered, ["insults"]);
+  assert.equal(rude.patienceLeft, 0, "Harry has run out, and the turn says so");
+});

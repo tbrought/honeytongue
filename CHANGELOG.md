@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Playtest transcripts, off by default: tick "Record playtest" in the web demo and press "Save transcript", or play with `npx honeytongue --transcript play.json`. Each turn records the input, the action chosen, the verdict, the score and threshold, the tells triggered, the patience left, and the flags and items the player had, with the Honeytongue version, the scene, and a `formatVersion`. Nothing is sent anywhere, and no keys are included. `scripts/transcript-to-evals.js` turns a transcript into draft eval cases for review.
+- The engine's per-turn `debug` also reports the scene character's `verdict`, `threshold`, `triggered` tells, and `patienceLeft`, and a repeat (caught locally) now has a `debug` too, with an empty `ranked`.
+
 ## 0.1.0-alpha.4 (2026-09-28)
 
 The first release tested against live Jev. About 2,600 live calls calibrated the defaults, the demo characters, and the docs; the findings are in `docs/live-results.md`.

@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 import { readFile } from "node:fs/promises";
+import { readFileSync, writeFileSync } from "node:fs";
+import { basename } from "node:path";
 import readline from "node:readline";
 import { argv, env, stdin, stdout } from "node:process";
 import { Game, StoryError } from "./engine.js";
 import { createJevClient } from "./jev.js";
 import { createMockClient } from "./mock.js";
+import { createTranscript, snapshot } from "./transcript.js";
 
 const wrap = (text, width = 72) =>
   text.split("\n").map((line) => {
@@ -24,6 +27,8 @@ const bar = (value, max, width = 20) => {
 };
 
 function printDebug(d) {
+  // A repeat is caught locally, so nothing answered it.
+  if (!d.ranked.length) { console.log(`\n  [local] ${d.verdict ?? "repeated"}: too close to an earlier attempt, not sent to Jev`); return; }
   const tag = `[${d.source ?? "unknown"}]`; // who answered this turn: jev, mock, or unknown if the client didn't say
   const top = d.ranked.map(([k, p]) => `${k} ${p.toFixed(2)}`).join(" · ");
   console.log(`\n  ${tag} action: ${top}`);
@@ -68,7 +73,14 @@ async function play(args) {
 }
 
 async function run(args, lines) {
-  const storyPath = args.find((a) => !a.startsWith("--")) ?? await chooseScene(lines);
+  // --transcript <file> saves a playtest transcript as you play; its file name isn't a story.
+  const transcriptPath = args.includes("--transcript") ? args[args.indexOf("--transcript") + 1] : null;
+  if (args.includes("--transcript") && !transcriptPath) {
+    console.error("--transcript needs a file name, like --transcript play.json");
+    process.exitCode = 1;
+    return;
+  }
+  const storyPath = args.find((a, i) => !a.startsWith("--") && args[i - 1] !== "--transcript") ?? await chooseScene(lines);
   if (!storyPath) return;
   let story;
   try {
@@ -93,6 +105,14 @@ async function run(args, lines) {
     return;
   }
 
+  let transcript = null;
+  if (transcriptPath) {
+    const { version } = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+    transcript = createTranscript({ version, scene: basename(String(storyPath instanceof URL ? storyPath.pathname : storyPath), ".json"), story });
+    transcript.start();
+    console.log(`(Recording a transcript to ${transcriptPath}. It stays on your computer.)\n`);
+  }
+
   console.log(wrap(game.intro()));
   console.log("\n(Type 'help' for tips.)");
 
@@ -106,7 +126,12 @@ async function run(args, lines) {
     if (input === "debug") { debug = !debug; console.log(`Debug view ${debug ? "on" : "off"}.`); continue; }
 
     try {
+      const before = snapshot(game);
       const result = await game.turn(input);
+      if (transcript) {
+        transcript.record(input, before, result, game);
+        writeFileSync(transcriptPath, JSON.stringify(transcript.data, null, 2) + "\n"); // after every turn, so quitting keeps it
+      }
       if (debug && result.debug) printDebug(result.debug);
       if (result.text) console.log("\n" + wrap(result.text));
     } catch (err) {

@@ -42,3 +42,22 @@ test("a story path still plays that story, with no menu", async () => {
   assert.match(stdout, /THE TIDY PROFIT/);
   assert.doesNotMatch(stdout, /Choose a scene/);
 });
+
+test("--transcript saves a playtest transcript as you play, and a scene picked from the menu names it", async () => {
+  const { mkdtempSync, readFileSync: read, existsSync } = await import("node:fs");
+  const { join } = await import("node:path");
+  const { tmpdir } = await import("node:os");
+  const file = join(mkdtempSync(join(tmpdir(), "honeytongue-")), "play.json");
+  const { stdout } = await play(["--mock", "--transcript", file], ["2", "ask Nib about his stew", "quit"]);
+  assert.match(stdout, /Recording a transcript to .*play\.json/);
+  assert.ok(existsSync(file));
+  const transcript = JSON.parse(read(file, "utf8"));
+  assert.equal(transcript.formatVersion, 1);
+  assert.equal(transcript.scene, "goblin-camp");
+  assert.equal(transcript.judge, "mock");
+  assert.deepEqual(transcript.runs[0].turns.map((t) => t.action.id), ["chat_nib"], "quit isn't a turn");
+
+  const bare = await play(["--mock", "--transcript"], ["q"]);
+  assert.equal(bare.code, 1);
+  assert.match(bare.stderr, /--transcript needs a file name/);
+});

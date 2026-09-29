@@ -5,6 +5,7 @@
 import { Game } from "./lib/engine.js";
 import { createProxyClient } from "./lib/jev.js";
 import { createMockClient } from "./lib/mock.js";
+import { createTranscript, snapshot } from "./lib/transcript.js";
 
 const $ = (id) => document.getElementById(id);
 const log = $("log");
@@ -23,6 +24,9 @@ let story;
 let game;
 let moves = 0;
 let debug = false;
+// An opt-in playtest transcript for the current scene, saved by the player as a file. Nothing is sent anywhere.
+let transcript = null;
+let version = null; // lib/version.json, for the transcript
 let busy = false;
 const typed = [];      // command history for the up and down arrows
 let typedAt = 0;
@@ -59,8 +63,13 @@ function showText(text) {
 /** The same view as the terminal player's --debug. */
 function showDebug(d, threshold) {
   if (!debug || !d) return;
-  const tag = `[${d.source ?? "unknown"}]`; // who answered this turn: jev, mock, or unknown if the proxy didn't say
   const box = el("div", { className: "debug" });
+  if (!d.ranked.length) { // a repeat is caught locally, so nothing answered it
+    box.append(el("p", {}, `[local] ${d.verdict ?? "repeated"}: too close to an earlier attempt, not sent to Jev`));
+    log.append(box);
+    return;
+  }
+  const tag = `[${d.source ?? "unknown"}]`; // who answered this turn: jev, mock, or unknown if the proxy didn't say
   box.append(el("p", {}, `${tag} action: ${d.ranked.map(([id, p]) => `${id} ${p.toFixed(2)}`).join(" · ")}`));
   if (d.persuasion) {
     const max = d.maxScore ?? 4;
@@ -115,8 +124,35 @@ function start() {
   log.replaceChildren();
   if (story.intro) line(story.intro);
   showText(game.scene.description);
+  if ($("record").checked) {
+    // One transcript per scene; a restart adds another playthrough to it.
+    if (transcript?.data.scene !== scene.id) transcript = createTranscript({ version, scene: scene.id, story });
+    transcript.start();
+    line("Recording this playtest. Nothing is sent anywhere: use Save transcript to download it.", "dim");
+  }
   settle(false);
 }
+
+$("record").addEventListener("change", () => {
+  const on = $("record").checked;
+  $("save-transcript").hidden = !on;
+  if (!on) { transcript = null; line("Stopped recording. The transcript so far is discarded.", "dim"); return settle(); }
+  if (!game) return;
+  transcript = createTranscript({ version, scene: scene.id, story });
+  transcript.start();
+  line("Recording this playtest from here. Nothing is sent anywhere: use Save transcript to download it.", "dim");
+  settle();
+});
+
+$("save-transcript").addEventListener("click", () => {
+  if (!transcript) return;
+  const file = new Blob([JSON.stringify(transcript.data, null, 2) + "\n"], { type: "application/json" });
+  const link = el("a", { href: URL.createObjectURL(file), download: `honeytongue-${transcript.data.scene}-${new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-")}.json` });
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+});
 
 async function submit(raw) {
   if (busy || !game) return;
@@ -142,8 +178,10 @@ async function submit(raw) {
   const threshold = game.npc?.character.threshold;
   const playing = game;
   try {
+    const before = snapshot(game);
     const result = await game.turn(text);
     if (game !== playing) return; // the player switched scenes while this turn was out
+    transcript?.record(text, before, result, game);
     moves++;
     thinking.remove();
     showMode(result.debug?.source);
@@ -251,6 +289,11 @@ addEventListener("hashchange", async () => {
   scrollTo(0, 0);
 });
 
+try {
+  version = (await fetchJson("lib/version.json")).version;
+} catch {
+  version = null; // transcripts still work without it
+}
 try {
   scenes = await fetchJson("lib/index.json");
   showScenes();

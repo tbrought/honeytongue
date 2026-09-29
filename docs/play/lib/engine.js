@@ -137,6 +137,9 @@ export function validateStory(story) {
 }
 
 export class Game {
+  #judged = null;  // this turn's persuasion outcome, for debug: { verdict, triggered }
+  #turnNpc = null; // the scene's character when the turn began (a success may move the player on)
+
   constructor(story, jev) {
     if (typeof jev?.ask !== "function") {
       throw new HoneytongueError("Game needs a client as its second argument: createJevClient(), createProxyClient({ url }), or createMockClient()");
@@ -224,6 +227,8 @@ export class Game {
     if (this.over) return { text: "The story has ended. Start a new game to play again." };
     const input = cleanInput(raw, MAX_INPUT);
     if (!input) return { text: "" };
+    this.#judged = null;
+    this.#turnNpc = this.npc;
 
     const fast = this.fastPath(input);
     if (fast) return { text: fast };
@@ -233,14 +238,14 @@ export class Game {
       const { options, input: original, answers } = this.pending;
       this.pending = null;
       const pick = options[PICKS.findIndex((re) => re.test(input))];
-      if (pick) return this.perform(pick, original, answers, null);
+      if (pick) return this.perform(pick, original, answers, this.#debugFor(answers, [[pick, 1]]));
     }
 
     // Repeats of a failed argument are handled locally: no Jev call.
-    if (this.npc?.findRepeat(input)) return this.perform("__repeat", input, null, null);
+    if (this.npc?.findRepeat(input)) return this.perform("__repeat", input, null, { ranked: [] });
 
     const { answers, ranked } = await this.interpret(input);
-    const debug = { source: answers[SOURCE], ranked: ranked.slice(0, 3), persuasion: answers.persuasion, threats: answers.threats, insults: answers.insults, maxScore: this.npc?.character.maxScore };
+    const debug = this.#debugFor(answers, ranked.slice(0, 3));
     const [top, p] = ranked[0];
     const second = ranked[1]?.[0];
     const unclear = top === "unclear" || p < CLARIFY_AT;
@@ -252,14 +257,29 @@ export class Game {
       this.react(lines, answers);
       return this.finish(lines, input, debug);
     }
-    if (unclear) return { text: "You're not sure how to do that. Try saying it another way.", debug };
-    if (top === "impossible") return { text: "That isn't something you can do here.", debug };
+    if (unclear) return { text: "You're not sure how to do that. Try saying it another way.", debug: this.#withOutcome(debug) };
+    if (top === "impossible") return { text: "That isn't something you can do here.", debug: this.#withOutcome(debug) };
     if (ambiguous) {
       this.pending = { options: [top, second], input, answers };
       const d = (id) => this.scene.actions[id].label ?? this.scene.actions[id].description;
-      return { text: `Did you mean:\n  1) ${d(top)}\n  2) ${d(second)}`, debug };
+      return { text: `Did you mean:\n  1) ${d(top)}\n  2) ${d(second)}`, debug: this.#withOutcome(debug) };
     }
     return this.perform(top, input, answers, debug);
+  }
+
+  #debugFor(answers, ranked) {
+    return { source: answers[SOURCE], ranked, persuasion: answers.persuasion, threats: answers.threats, insults: answers.insults, maxScore: this.npc?.character.maxScore };
+  }
+
+  /** How the turn went for the scene's character: the verdict (if it was judged), their threshold, the tells triggered, and patience left. */
+  #withOutcome(debug) {
+    const npc = this.#turnNpc;
+    return Object.assign(debug, {
+      verdict: this.#judged?.verdict ?? null,
+      threshold: npc?.character.threshold ?? null,
+      triggered: this.#judged?.triggered ?? [],
+      patienceLeft: npc ? npc.patienceLeft : null,
+    });
   }
 
   fastPath(input) {
@@ -296,7 +316,7 @@ export class Game {
   finish(lines, input, debug) {
     const text = lines.filter(Boolean).join("\n\n");
     this.history = [...this.history, { player: input, result: text.slice(0, 160) }].slice(-HISTORY);
-    return { text, debug };
+    return { text, debug: debug && this.#withOutcome(debug) };
   }
 
   /** Whether this turn's tells would offend the NPC: the same rule persuasion uses. */
@@ -307,6 +327,7 @@ export class Game {
   /** NPCs react to threats and insults whatever the player was doing, not just when persuading. */
   react(lines, answers) {
     if (this.over || !this.isHostile(answers)) return;
+    this.#judged = { verdict: "offended", triggered: readPersuasion(this.npc.character, answers).triggered };
     lines.push(this.hostileReaction());
     this.drain(this.npc.character.offendedCost, lines);
   }
@@ -328,6 +349,7 @@ export class Game {
     }
 
     const result = this.npc.record(input, answers);
+    this.#judged = { verdict: result.verdict, triggered: result.triggered };
     if (result.verdict === "convinced") {
       lines.push(npc.persuasion.success.text);
       this.apply(npc.persuasion.success, lines);

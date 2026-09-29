@@ -428,6 +428,7 @@ decide: (result, { previousAttempts }) =&gt;
       <p><a href="play/">Play them in your browser</a> (each scene has its own link, like <code>play/#goblin-camp</code>), or in a terminal:</p>
 <pre><code>npx honeytongue              <span class="c"># pick a demo scene</span>
 npx honeytongue story.json   <span class="c"># play your own story</span>
+npx honeytongue --transcript play.json   <span class="c"># save a playtest transcript as you play</span>
 npm run play                 <span class="c"># in the repository: with Jev, showing its reasoning each turn</span>
 npm run play:mock            <span class="c"># in the repository: offline, no key needed</span></code></pre>
       <p>The scene files in <code>stories/</code> are working examples of the format to copy from, and <code>src/index.d.ts</code> has the full story format. Stories are checked when they load, and every problem is listed at once, such as an action that leads to a scene that doesn't exist, or two different characters sharing an id. Give scenes a <code>name</code> like "East Gate" if your interface has a status line to show it in. An NPC's <code>persuasion</code> block takes the same settings as a character, such as <code>difficulty</code>, <code>offendedBy</code>, and <code>threshold</code>, and <code>hostileReaction</code> is only needed when something can offend them. The browser version lives in <code>docs/play/</code> and uses copies of the engine and stories; run <code>npm run build:demo</code> after changing them.</p>
@@ -461,6 +462,9 @@ npm run eval -- --all                     <span class="c"># every suite (about 9
 npm run eval -- --all --repeats 10        <span class="c"># and check every scripted verdict is reliable</span>
 npm run eval -- --mock                    <span class="c"># the keyword mock's baseline</span></code></pre>
       <p>The keyword mock scores lower than Jev on these suites, mostly because it can't know synonyms: "telescope" doesn't match "spyglass".</p>
+      <h3>Playtest transcripts</h3>
+      <p>Real players try things you won't think of. To collect playtests, tick <strong>Record playtest</strong> in the <a href="play/">web demo</a> and press <strong>Save transcript</strong> when you're done, or play in a terminal with <code>npx honeytongue --transcript play.json</code>. Recording is off by default, and nothing is sent anywhere: the player saves the file themselves. Each turn records what was typed, the action chosen, the verdict, the score and threshold, the tells triggered, the patience left, and the flags and items the player had, along with the Honeytongue version and the scene. It never includes API keys.</p>
+      <p>In the repository, <code>node scripts/transcript-to-evals.js play.json</code> turns a transcript into draft eval cases, each marked as a draft for you to review before adding it to a suite.</p>
       <h3>Writing lines that win reliably</h3>
       <p>If your story has a line that's meant to win (or lose), check it the way players meet it, ten times: it should give its intended verdict every time, with its average at least 0.1 from the threshold. The same words score almost the same each time, usually within 0.1, so a line that passes this check is safe. Scores bunch up near the top of the scale, though (the best arguments score about 3.7 to 3.9 out of 4), so a winning line for a hard or very hard character necessarily sits close to its threshold. Repeats are how to check it. <code>--repeats 10</code> does this for every scripted case.</p>
     </section>
