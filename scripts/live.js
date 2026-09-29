@@ -102,20 +102,41 @@ const ROUTES = {
   },
 };
 
-async function playRoute(id, lines, prefix = []) {
+// --repeats N: the reliability rule (see scripts/eval.js). A route's final, winning line is repeated N times on
+// copies of the game as the player reaches it, and must win every time with an average at least 0.1 above the threshold.
+const ROUTE_REPEATS = process.argv.includes("--repeats") ? Number(process.argv[process.argv.indexOf("--repeats") + 1]) : 1;
+const routeResults = [];
+
+/** A copy of a game's state (scene, flags, items, recent turns), for repeating a turn as the player would reach it. */
+function copyGame(game) {
+  const copy = new Game(game.story, client);
+  copy.sceneId = game.sceneId;
+  copy.flags = new Set(game.flags);
+  copy.inventory = [...game.inventory];
+  copy.history = [...game.history];
+  return copy;
+}
+
+async function playRoute(id, lines, prefix = [], label = "") {
   const game = new Game(story(id), client);
-  for (const line of [...prefix, ...lines]) {
+  const all = [...prefix, ...lines];
+  for (const [i, line] of all.entries()) {
     if (game.over) break;
-    const threshold = game.npc?.character.threshold;
+    if (i === all.length - 1 && ROUTE_REPEATS > 1 && game.npc) {
+      const character = game.npc.character;
+      const results = [];
+      for (let n = 0; n < ROUTE_REPEATS; n++) results.push(readPersuasion(character, (await copyGame(game).interpret(line)).answers));
+      const wins = results.filter((r) => r.verdict === "convinced").length;
+      const average = mean(results.map((r) => r.score));
+      const ok = wins === ROUTE_REPEATS && average - character.threshold >= 0.1;
+      routeResults.push({ id, label, line, wins, average, threshold: character.threshold, ok });
+      say(`    repeated ${ROUTE_REPEATS} times: wins ${wins}/${ROUTE_REPEATS}, average ${fmt(average)} (${average >= character.threshold ? "+" : ""}${fmt(average - character.threshold)}) ${ok ? "reliable" : "UNRELIABLE"}`);
+    }
     const r = await game.turn(line);
     const d = r.debug;
     const tells = d ? `threats ${fmt(d.threats?.noul)} insults ${fmt(d.insults?.noul)}` : "";
-    // The margin rule (scripts/eval.js): a scripted persuasion line should sit at least 0.3 from the threshold.
-    const persuading = d && /^persuade/.test(d.ranked[0][0]);
-    const margin = persuading ? d.persuasion.score - threshold : null;
     say(`  > ${line}`);
-    if (d) say(`    [${d.ranked.map(([k, p]) => `${k} ${fmt(p)}`).join(", ")}] persuasion ${fmt(d.persuasion?.score)} ${tells}` +
-      (persuading ? ` | margin ${margin >= 0 ? "+" : ""}${fmt(margin)}${Math.abs(margin) < 0.3 ? " NEAR" : ""}` : ""));
+    if (d) say(`    [${d.ranked.map(([k, p]) => `${k} ${fmt(p)}`).join(", ")}] persuasion ${fmt(d.persuasion?.score)} ${tells}`);
     say(`    ${r.text.replace(/\n+/g, " / ").slice(0, 240)}`);
   }
   say(`  => ${game.scene.ending ?? "(no ending yet)"}`);
@@ -128,11 +149,15 @@ async function routes() {
     if (only && !only.includes(id)) continue;
     current = `engine route ${id}`;
     say(`\n== ${id}: talking route`);
-    await playRoute(id, r.talk);
+    await playRoute(id, r.talk, [], "talking route");
     say(`== ${id}: plain winning line (after the same discovery turns)`);
-    await playRoute(id, r.plain, r.talk.slice(0, -1));
+    await playRoute(id, r.plain, r.talk.slice(0, -1), "plain winning line");
     say(`== ${id}: non-talking route`);
     await playRoute(id, r.other);
+  }
+  if (ROUTE_REPEATS > 1) {
+    say(`\nReliable winning lines: ${routeResults.filter((r) => r.ok).length}/${routeResults.length}`);
+    for (const r of routeResults) say(`  ${r.ok ? "ok        " : "UNRELIABLE"} ${r.id}, ${r.label}: ${r.wins}/${ROUTE_REPEATS} wins, average ${fmt(r.average)} against ${r.threshold}`);
   }
 }
 

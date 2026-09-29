@@ -6,6 +6,7 @@
 //   npm run eval -- --all                        every suite in evals/ (more Jev calls)
 //   npm run eval -- --all --record               also record each call's latency and tokens in live-runs/
 //   npm run eval -- --all --patch <file>         try a candidate rubric or persona first (see scripts/patches.js)
+//   npm run eval -- --all --repeats 10           also check every scripted verdict is reliable (see reliability())
 //
 // A scene suite plays each case in a fresh Game. A character suite (like showcase.json) sends each line
 // to every character in a presets file, with no scene around it.
@@ -16,7 +17,8 @@ import { Game } from "../src/engine.js";
 import { defineCharacter, judgePersuasion, readPersuasion } from "../src/persuasion.js";
 import { createJevClient } from "../src/jev.js";
 import { createMockClient } from "../src/mock.js";
-import { liveClient, summarize } from "./live-recorder.js";
+import { liveClient, summarize, mean } from "./live-recorder.js";
+import { writeFileSync, mkdirSync } from "node:fs";
 import { loadPatches, describePatches, patchCharacter, patchStory } from "./patches.js";
 
 const evalsDir = new URL("../evals/", import.meta.url);
@@ -34,8 +36,10 @@ const recorded = [];
 const client = useMock ? createMockClient() : record ? liveClient(() => current, recorded) : createJevClient();
 const readJson = async (url) => JSON.parse(await readFile(url, "utf8"));
 
-const MARGIN = 0.3; // see check()
-const tally = { action: [0, 0], score: [0, 0], threats: [0, 0], insults: [0, 0], verdict: [0, 0], margin: [0, 0], errors: [0, 0] };
+const REPEATS = process.argv.includes("--repeats") ? Number(process.argv[process.argv.indexOf("--repeats") + 1]) : 1;
+const GAP = 0.1; // see reliability()
+const rows = []; // every case's results, saved with --record for the docs' numbers
+const tally = { action: [0, 0], score: [0, 0], threats: [0, 0], insults: [0, 0], verdict: [0, 0], reliable: [0, 0], errors: [0, 0] };
 const mark = (kind, ok) => { tally[kind][1]++; if (ok) tally[kind][0]++; return ok ? "ok" : "MISS"; };
 
 /** Checks shared by both kinds of suite: the score range, each tell, and the verdict. */
@@ -53,14 +57,25 @@ function check(c, answers, character, expected = c.verdict) {
   if (expected) {
     const { verdict, score } = readPersuasion(character, answers);
     notes.push(`${verdict} ${mark("verdict", verdict === expected)}${verdict === expected ? "" : ` (want ${expected})`}`);
-    // Margin rule: a verdict decided by the score should sit at least MARGIN from the threshold, because
-    // identical attempts vary by up to about 0.2. Offended verdicts are decided by the tells, not the score.
-    if (verdict !== "offended" && expected !== "offended") {
-      const margin = score - character.threshold;
-      notes.push(`margin ${margin >= 0 ? "+" : ""}${margin.toFixed(2)} ${mark("margin", Math.abs(margin) >= MARGIN) === "ok" ? "ok" : "NEAR"}`);
-    }
   }
   return notes;
+}
+
+/**
+ * Reliability rule: a scripted winning or losing line must give its intended verdict in every one of REPEATS
+ * tries, with its average score at least GAP from the threshold. Scores barely vary between identical attempts,
+ * but they bunch up near the top of the scale, so a hard character's winning line necessarily sits close to its
+ * threshold; repeats are how to check it. Offended verdicts are decided by the tells, so they aren't repeated.
+ */
+async function reliability(first, again, character, expected) {
+  if (REPEATS < 2 || !["convinced", "unconvinced"].includes(expected)) return null;
+  const results = [readPersuasion(character, first)];
+  for (let i = 1; i < REPEATS; i++) results.push(readPersuasion(character, await again()));
+  const hits = results.filter((r) => r.verdict === expected).length;
+  const average = mean(results.map((r) => r.score));
+  const gap = average - character.threshold;
+  const ok = hits === REPEATS && Math.abs(gap) >= GAP;
+  return { hits, average, note: `reliable ${hits}/${REPEATS}, average ${average.toFixed(2)} (${gap >= 0 ? "+" : ""}${gap.toFixed(2)}) ${mark("reliable", ok) === "ok" ? "ok" : "UNRELIABLE"}` };
 }
 
 async function sceneSuite(suite, url) {
@@ -70,19 +85,30 @@ async function sceneSuite(suite, url) {
     const game = new Game(story, client);
     for (const f of c.flags ?? []) game.flags.add(f);
     for (const i of c.items ?? []) if (!game.inventory.includes(i)) game.inventory.push(i);
+    const fresh = () => {
+      const g = new Game(story, client);
+      for (const f of c.flags ?? []) g.flags.add(f);
+      for (const i of c.items ?? []) if (!g.inventory.includes(i)) g.inventory.push(i);
+      return g;
+    };
     let answers, ranked;
     try {
       ({ answers, ranked } = await game.interpret(c.input));
     } catch (err) {
-      console.log(`"${c.input.slice(0, 60)}"
-   ERROR ${err.message}`);
+      console.log(`"${c.input.slice(0, 60)}"\n   ERROR ${err.message}`);
       mark("errors", false);
       continue;
     }
     const [top, p] = ranked[0];
     const notes = [];
     if (c.expect) notes.push(`action ${top} ${p.toFixed(2)} ${mark("action", top === c.expect)}${top === c.expect ? "" : ` (want ${c.expect})`}`);
-    if (game.npc) notes.push(...check(c, answers, game.npc.character));
+    let repeated = null;
+    if (game.npc) {
+      notes.push(...check(c, answers, game.npc.character));
+      repeated = await reliability(answers, async () => (await fresh().interpret(c.input)).answers, game.npc.character, c.verdict);
+      if (repeated) notes.push(repeated.note);
+    }
+    rows.push({ suite: current, input: c.input, action: top, score: answers.persuasion?.score ?? null, average: repeated?.average ?? null, hits: repeated?.hits ?? null });
     console.log(`"${c.input.slice(0, 60)}"\n   ${notes.join(" | ")}${c.note ? `  [${c.note}]` : ""}`);
   }
 }
@@ -104,6 +130,15 @@ async function characterSuite(suite, url) {
         continue;
       }
       const notes = check({ ...line, verdict }, answers, character);
+      const again = async () => {
+        let a;
+        await judgePersuasion({ ask: async (...args) => (a = await client.ask(...args)) }, character, line.input);
+        return a;
+      };
+      const repeated = await reliability(answers, again, character, verdict);
+      if (repeated) notes.push(repeated.note);
+      const result = readPersuasion(character, answers);
+      rows.push({ suite: current, tactic: line.tactic, character: id, input: line.input, verdict: result.verdict, score: result.score, average: repeated?.average ?? null, hits: repeated?.hits ?? null });
       console.log(`   ${character.name.padEnd(16)} persuasion ${answers.persuasion.score.toFixed(2)} | ${notes.join(" | ")}`);
     }
   }
@@ -126,6 +161,10 @@ console.log("");
 for (const [kind, [hit, total]] of Object.entries(tally)) {
   if (kind === "errors") { if (total) console.log(`errors   ${total} case(s) failed to run`); }
   else if (total) console.log(`${kind.padEnd(8)} ${hit}/${total}`);
+}
+if (record) {
+  mkdirSync(new URL("../live-runs/", import.meta.url), { recursive: true });
+  writeFileSync(new URL(`../live-runs/eval-rows-${Date.now()}.json`, import.meta.url), JSON.stringify({ repeats: REPEATS, rows }, null, 2));
 }
 if (record) console.log(`
 ${summarize(recorded)}`);

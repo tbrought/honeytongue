@@ -37,7 +37,7 @@
       "expect": "unclear"
     },
     {
-      "input": "Straight deal, Maude: six crates on your quay carry the captain's mark and aren't on your manifest. Take me across and I'll swear to it in front of the whole crew.",
+      "input": "Straight deal, Maude: I'll show you the six crates with the captain's mark that aren't on your manifest, the crew's missing shares, and I'll swear to it before the whole crew. All I ask is a berth across the strait.",
       "expect": "persuade_maude",
       "score": [
         3.6,
