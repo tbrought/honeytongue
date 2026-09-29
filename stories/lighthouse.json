@@ -9,7 +9,7 @@
   "scenes": {
     "lamp_room": {
       "name": "The Lamp Room",
-      "description": "Rain lashes the windows at the top of the lighthouse. The great lamp sits cold in its brass cage. Beside it, old Cobb Lanterly, the keeper, sits on a stool with the lamp key in his lap and his logbook open on the table. A spyglass hangs by the gallery door. Out in the dark, a single lantern bobs on the waves, closer to the rocks than it should be.",
+      "description": "Rain lashes the windows at the top of the lighthouse. The #[great lamp] sits cold in its brass cage. Beside it, old @[Cobb Lanterly], the keeper, sits on a stool with the #[lamp key] in his lap and his #[logbook] open on the table. A #[spyglass] hangs by the gallery door. Out in the dark, a single lantern bobs on the waves, closer to the rocks than it should be.",
       "npc": {
         "id": "cobb",
         "name": "Cobb Lanterly",
@@ -21,9 +21,9 @@
           }
         ],
         "patience": 10,
-        "hostileReaction": "Cobb stiffens on his stool. \"Forty winters I've kept this light. I'll not be spoken to like that in my own tower.\"",
+        "hostileReaction": "@[Cobb] stiffens on his stool. \"Forty winters I've kept this light. I'll not be spoken to like that in my own tower.\"",
         "outOfPatience": {
-          "text": "Cobb sets the lamp key down. \"I've heard enough. Go and wait at the harbour with the other families.\" He walks you down the stairs and bars the tower door behind you.",
+          "text": "@[Cobb] sets the #[lamp key] down. \"I've heard enough. Go and wait at the harbour with the other families.\" He walks you down the stairs and bars the tower door behind you.",
           "goto": "stayed_dark"
         },
         "persuasion": {
@@ -31,44 +31,44 @@
           "reactions": [
             {
               "min": 0,
-              "text": "Cobb shakes his head slowly. \"Lord's orders. The coast stays dark till the raiders pass.\""
+              "text": "@[Cobb] shakes his head slowly. \"Lord's orders. The coast stays dark till the raiders pass.\""
             },
             {
               "min": 1.5,
-              "text": "Cobb pulls up a second stool and pours you something hot. \"Go on, then. I'm listening.\""
+              "text": "@[Cobb] pulls up a second stool and pours you something hot. \"Go on, then. I'm listening.\""
             },
             {
               "min": 2.5,
-              "text": "Cobb looks out at the black water, turning the lamp key over in his fingers. \"And if I'm wrong, the whole town pays for it.\""
+              "text": "@[Cobb] looks out at the black water, turning the #[lamp key] over in his fingers. \"And if I'm wrong, the whole town pays for it.\""
             }
           ],
           "success": {
-            "text": "Cobb is quiet for a long moment. Then he turns the brass shutter to face the open sea, and strikes a light. The great lamp flares, and a white beam sweeps out across the waves. Far out, a small lantern swings round toward the harbour mouth.",
+            "text": "@[Cobb] is quiet for a long moment. Then he turns the brass shutter to face the open sea, and strikes a light. The #[great lamp] flares, and a white beam sweeps out across the waves. Far out, a small lantern swings round toward the harbour mouth.",
             "goto": "light_on"
           }
         },
-        "repeatReaction": "Cobb smiles tiredly. \"You told me that one already. I'm old, not forgetful.\""
+        "repeatReaction": "@[Cobb] smiles tiredly. \"You told me that one already. I'm old, not forgetful.\""
       },
       "actions": {
         "persuade_cobb": {
-          "label": "Try to talk Cobb into lighting the lamp",
+          "label": "Try to talk @[Cobb] into lighting the lamp",
           "description": "Try to convince, plead with, argue with, threaten, or reason with the keeper so he lights the lamp tonight: anything said to him, threats included",
           "persuade": true
         },
         "chat_cobb": {
-          "label": "Talk with Cobb about himself",
+          "label": "Talk with @[Cobb] about himself",
           "description": "Make small talk with the keeper, or ask about himself, his years here, or his past, without asking him to light the lamp",
-          "text": "Cobb keeps his eyes on the window. \"Forty years I've kept this light. I only ever let it burn low the once.\" He taps a line in the logbook, ringed in black ink. \"The Wren. She never came home.\"",
+          "text": "@[Cobb] keeps his eyes on the window. \"Forty years I've kept this light. I only ever let it burn low the once.\" He taps a line in the #[logbook], ringed in black ink. \"The Wren. She never came home.\"",
           "setFlags": ["lost_a_boat"]
         },
         "read_logbook": {
-          "label": "Read the logbook",
+          "label": "Read the #[logbook]",
           "description": "Read, examine, or study the keeper's logbook",
           "text": "Forty years of neat entries: weather, oil, boats sighted. One line from long ago is ringed in black: \"Lamp burned low. The Wren lost on the rocks. My fault.\"",
           "setFlags": ["lost_a_boat"]
         },
         "use_spyglass": {
-          "label": "Look through the spyglass",
+          "label": "Look through the #[spyglass]",
           "description": "Use the spyglass to look out to sea, at the raiders or the boat",
           "text": "Through the rain, you find the raiders' sails, anchored behind the island with their lanterns out. Nobody is putting to sea in this. Nearer in, your sister's boat is being driven toward the rocks.",
           "setFlags": ["raiders_sheltering"]
@@ -80,9 +80,9 @@
           "setFlags": ["knows_about_shutter"]
         },
         "search_stores": {
-          "label": "Search the stores",
+          "label": "Search the #[stores]",
           "description": "Search the storeroom, supplies, casks, or cupboards on the stairs below",
-          "text": "On the landing below, you find a cask of lamp oil and a tinderbox. Cobb is too busy watching the sea to notice you take them.",
+          "text": "On the landing below, you find a cask of #[lamp oil] and a #[tinderbox]. @[Cobb] is too busy watching the sea to notice you take them.",
           "giveItems": ["lamp oil", "tinderbox"]
         },
         "light_beacon": {
@@ -96,15 +96,15 @@
           "goto": "beacon"
         },
         "grab_key": {
-          "label": "Grab the lamp key",
+          "label": "Grab the #[lamp key]",
           "description": "Snatch or wrestle the lamp key from the keeper to light the lamp yourself, actually doing it now; words alone, even threats, are never this",
-          "text": "Cobb's grip is stronger than it looks. \"No,\" he says quietly, and puts the key away inside his coat.",
+          "text": "@[Cobb]'s grip is stronger than it looks. \"No,\" he says quietly, and puts the key away inside his coat.",
           "patience": -3
         },
         "leave": {
           "label": "Go and wait at the harbour",
           "description": "Give up, leave the lighthouse, and go to wait at the harbour",
-          "text": "You leave Cobb to his cold lamp and go down to the harbour to wait with the other families.",
+          "text": "You leave @[Cobb] to his cold lamp and go down to the harbour to wait with the other families.",
           "goto": "stayed_dark"
         }
       }

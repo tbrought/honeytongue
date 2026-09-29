@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { Game, validateStory, createMockClient } from "../src/index.js";
+import { stripMarkup } from "../src/markup.js";
 
 const load = (file) => JSON.parse(readFileSync(new URL(`../stories/${file}`, import.meta.url), "utf8"));
 const scenes = load("index.json");
@@ -103,7 +104,7 @@ for (const scene of scenes) {
     const game = new Game(story, createMockClient());
     let last;
     for (const line of routes.talk) last = await game.turn(line);
-    assert.ok(last.text.includes(npc.persuasion.success.text), last.text);
+    assert.ok(last.text.includes(stripMarkup(npc.persuasion.success.text)), last.text);
     assert.equal(game.sceneId, npc.persuasion.success.goto);
     assert.equal(game.over, true);
   });

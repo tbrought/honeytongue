@@ -5,10 +5,11 @@ import {
   Persuadable, judgePersuasion, readPersuasion, defineCharacter, persuasionQuestions, persuasionState,
   cleanInput, similarity, HoneytongueError, StoryError, DEFAULT_LEVELS, VERSION,
   Game, validateStory, createJevClient, createProxyClient, createProxyHandler, createMockClient,
+  parseMarkup, stripMarkup,
 } from "honeytongue";
 import type {
   Character, DefinedCharacter, Verdict, Tell, Difficulty, PersuasionResult, AttemptResult, Attempt,
-  Story, TurnResult, TurnDebug, JevClient, ProxyHandlerOptions, ProxyEnv, DecideHook,
+  Story, TurnResult, TurnDebug, JevClient, ProxyHandlerOptions, ProxyEnv, DecideHook, Part, PartKind,
 } from "honeytongue";
 import * as persuasion from "honeytongue/persuasion";
 import type { Character as SubpathCharacter, JevClient as SubpathClient } from "honeytongue/persuasion";
@@ -99,6 +100,20 @@ async function engineApi(client: JevClient) {
     expectType<[string, number][]>(debug.ranked);
     expectType<"jev" | "mock" | undefined>(debug.source);
   }
+  // Parts carry meaning only; how each kind looks is up to the interface.
+  for (const paragraph of turn.parts) {
+    for (const part of paragraph) {
+      expectType<PartKind>(part.kind);
+      expectType<string>(part.text);
+      expectType<true | undefined>(part.inSpeech);
+      // @ts-expect-error: parts never carry presentation, such as a colour
+      part.color;
+    }
+  }
+  expectType<Part[]>(parseMarkup("@[Harry] waves."));
+  expectType<string>(stripMarkup("#[letter]"));
+  // @ts-expect-error: not a kind of part
+  const badKind: PartKind = "bold";
   expectType<Persuadable | null>(game.npc);
   expectType<string>(game.intro());
   for (const r of Game.requests(story)) expectType<DefinedCharacter | null>(r.character);

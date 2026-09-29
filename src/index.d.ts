@@ -273,8 +273,38 @@ export interface TurnDebug {
   patienceLeft?: number | null;
 }
 
-export interface TurnResult {
+// ---- Story markup ----------------------------------------------------------------
+
+/**
+ * What a piece of a reply is. Story text: plain "text", "speech" (found from double quotes), a "character" (@[name]),
+ * or an "item" (#[thing]). The engine's own lines are "system", and the ending's name is "ending". Meaning only:
+ * how each kind looks is up to your interface.
+ */
+export type PartKind = "text" | "speech" | "character" | "item" | "system" | "ending";
+
+export interface Part {
+  kind: PartKind;
   text: string;
+  /** Set on a character or item named inside speech. */
+  inSpeech?: true;
+}
+
+/**
+ * A paragraph of story text as parts, in order. Joining the parts' text gives stripMarkup(text). Only story markup
+ * and speech are found here; "system" and "ending" parts come from the engine.
+ */
+export function parseMarkup(text: string): Part[];
+/** Text with markup removed and escapes (\@[ and \#[) resolved: what a plain-text interface shows, and what Jev sees. */
+export function stripMarkup(text: string): string;
+
+export interface TurnResult {
+  /** The reply as plain text, paragraphs separated by a blank line. Never contains markup. */
+  text: string;
+  /**
+   * The same reply for styling: one array of parts per paragraph, so parts[i] is paragraph i of
+   * text.split("\n\n"). A stable part of the API; see "Story markup" in the docs.
+   */
+  parts: Part[][];
   debug?: TurnDebug | null;
 }
 
@@ -296,6 +326,7 @@ export class Game {
   readonly scene: Scene;
   /** The Persuadable for the current scene's NPC, or null. */
   readonly npc: Persuadable | null;
+  /** The title, intro, and first scene as plain text. To style them, use parseMarkup on story.intro and scene.description. */
   intro(): string;
   /** Turns run one at a time, in the order they were sent. */
   turn(input: string): Promise<TurnResult>;
