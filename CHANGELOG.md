@@ -2,7 +2,7 @@
 
 ## 0.1.0-alpha.10 (2026-09-29)
 
-Site polish: the docs home page and the playground now match the demo, so the whole site feels like one design. The library itself is unchanged.
+Site polish: the docs home page and the playground now match the demo, so the whole site feels like one design, and the Phaser example has pixel-art sprites. The library itself is unchanged.
 
 ### Changed
 
@@ -14,6 +14,11 @@ Site polish: the docs home page and the playground now match the demo, so the wh
 - **Syntax highlighting** in the docs' code blocks, in the demo's colours, generated at build time as static markup (`scripts/highlight-docs.js`, run by `npm run build:demo`): no script or library on the page, and nothing new for the CSP to allow. Longer blocks name their language, and story markup inside strings is shown as the demo shows it.
 - **Colour with meaning:** the example transcript on the home page shows replies as the demo does; the showcase grid and the Verdicts table colour each verdict (with the demo's labels named under the table, so they read as the same verdicts); characters' names are styled in the tables; and the story markup example shows how it looks on screen.
 - **More rhythm on the home page:** larger section headers with a rule, more room between sections, title cards with the logo for each part of the docs, and the logo in the footer. The home page grows by about 2 KB over the wire.
+
+### Changed (the Phaser example)
+
+- **The Phaser example has pixel-art sprites** for the player, the troll, and the sign (`examples/phaser/assets/`, by Tristan Broughton, under the project's MIT license), in place of the placeholder shapes. They're 32x32, loaded with `this.load.image`, and drawn at 2x with `pixelArt: true`, so they stay crisp. The player turns to face the way they walk; the river, the bridge, and where you can read the sign or talk to the troll are sized to the new sprites; and whatever stands lower on the screen is drawn in front. The troll now climbs down off the bridge into the water when he's convinced. `startGame()` takes an `assets` option for where the sprites are (`"assets/"` by default).
+- Sprites load as plain images (`loader.imageLoadType: "HTMLImageElement"`) rather than through `blob:` URLs, so the site's CSP still allows images only from itself (plus the `data:` images Phaser builds). `npm run build:demo` copies them to honeytongue.dev/phaser/, and the docs' screenshot shows them.
 
 ### Changed (docs)
 

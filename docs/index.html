@@ -340,7 +340,7 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
     <section id="visual">
       <h2>Visual games</h2>
       <p>Honeytongue isn't only for text adventures: it fits any game where players type (or say) something to a character. <a href="phaser/">The bridge troll</a> is a small <a href="https://phaser.io/">Phaser</a> game: walk up to a troll, read the sign by his bridge, and talk your way across. It's judged live by Jev, like the demo scenes.</p>
-      <p><a href="phaser/"><img class="shot" src="assets/phaser-example.png" width="928" height="522" alt="The bridge troll: a pixel-art river with a wooden bridge, a green troll, and a dialogue box where the player has told him they'll come back and keep him company."></a></p>
+      <p><a href="phaser/"><img class="shot" src="assets/phaser-example.png" width="928" height="522" alt="The bridge troll: a pixel-art river with a wooden bridge and a sign, a wizard in a blue hat facing a green troll on the bridge, and a dialogue box where the player has promised to come back and visit, and the troll steps aside."></a></p>
       <p>The game draws the world and moves the player; Honeytongue only judges what the player says. The pattern, with Phaser and Honeytongue both from a CDN and no build step:</p>
 <pre data-lang="HTML"><code><span class="k">&lt;script</span> <span class="f">src</span>=<span class="s">"https://cdn.jsdelivr.net/npm/phaser@4.2.1/dist/phaser.min.js"</span>
   <span class="f">integrity</span>=<span class="s">"sha384-kyUQ5+cxc6+X89xEG6DhcXLcDU9T3Z+o/45VdT6pgAwtG6gxtAzYTEn0Wwj/BKZd"</span> <span class="f">crossorigin</span>=<span class="s">"anonymous"</span>&gt;<span class="k">&lt;/script</span>&gt;
@@ -364,7 +364,7 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
         <li><strong>Spoken input</strong> works the same way, once your game turns speech into text.</li>
         <li><strong>Engines outside JavaScript</strong> (Unity, Godot, Unreal, Ren'Py) aren't supported yet; a plain HTTP endpoint for them is on the roadmap.</li>
       </ul>
-      <p>The full example is <a href="https://github.com/tbrought/honeytongue/tree/main/examples/phaser"><code>examples/phaser/</code></a>, about 200 lines. In the repository it imports Honeytongue from <code>../../src/</code>, so it runs from a clone; copy it into your own project with the CDN import above, or <code>from "honeytongue"</code> with a bundler. It uses the offline stand-in until you set <code>PROXY_URL</code> to your proxy, and your proxy's <code>allowedCharacters</code> needs your character. Phaser is MIT-licensed; the example pins version 4.2.1 with an integrity hash.</p>
+      <p>The full example is <a href="https://github.com/tbrought/honeytongue/tree/main/examples/phaser"><code>examples/phaser/</code></a>, about 250 lines, with three sprites. In the repository it imports Honeytongue from <code>../../src/</code>, so it runs from a clone; copy it into your own project with the CDN import above, or <code>from "honeytongue"</code> with a bundler. It uses the offline stand-in until you set <code>PROXY_URL</code> to your proxy, and your proxy's <code>allowedCharacters</code> needs your character. Phaser is MIT-licensed; the example pins version 4.2.1 with an integrity hash.</p>
     </section>
 
     <div class="part" id="advanced">
