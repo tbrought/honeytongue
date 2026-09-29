@@ -207,6 +207,7 @@ else say(result.reaction ?? "Harry's hand drops to his club.");</code></pre>
       <ul class="points">
         <li><strong>Say what moves them, not just what they dislike.</strong> "A proud bouncer who can't stand being disrespected" gave Jev nothing to reward, and good arguments scored 1.3 to 2.7 out of 4. One line is enough when it names what drives the character: "A greedy corner-shop owner who'll do almost anything for money."</li>
         <li><strong>If a tactic should work on them, say so plainly.</strong> Jev judges flattery, bribes, and threats only by the persona, so a coward needs "a firm threat makes him give in", a vain character needs to love praise, and a greedy one needs to want money. A merely "nervous" troll moved under a threat, but not far enough to agree.</li>
+        <li><strong>Not being offended isn't the same as being impressed.</strong> Leaving insults out of <code>offendedBy</code>, or writing a persona who takes them as banter, stops a character being offended by them, but rough language still won't strengthen an argument unless the persona says plainly that it impresses them. Maude takes insults as banter, and an insult in front of a good argument still cost it about 0.25.</li>
         <li><strong>If they'd want evidence, pass it in.</strong> Without it, a player's claims are just claims: a detective who "trusts only evidence" scored the best arguments below 2.5. Use <a href="#secrets">secrets</a> for what the player has discovered, or the <code>context</code> option of <code>attempt()</code> for other game state.</li>
         <li><strong>Keep hidden motivations out of the persona.</strong> Put them in <a href="#secrets">secrets</a>, so a player on their second playthrough can't open with them.</li>
       </ul>
@@ -215,7 +216,7 @@ else say(result.reaction ?? "Harry's hand drops to his club.");</code></pre>
 
     <section id="showcase">
       <h2>Same words, different people</h2>
-      <p>The same five lines, said to the four characters from the demo scenes. Each character's persona and settings decide how it lands: Nib, the cowardly goblin, folds under a threat but can't stand being mocked; Maude, the pirate quartermaster, takes insults as banter but treats a threat as mutiny.</p>
+      <p>The same five lines, said to the four characters from the demo scenes. Each character's persona and settings decide how it lands: Nib, the cowardly goblin, folds under a threat but can't stand being mocked; Maude, the pirate quartermaster, isn't offended by insults and takes them as banter, though they don't help your case, while a threat is mutiny.</p>
       <div class="table-wrap"><table class="grid">
         <caption>Verdicts and average scores out of 4, from 10 live runs against jev-1.13.0. Offended verdicts come from the threat and insult checks, so their scores don't matter. Thresholds: Nib 2.4 (easy), Harry and Cobb 3.2 (normal), Maude 3.6 (hard).</caption>
         <thead><tr><th scope="col">Line</th><th scope="col" data-character="harry">Harry<br><span class="dim">the gatekeeper</span></th><th scope="col" data-character="nib">Nib<br><span class="dim">the goblin guard</span></th><th scope="col" data-character="maude">Maude<br><span class="dim">the quartermaster</span></th><th scope="col" data-character="cobb">Cobb<br><span class="dim">the lighthouse keeper</span></th></tr></thead>
@@ -429,7 +430,7 @@ decide: (result, { previousAttempts }) =&gt;
         <tbody>
           <tr><td>The Gatehouse (5 min)</td><td>Get into the city after curfew</td><td>Harry Goatleaf, a tired gatekeeper who hates flattery</td></tr>
           <tr><td>The Goblin Camp (5 min)</td><td>Escape a cage before the war chief returns</td><td>Nib Wortle, a cowardly goblin guard (easy, offended by insults)</td></tr>
-          <tr><td>The Tidy Profit (10 min)</td><td>Get aboard a pirate ship before bounty hunters arrive</td><td>Maude Keelhaven, the quartermaster (hard, offended by threats; insults are banter)</td></tr>
+          <tr><td>The Tidy Profit (10 min)</td><td>Get aboard a pirate ship before bounty hunters arrive</td><td>Maude Keelhaven, the quartermaster (hard, offended by threats; she isn't offended by insults and takes them as banter, but they don't help your case)</td></tr>
           <tr><td>The Dark Lighthouse (8 min)</td><td>Get the lamp lit for your sister's boat, despite the lord's orders</td><td>Cobb Lanterly, the old keeper (default settings, patient)</td></tr>
         </tbody>
       </table></div>
