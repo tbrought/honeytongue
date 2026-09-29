@@ -1,57 +1,79 @@
 # Honeytongue in Twine (SugarCube 2)
 
-> This recipe hasn't been tested in Twine yet. If something doesn't work, please open an issue.
-
-Twine stories run in the player's browser, so you need a proxy to keep your API key private. Deploy `examples/cloudflare-worker.js` first, with your story's published address in `allowedOrigins` and your character in `allowedCharacters` (exactly as the story passes it to `Persuadable`). If you're not sure what that address is, try the story once: the error message names the exact origin to add.
+Tested in the Twine web app, Twine 2.12.0 with SugarCube 2.37.3, using the offline stand-in (`createMockClient()`): winning, an empty line, and running out of patience all work, with no console errors.
 
 ## 1. Story JavaScript
 
 ```js
-import("https://cdn.jsdelivr.net/npm/honeytongue@alpha/src/index.js").then(({ Persuadable, createProxyClient }) => {
-  const client = createProxyClient({ url: "https://honeytongue-proxy.your-name.workers.dev" });
-
-  setup.harry = new Persuadable({
-    name: "Harry Goatleaf",
-    persona: "A tired night guard who values honesty and despises flattery and bribes.",
-    goal: "Open the gate after curfew",
-    patience: 4,
-  }, { client });
-});
-
-// Called by the "Say it" button. Ignores empty input and double clicks, and shows errors instead of hiding them.
-setup.say = function (plea) {
-  if (setup.busy || !setup.harry || !String(plea ?? "").trim()) return;
-  setup.busy = true;
-  setup.harry.attempt(plea)
-    .then(function (r) {
-      if (r.verdict === "convinced") return Engine.play("Through the gate");
-      if (r.outOfPatience) return Engine.play("The cell");
-      State.variables.reaction = r.verdict === "offended" ? "Harry's hand drops to his club." : r.reaction;
-      Engine.play("At the gate");
-    })
-    .catch(function (err) {
-      State.variables.reaction = "(Couldn't reach the proxy: " + err.message + ")";
-      Engine.play("At the gate");
-    })
-    .finally(function () { setup.busy = false; });
-};
+setup.ready = import("https://cdn.jsdelivr.net/npm/honeytongue@alpha/src/index.js")
+  .then(function (hon) {
+    setup.harry = new hon.Persuadable({
+      name: "Harry",
+      persona: "A tired night guard who values honesty and can't stand flattery. A sick child moves him.",
+      goal: "Open the gate after curfew",
+      patience: 4,
+    }, { client: hon.createMockClient() });
+  });
 ```
 
-## 2. A passage called "At the gate"
+`setup.ready` finishes once Honeytongue has loaded, a moment after the story starts, so the button waits for it.
+
+## 2. A passage called "At the gate" (the start passage)
 
 ```
-Harry Goatleaf, the gatekeeper, blocks the gate.
+Harry blocks the gate.
 
-<<if $reaction>>$reaction<</if>>
+<<if $reply>>$reply<</if>>
 
 <<textbox "_plea" "">>
-<<button "Say it">><<run setup.say(_plea)>><</button>>
+<<button "Say it">>
+  <<run (function (plea) {
+    setup.ready
+      .then(function () { return setup.harry.attempt(plea); })
+      .then(function (r) {
+        State.variables.reply = r.reaction || "Harry glares at you.";
+        if (r.verdict === "convinced") { Engine.play("Through the gate"); }
+        else if (r.outOfPatience) { Engine.play("The cell"); }
+        else { Engine.play("At the gate"); }
+      })
+      .catch(function () {
+        State.variables.reply = "Say something first.";
+        Engine.play("At the gate");
+      });
+  })(_plea)>>
+<</button>>
 ```
 
-Add passages called "Through the gate" and "The cell" for the two endings.
+`r.reaction` is only set for unconvinced and repeated verdicts, so an offensive line gets "Harry glares at you." An empty line makes `attempt()` throw, and the `catch` asks the player to say something.
+
+## 3. The two endings
+
+A passage called "Through the gate":
+
+```
+Harry lifts the bar. You're through! <<link "Play again" "At the gate">><<run setup.harry.reset()>><<set $reply to "">><</link>>
+```
+
+A passage called "The cell":
+
+```
+"Enough," Harry says, and calls the watch. <<link "Try again" "At the gate">><<run setup.harry.reset()>><<set $reply to "">><</link>>
+```
+
+## Judging with Jev
+
+> This part hasn't been tested inside Twine yet. If something doesn't work, please open an issue.
+
+Twine stories run in the player's browser, so judging with Jev needs a proxy that keeps your API key private. Deploy `examples/cloudflare-worker.js` first, with your story's published address in `allowedOrigins` and your character in `allowedCharacters` (exactly as the story passes it to `Persuadable`). If you're not sure what that address is, try the story once: the error message names the exact origin to add. Then swap the client:
+
+```js
+{ client: hon.createProxyClient({ url: "https://honeytongue-proxy.your-name.workers.dev" }) }
+```
+
+With a proxy, an error can also mean the proxy couldn't be reached or refused the request, not only an empty line, so show the error's `message` in the `catch` instead of "Say something first."
 
 ## Things to know
 
-- `setup.harry` lives in memory, so its patience and memory aren't included in SugarCube saves. Reset it when a new game starts with `setup.harry.reset()`.
-- The import finishes a moment after the story loads. Until then `setup.say` does nothing, so if players can reach the gate on the very first passage, tell them to wait a second or disable the button until `setup.harry` exists.
+- `setup.harry` lives in memory, so its patience and memory aren't included in SugarCube saves. The endings' links call `setup.harry.reset()` to start a new game.
+- A quick double click sends the line twice: if the first doesn't convince, the second counts as a repeat and costs patience too. If that matters, disable the button until the reply comes back.
 - Use `setup.harry.learn("secret_id")` in the passage where the player discovers a secret.

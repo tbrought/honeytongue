@@ -323,14 +323,18 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
 
     <section id="twine">
       <h2>Twine</h2>
-      <p>For SugarCube 2, load Honeytongue in your Story JavaScript and keep the character on <code>setup</code>:</p>
-<pre data-lang="JavaScript"><code><span class="k">import</span>(<span class="s">"https://cdn.jsdelivr.net/npm/honeytongue@alpha/src/index.js"</span>)
-  .<span class="f">then</span>(({ Persuadable, createProxyClient }) =&gt; {
-    <span class="k">const</span> client = <span class="f">createProxyClient</span>({ url: <span class="s">"https://your-proxy.workers.dev"</span> });
-    setup.harry = <span class="k">new</span> <span class="f">Persuadable</span>({ name: <span class="s">"Harry Goatleaf"</span>, persona: <span class="s">"..."</span>, goal: <span class="s">"..."</span> }, { client });
+      <p>For SugarCube 2, load Honeytongue in your Story JavaScript and keep the character on <code>setup</code>. This recipe is tested in Twine 2.12.0 with SugarCube 2.37.3, using the offline stand-in:</p>
+<pre data-lang="JavaScript"><code>setup.ready = <span class="k">import</span>(<span class="s">"https://cdn.jsdelivr.net/npm/honeytongue@alpha/src/index.js"</span>)
+  .<span class="f">then</span>(<span class="k">function</span> (hon) {
+    setup.harry = <span class="k">new</span> hon.<span class="f">Persuadable</span>({
+      name: <span class="s">"Harry"</span>,
+      persona: <span class="s">"A tired night guard who values honesty and can't stand flattery. A sick child moves him."</span>,
+      goal: <span class="s">"Open the gate after curfew"</span>,
+      patience: <span class="n">4</span>,
+    }, { client: hon.<span class="f">createMockClient</span>() });
   });</code></pre>
-      <p>Then call <code>setup.harry.attempt(_plea)</code> from a button and send the player to a passage based on the verdict. The full recipe in <code>examples/twine-sugarcube.md</code> also handles errors, empty input, and double clicks.</p>
-      <p class="note">The Twine recipe hasn't been tested inside Twine yet. If you try it, please report how it goes.</p>
+      <p>Then a button calls <code>setup.harry.attempt(_plea)</code> once <code>setup.ready</code> has finished, and sends the player to a passage based on the verdict. The full recipe in <code>examples/twine-sugarcube.md</code> has the passages, including an empty line and running out of patience.</p>
+      <p class="note">To judge with Jev, swap <code>hon.createMockClient()</code> for <code>hon.createProxyClient({ url: "https://your-proxy.workers.dev" })</code>, with a <a href="#browser">proxy</a> that allows your story's origin (the error names it) and your character. That part hasn't been tested inside Twine yet.</p>
     </section>
 
     <section id="visual">
