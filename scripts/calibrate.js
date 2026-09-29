@@ -7,6 +7,7 @@
 //   node scripts/calibrate.js injections    prompt-injection attempts, standalone and as engine turns
 //   node scripts/calibrate.js threats       threats on cowardly characters, with controls
 //   node scripts/calibrate.js flattery      flattery on a vain persona and on honest ones
+//   node scripts/calibrate.js robustness    twelve characters we didn't design, plus edge cases
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { Game } from "../src/engine.js";
 import { defineCharacter, judgePersuasion } from "../src/persuasion.js";
@@ -197,9 +198,53 @@ async function flatteryStep() {
   }
 }
 
+// ---- Robustness: characters we didn't design ----------------------------------------
+
+const TACTICS = ["threat", "insult", "flattery", "bribe", "injection"];
+
+async function robustnessStep() {
+  const suite = load("evals/calibration/robustness.json");
+  const define = (c) => defineCharacter({ ...c, ...(typeof c.levels === "string" && { levels: suite.rubrics[c.levels] }) });
+  const cast = Object.fromEntries(Object.entries(suite.characters).map(([id, x]) => [id, define(x.character)]));
+  current = `standalone calibrate-robustness ${describePatches(patches)}`;
+  for (const [id, spec] of Object.entries(suite.characters)) {
+    const c = cast[id];
+    const row = { traits: spec.traits, expect: spec.expect, difficulty: c.difficulty ?? "normal (default)", threshold: c.threshold,
+      maxScore: c.maxScore, offendedBy: c.offendedBy, compelling: [], middling: [] };
+    for (const line of spec.lines.compelling) row.compelling.push(await judge(c, line));
+    for (const line of spec.lines.middling) row.middling.push(await judge(c, line));
+    for (const kind of ["weak", ...TACTICS]) row[kind] = await judge(c, spec.lines[kind]);
+    results.data[id] = row;
+    const v = (r) => `${fmt(r.score)}${r.verdict === "convinced" ? "*" : r.verdict === "offended" ? "!" : ""}`;
+    say(`\n== ${c.name} [${spec.traits.join(", ")}] ${row.difficulty}, threshold ${c.threshold}/${c.maxScore}, offended by ${c.offendedBy.join(", ") || "nothing"}`);
+    say(`  compelling ${row.compelling.map(v).join(" ")} | middling ${row.middling.map(v).join(" ")} | weak ${v(row.weak)}`);
+    say(`  ${TACTICS.map((t) => `${t} ${v(row[t])} (thr ${fmt(row[t].threats)}, ins ${fmt(row[t].insults)})`).join(" | ")}`);
+  }
+  say("\n(* convinced, ! offended)");
+
+  current = `standalone calibrate-edge ${describePatches(patches)}`;
+  results.edge = { short: [], long: [], languages: [] };
+  say("\n== Edge cases");
+  for (const id of suite.edge.short.on) for (const line of suite.edge.short.lines) {
+    const r = await judge(cast[id], line);
+    results.edge.short.push({ id, ...r });
+    say(`  short  ${cast[id].name.padEnd(22)} "${line}" ${fmt(r.score)} ${r.verdict} (thr ${fmt(r.threats)}, ins ${fmt(r.insults)})`);
+  }
+  for (const id of suite.edge.long.on) for (const line of suite.edge.long.lines) {
+    const r = await judge(cast[id], line);
+    results.edge.long.push({ id, length: line.length, ...r });
+    say(`  long   ${cast[id].name.padEnd(22)} ${line.length} chars "${line.slice(0, 40)}..." ${fmt(r.score)} ${r.verdict}`);
+  }
+  for (const id of suite.edge.languages.on) for (const [lang, line] of Object.entries(suite.edge.languages.lines[id])) {
+    const r = await judge(cast[id], line);
+    results.edge.languages.push({ id, lang, ...r });
+    say(`  ${lang.padEnd(6)} ${cast[id].name.padEnd(22)} ${fmt(r.score)} ${r.verdict} (thr ${fmt(r.threats)}, ins ${fmt(r.insults)}) "${line.slice(0, 40)}"`);
+  }
+}
+
 // ---- Run ----------------------------------------------------------------------------
 
-const steps = { arguments: argumentsStep, secrets: secretsStep, injections: injectionsStep, threats: threatsStep, flattery: flatteryStep };
+const steps = { arguments: argumentsStep, secrets: secretsStep, injections: injectionsStep, threats: threatsStep, flattery: flatteryStep, robustness: robustnessStep };
 const step = process.argv[2];
 if (!steps[step]) {
   console.error(`Usage: node scripts/calibrate.js ${Object.keys(steps).join("|")} [--patch <file>]...`);
