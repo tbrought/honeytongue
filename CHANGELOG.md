@@ -1,5 +1,45 @@
 # Changelog
 
+## 0.1.0-alpha.11 (2026-09-29)
+
+Hardening before 0.1.0, from a review of the whole project: a proxy that's secure by default, limits on what the library sends that a proxy enforces, and the site's browser checks in CI. This release has breaking changes.
+
+### Breaking
+
+- **`createProxyHandler()` needs `allowedStories` or `allowedCharacters`.** Without them it throws, because the proxy would answer any Jev question on your key (and TypeSafe's terms forbid offering Jev as a standalone service). A local tool that must forward anything can pass `dangerouslyAllowAnyRequest: true`. In TypeScript, the options must now include one of the three.
+- **A `Persuadable`'s state is read-only.** `attempts`, `knows`, `patienceLeft`, and `convinced` can still be read (`attempts` as a frozen copy, `knows` as a copy of the set), but only its methods change them: `learn()`, `losePatience()`, `record()`, and `reset()`. Its queue, and the engine's, are private.
+
+### Changed
+
+- **What the library sends is capped, and only long conversations of long lines are affected.** Memory is now the last 10 attempts, or 1,500 characters of them, whichever runs out first (`memory` and the new `memoryLength`), and each recent turn keeps the first 200 characters of what the player typed (a story's new `recentTurnLength`). Typical lines are about 80 characters, so players in ordinary conversations see no difference. `state()` shows exactly what an attempt sends. A proxy with `allowedCharacters` or `allowedStories` enforces each character's and story's own values, so raising them stays safe.
+- `judgePersuasion()`'s `previousAttempts` are trimmed the same way (to `memory`, then `memoryLength`).
+- **A `Persuadable` keeps its last 100 attempts** for spotting repeats, instead of every attempt.
+- **Every refusal from a guarded proxy names the limit it hit**, such as "longer than Harry's maxInputLength of 500 characters". Oversized bodies say the byte limit.
+- **The demo proxy** reads at most 15,000 bytes (the largest request the library can send for the demo, in any script, plus a margin), and no longer accepts pages on `tbrought.github.io`, which GitHub redirects to honeytongue.dev.
+- `examples/node-proxy.js` listens on 127.0.0.1 only, and allows the demo scenes and the character in `examples/browser.html` (now in `examples/harry.js`, shared by both).
+- The package ships only the font weights the playground uses, and leaves out the demo's own Worker and Wrangler config: 221 KB packed, down from 306 KB.
+
+### Added
+
+- **`context` through a guarded proxy:** give a character a `maxContextLength` (the most characters of `context`, as JSON) and `attempt(input, { context })` works through a proxy with `allowedCharacters`. `attempt()` checks the limit too, so you find out before you deploy.
+- **`toNodeListener(handle, { maxBytes, env })`**, exported from `honeytongue/proxy`: runs the proxy on a plain Node server, refusing bodies over the limit as they arrive, and passing the socket's address as `env.remoteAddress` for `clientIp`. The docs have a short "Node servers" example.
+- **`deadlineMs` for `createJevClient()`:** the most time a whole call may take, retries and waits included. None by default; the proxy uses 12 seconds, so it stops before a page's usual 15-second timeout.
+- `npm run check:browser` (in CI too): every page in headless Chrome or Edge, for CSP violations, hostile text, contrast, and the demo and Phaser walk-throughs. `npm run check:screenshots` compares the demo pixel for pixel against a baseline, locally.
+- Dependabot keeps the workflows' pinned actions current.
+
+### Fixed
+
+- The proxy read a request's whole body before checking its size when the size wasn't declared; it now stops reading at `maxStateBytes`.
+- JSON nested thousands of levels deep crashed the request guard; it's now refused with a 400.
+- `createJevClient()`'s browser check also covers browsers' Web Workers.
+- The docs' screenshot loads lazily.
+
+### Docs
+
+- `allowedOrigins` only controls browsers: scripts send no `Origin`, so the allowlists and your spending limit are what protect your key.
+- Off Cloudflare, clients with no reported address share one rate-limit bucket: set `clientIp`.
+- `attempt()` still asks Jev once a conversation is over (convinced or out of patience): check first if your game shouldn't pay for that.
+
 ## 0.1.0-alpha.10 (2026-09-29)
 
 Site polish: the docs home page and the playground now match the demo, so the whole site feels like one design, and the Phaser example has pixel-art sprites. The library itself is unchanged.
