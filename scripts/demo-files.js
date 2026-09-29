@@ -19,5 +19,7 @@ export const DEMO_FILES = [
   // The Phaser example's game and character, so the site's playable copy is exactly the example.
   ["examples/phaser/game.js", "docs/phaser/lib/game.js"],
   ["examples/phaser/character.js", "docs/phaser/lib/character.js"],
+  // Its sprites, which the game loads from assets/ next to the page.
+  ...["player", "troll", "sign"].map((name) => [`examples/phaser/assets/phaser-demo-${name}-32.png`, `docs/phaser/assets/phaser-demo-${name}-32.png`]),
 ]);
 

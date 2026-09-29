@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Character Playground</title>
 <meta name="description" content="Design a Honeytongue character and tune it by trying lines against it, without writing code.">
-<!-- Nothing loads from anywhere but this site and Google Fonts. -->
+<!-- Nothing loads from anywhere but this site. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src 'self' https://api.honeytongue.dev; base-uri 'none'; form-action 'none'; object-src 'none'">
 <!-- Filled in by `npx honeytongue playground` with how to reach its local judge. Empty here = preview only. -->
 <meta name="honeytongue-local" content="">
@@ -37,7 +37,7 @@
 </header>
 
 <main class="wrap pg">
-  <h1>Character Playground</h1>
+  <h1><img class="logo logo-big" src="../assets/honeytongue-logo-192.png" alt="" width="96" height="96">Character Playground</h1>
   <p class="lede">Design a character, then try lines against it the way a player would. Every change starts a fresh conversation, and Replay reruns your lines so you can see what the change did.</p>
   <p class="mode" id="mode">Preview only. To tune with real judgements, run <code>npx honeytongue playground</code>. Here, lines are judged by simple keyword matching, a stand-in for Jev that understands far less.</p>
 

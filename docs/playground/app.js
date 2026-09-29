@@ -6,7 +6,7 @@ import { createProxyClient } from "../play/lib/jev.js";
 import { defineCharacter, DEFAULT_LEVELS } from "../play/lib/persuasion.js";
 import {
   FIELDS, TELLS, fieldErrors, minimalCharacter, characterCode, storyJson, readDraft, encodeShare, decodeShare, readPresets,
-  tryLine, replay, conversation,
+  tryLine, replay, conversation, VERDICT_LABELS, spokenLabel, replyParts,
 } from "./designer.js";
 
 const $ = (id) => document.getElementById(id);
@@ -206,14 +206,21 @@ let lines = [];           // [{ said, result }] in this conversation
 let previous = [];        // the lines of the conversation before the last change or reset, for Replay
 let generation = 0;       // bumped by every fresh conversation, so late answers from an older one are dropped
 let busy = false;
+let lastReading = 0;      // the meter's last reading (%), so the next one moves from there, as in the demo
 
 const list = $("attempts");
 const notice = (text) => { $("notice").textContent = text; };
 const fixed = (n) => (Number.isFinite(n) ? n.toFixed(2) : "?");
 
-function meter(score, max, threshold, className = "meter") {
+/** A meter. The main one starts at the last reading and moves to this one (instant under reduced motion). */
+function meter(score, max, threshold, { moves = false, className = "meter" } = {}) {
   const m = el("span", { className, ariaHidden: "true" }, el("i"), el("b"));
-  m.style.setProperty("--score", `${Math.max(0, Math.min(100, ((score ?? 0) / max) * 100))}%`);
+  const reading = Math.max(0, Math.min(100, ((score ?? 0) / max) * 100));
+  m.style.setProperty("--score", `${moves ? lastReading : reading}%`);
+  if (moves) {
+    requestAnimationFrame(() => requestAnimationFrame(() => m.style.setProperty("--score", `${reading}%`)));
+    lastReading = reading;
+  }
   m.style.setProperty("--mark", `${(threshold / max) * 100}%`);
   return m;
 }
@@ -234,22 +241,35 @@ function patienceText(result, character) {
   return `patience ${result.patienceLeft} of ${character.patience} left`;
 }
 
-/** One attempt: the line, its verdict and score, and why. `before` is the same line's result before a change. */
+/** The character's reply as the demo shows one: its label, then what they said, with speech and their name styled. */
+function reply(result, character, hint) {
+  const said = el("span", { className: "reaction" });
+  for (const part of result.reaction ? replyParts(result.reaction, character.name) : []) {
+    said.append(part.kind === "text" ? part.text : el("span", { className: `part-${part.kind}`, textContent: part.text }));
+  }
+  return el("div", { className: `reply v-${result.verdict}` },
+    el("p", {}, el("span", { className: "vh", textContent: `${spokenLabel(result.verdict)} ` }),
+      el("span", { className: "chip", ariaHidden: "true", textContent: VERDICT_LABELS[result.verdict] }), said),
+    hint ? el("p", { className: "hint", textContent: hint }) : null);
+}
+
+/** One attempt: the line, the reply, its score, and why. `before` is the same line's result before a change. */
 function attemptCard(said, result, character, before) {
   const max = result.maxScore;
   const card = el("li", { className: "attempt" }, el("p", { className: "cmd", textContent: said }));
   const scored = result.score !== null;
-  const verdict = el("span", { className: `verdict${result.verdict === "convinced" ? " won" : ""}`, textContent: result.verdict });
+  const hint = result.verdict === "convinced" ? "Convinced. In a game, the scene would move on here."
+    : result.outOfPatience && !(before?.outOfPatience) ? "Out of patience. In a game, their out-of-patience effect would play here." : "";
+  card.append(reply(result, character, hint));
   card.append(el("p", { className: "readout" },
-    verdict,
-    scored && meter(result.score, max, result.threshold),
+    scored && meter(result.score, max, result.threshold, { moves: true }),
     scored ? el("span", {}, `${fixed(result.score)} / ${max}, needs ${result.threshold}`) : el("span", {}, "not judged again: a repeat"),
     result.source !== undefined || scored ? el("span", { className: "tag" }, `[${result.source ?? "unknown"}]`) : null));
   if (before) {
     const wasScored = before.score !== null;
     card.append(el("p", { className: "readout was" },
       el("span", {}, "before:"),
-      wasScored && meter(before.score, before.maxScore, before.threshold, "meter small"),
+      wasScored && meter(before.score, before.maxScore, before.threshold, { className: "meter small" }),
       el("span", {}, `${wasScored ? `${fixed(before.score)} / ${before.maxScore}` : "repeat"}, ${before.verdict}`)));
   }
   const tells = result.triggered.length ? `triggered ${result.triggered.join(" and ")}` : "no tells triggered";
@@ -260,10 +280,17 @@ function attemptCard(said, result, character, before) {
         result.distribution ? " " : "", result.distribution ? distributionBars(result.distribution) : null),
       el("q", { textContent: result.level.text })));
   }
-  if (result.reaction) card.append(el("p", { className: "reaction", textContent: result.reaction }));
-  if (result.verdict === "convinced") card.append(el("p", { className: "hint", textContent: "Convinced. In a game, the scene would move on here." }));
-  else if (result.outOfPatience && !(before?.outOfPatience)) card.append(el("p", { className: "hint", textContent: "Out of patience. In a game, their out-of-patience effect would play here." }));
   return card;
+}
+
+/** Patience as pips, as in the demo's status line: a pip that was just lost pulses (not under reduced motion). */
+let pipsShown = null;
+function patiencePips(total, left) {
+  if (!Number.isFinite(total)) return (pipsShown = null);
+  const was = pipsShown?.childElementCount === total ? [...pipsShown.children].map((pip) => pip.classList.contains("on")) : [];
+  pipsShown = el("span", { className: "pips", ariaHidden: "true" },
+    ...Array.from({ length: total }, (_, i) => el("i", { className: i < left ? "on" : was[i] ? "lost" : "" })));
+  return pipsShown;
 }
 
 function updateStats() {
@@ -271,7 +298,7 @@ function updateStats() {
   const c = current.character;
   const patience = c.patience === Infinity ? "unlimited" : `${current.npc.patienceLeft} of ${c.patience}`;
   $("stats").replaceChildren("Convinced at ", el("strong", {}, `${c.threshold} / ${c.maxScore}`),
-    c.difficulty ? ` (${c.difficulty})` : "", ". Patience: ", el("strong", {}, patience), ".");
+    c.difficulty ? ` (${c.difficulty})` : "", ". Patience: ", patiencePips(c.patience, current.npc.patienceLeft), el("strong", {}, patience), ".");
 }
 
 function updateButtons() {
@@ -284,6 +311,7 @@ function updateButtons() {
 /** Start a fresh conversation with the form's character. The old one's lines are kept for Replay. */
 function freshConversation() {
   generation++;
+  lastReading = 0;
   if (lines.length) previous = lines;
   lines = [];
   list.replaceChildren();

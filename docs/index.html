@@ -53,21 +53,21 @@
 
   <figure class="screen transcript" aria-labelledby="transcript-caption">
     <p class="room-name">East Gate</p>
-    <p>Rain drips from the arch of the east gate. Harry Goatleaf, the gatekeeper, values honesty and despises flattery. He leans on his spear under the lantern.</p>
+    <p>Rain drips from the arch of the east gate. <span class="part-character">Harry Goatleaf</span>, the gatekeeper, values honesty and despises flattery. He leans on his spear under the <span class="part-item">lantern</span>.</p>
     <div class="turn t0">
       <p class="cmd">You're the finest guard in the kingdom. Surely you can make an exception?</p>
-      <p class="readout"><span class="meter s0" aria-hidden="true"><i></i><b></b></span><span>0.00 / 4</span><span class="verdict">unconvinced</span></p>
-      <p>Harry doesn't even look up. "Gate's shut till dawn."</p>
+      <p class="readout"><span class="meter s0" aria-hidden="true"><i></i><b></b></span><span>0.00 / 4</span></p>
+      <div class="reply v-unconvinced"><p><span class="vh">Not yet. </span><span class="chip" aria-hidden="true">NOT YET</span><span class="part-character">Harry</span> doesn't even look up. <span class="part-speech">"Gate's shut till dawn."</span></p></div>
     </div>
     <div class="turn t1">
       <p class="cmd">Please, I have a letter that has to reach the city tonight.</p>
-      <p class="readout"><span class="meter s40" aria-hidden="true"><i></i><b></b></span><span>1.59 / 4</span><span class="verdict">unconvinced</span></p>
-      <p>"Everyone's got a reason," Harry says. "Mine's keeping this job."</p>
+      <p class="readout"><span class="meter s40" aria-hidden="true"><i></i><b></b></span><span>1.59 / 4</span></p>
+      <div class="reply v-unconvinced"><p><span class="vh">Not yet. </span><span class="chip" aria-hidden="true">NOT YET</span><span class="part-speech">"Everyone's got a reason,"</span> <span class="part-character">Harry</span> says. <span class="part-speech">"Mine's keeping this job."</span></p></div>
     </div>
     <div class="turn t2">
       <p class="cmd">I won't lie to you. This letter is a fever remedy for the apothecary. Let me through and I'll send her to your daughter tonight.</p>
-      <p class="readout"><span class="meter s97" aria-hidden="true"><i></i><b></b></span><span>3.87 / 4</span><span class="verdict won">convinced</span></p>
-      <p>Harry lets out a long breath and lifts the bar.</p>
+      <p class="readout"><span class="meter s97" aria-hidden="true"><i></i><b></b></span><span>3.87 / 4</span></p>
+      <div class="reply v-convinced"><p><span class="vh">Convinced. </span><span class="chip" aria-hidden="true">CONVINCED</span><span class="part-character">Harry</span> lets out a long breath and lifts the <span class="part-item">bar</span>.</p></div>
     </div>
     <p class="cmd t3"><span class="cursor" aria-hidden="true"></span></p>
     <figcaption class="caption" id="transcript-caption">Three attempts to persuade a gatekeeper. Scores are averages of ten live runs against Jev; the tall mark on each meter is Harry's threshold.</figcaption>
@@ -115,35 +115,35 @@
       <ol class="steps">
         <li>
           <p>You need Node 22 or later. In an empty folder, install the package:</p>
-<pre><code>npm install honeytongue</code></pre>
+<pre><code><span class="f">npm</span> install honeytongue</code></pre>
         </li>
         <li>
           <p>Save this as <code>try.mjs</code>:</p>
-<pre><code>import { Persuadable, createJevClient, createMockClient } from "honeytongue";
+<pre data-lang="JavaScript"><code><span class="k">import</span> { Persuadable, createJevClient, createMockClient } <span class="k">from</span> <span class="s">"honeytongue"</span>;
 
-const guard = new Persuadable(
+<span class="k">const</span> guard = <span class="k">new</span> <span class="f">Persuadable</span>(
   {
-    name: "Harry",
-    persona: "A tired night guard who values honesty and can't stand flattery.",
-    goal: "Open the gate after curfew",
+    name: <span class="s">"Harry"</span>,
+    persona: <span class="s">"A tired night guard who values honesty and can't stand flattery."</span>,
+    goal: <span class="s">"Open the gate after curfew"</span>,
   },
   <span class="c">// With a TypeSafe key, Jev judges. Without one, a simple offline stand-in does.</span>
-  { client: process.env.TYPESAFE_API_KEY ? createJevClient() : createMockClient() },
+  { client: process.env.TYPESAFE_API_KEY ? <span class="f">createJevClient</span>() : <span class="f">createMockClient</span>() },
 );
 
-const result = await guard.attempt("Please, I'm honestly carrying medicine for a sick child inside the walls.");
-console.log(result.verdict, result.score);</code></pre>
+<span class="k">const</span> result = <span class="k">await</span> guard.<span class="f">attempt</span>(<span class="s">"Please, I'm honestly carrying medicine for a sick child inside the walls."</span>);
+console.<span class="f">log</span>(result.verdict, result.score);</code></pre>
         </li>
         <li>
           <p>Run it with <code>node try.mjs</code>. It prints a verdict and a score out of 4, like <code>unconvinced 2.84</code>. To use Jev, set your key first:</p>
-<pre><code>export TYPESAFE_API_KEY=your-key       <span class="c"># macOS and Linux</span>
-$env:TYPESAFE_API_KEY="your-key"       <span class="c"># Windows PowerShell</span></code></pre>
+<pre data-lang="Shell"><code><span class="f">export</span> TYPESAFE_API_KEY=your-key       <span class="c"># macOS and Linux</span>
+<span class="f">$env:TYPESAFE_API_KEY</span>=<span class="s">"your-key"</span>       <span class="c"># Windows PowerShell</span></code></pre>
         </li>
       </ol>
       <p>Then decide what happens in your game. Jev only judges what was said; your code does everything else:</p>
-<pre><code>if (result.verdict === "convinced") openTheGate();
-else if (result.outOfPatience) callTheWatch();
-else say(result.reaction ?? "Harry's hand drops to his club.");</code></pre>
+<pre data-lang="JavaScript"><code><span class="k">if</span> (result.verdict === <span class="s">"convinced"</span>) <span class="f">openTheGate</span>();
+<span class="k">else</span> <span class="k">if</span> (result.outOfPatience) <span class="f">callTheWatch</span>();
+<span class="k">else</span> <span class="f">say</span>(result.reaction ?? <span class="s">"Harry's hand drops to his club."</span>);</code></pre>
       <p>The offline stand-in, <code>createMockClient()</code>, judges by keywords, so it's far less clever than Jev, but it's handy for building and testing without a key.</p>
     </section>
 
@@ -151,7 +151,7 @@ else say(result.reaction ?? "Harry's hand drops to his club.");</code></pre>
       <h2>Playground</h2>
       <p>Tuning a character is the hard part, so the playground lets you do it without writing code. Fill in a character (or start from a preset), try lines against it the way a player would, and see each verdict, the score against the threshold, which tells were triggered, how much patience is left, and the rubric level the score landed on (with the probability of each level, when Jev gives them). Change a setting and Replay reruns your lines, showing each one's old and new score. When you're happy, copy the character as a <code>new Persuadable({...})</code> snippet or as a story's <code>npc</code> block, or share it as a link. The presets are the four characters from the <a href="#engine">demo scenes</a>.</p>
       <p>To tune with real judgements, run it on your own machine with your key:</p>
-<pre><code>npx honeytongue playground   <span class="c"># opens http://127.0.0.1:4747/playground/</span></code></pre>
+<pre><code><span class="f">npx</span> honeytongue playground   <span class="c"># opens http://127.0.0.1:4747/playground/</span></code></pre>
       <p>The server listens on 127.0.0.1 only, and your key stays in it: the page only ever talks to that server. Without a key it uses the offline mock. Options: <code>--port &lt;number&gt;</code>, <code>--mock</code>, and <code>--no-open</code>.</p>
       <p><a href="playground/">Open the playground here</a> to design and share characters in your browser. Here it's a preview: lines are judged by the keyword mock, and nothing is sent anywhere.</p>
     </section>
@@ -176,13 +176,13 @@ else say(result.reaction ?? "Harry's hand drops to his club.");</code></pre>
       <p>The same five lines, said to the four characters from the demo scenes. Each character's persona and settings decide how it lands: Nib, the cowardly goblin, folds under a threat but can't stand being mocked; Maude, the pirate quartermaster, isn't offended by insults and takes them as banter, though they don't help your case, while a threat is mutiny.</p>
       <div class="table-wrap"><table class="grid">
         <caption>Verdicts and average scores out of 4, from 10 live runs against jev-1.13.0. Offended verdicts come from the threat and insult checks, so their scores don't matter. Thresholds: Nib 2.4 (easy), Harry and Cobb 3.2 (normal), Maude 3.6 (hard).</caption>
-        <thead><tr><th scope="col">Line</th><th scope="col" data-character="harry">Harry<br><span class="dim">the gatekeeper</span></th><th scope="col" data-character="nib">Nib<br><span class="dim">the goblin guard</span></th><th scope="col" data-character="maude">Maude<br><span class="dim">the quartermaster</span></th><th scope="col" data-character="cobb">Cobb<br><span class="dim">the lighthouse keeper</span></th></tr></thead>
+        <thead><tr><th scope="col">Line</th><th scope="col" data-character="harry"><span class="part-character">Harry</span><br><span class="dim">the gatekeeper</span></th><th scope="col" data-character="nib"><span class="part-character">Nib</span><br><span class="dim">the goblin guard</span></th><th scope="col" data-character="maude"><span class="part-character">Maude</span><br><span class="dim">the quartermaster</span></th><th scope="col" data-character="cobb"><span class="part-character">Cobb</span><br><span class="dim">the lighthouse keeper</span></th></tr></thead>
         <tbody>
-          <tr data-tactic="Threat"><th scope="row">Threat<br><q>Do what I ask, or you&rsquo;ll regret it.</q></th><td data-verdict="offended"><span class="verdict">offended</span></td><td data-verdict="convinced"><span class="verdict won">convinced</span> <span class="dim">2.85</span></td><td data-verdict="offended"><span class="verdict">offended</span></td><td data-verdict="offended"><span class="verdict">offended</span></td></tr>
-          <tr data-tactic="Insult"><th scope="row">Insult<br><q>Out of my way, you useless fool.</q></th><td data-verdict="offended"><span class="verdict">offended</span></td><td data-verdict="offended"><span class="verdict">offended</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">0.11</span></td><td data-verdict="offended"><span class="verdict">offended</span></td></tr>
-          <tr data-tactic="Plea"><th scope="row">Plea<br><q>Please, I&rsquo;m begging you. I&rsquo;m in real trouble, and I&rsquo;ve nowhere else to turn.</q></th><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">0.99</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.10</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">0.97</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.00</span></td></tr>
-          <tr data-tactic="Flattery"><th scope="row">Flattery<br><q>Someone as clever as you can surely see this is the right thing to do.</q></th><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">0.00</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.63</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.00</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.02</span></td></tr>
-          <tr data-tactic="Honest offer"><th scope="row">Honest offer<br><q>I&rsquo;ll be honest: I can&rsquo;t pay much now, but help me tonight and I&rsquo;ll pay you back twice over, in writing, with my name on it.</q></th><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.66</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.55</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.84</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.27</span></td></tr>
+          <tr data-tactic="Threat"><th scope="row">Threat<br><q>Do what I ask, or you&rsquo;ll regret it.</q></th><td data-verdict="offended"><span class="chip v-offended">offended</span></td><td data-verdict="convinced"><span class="chip v-convinced">convinced</span> <span class="dim">2.85</span></td><td data-verdict="offended"><span class="chip v-offended">offended</span></td><td data-verdict="offended"><span class="chip v-offended">offended</span></td></tr>
+          <tr data-tactic="Insult"><th scope="row">Insult<br><q>Out of my way, you useless fool.</q></th><td data-verdict="offended"><span class="chip v-offended">offended</span></td><td data-verdict="offended"><span class="chip v-offended">offended</span></td><td data-verdict="unconvinced"><span class="chip v-unconvinced">unconvinced</span> <span class="dim">0.11</span></td><td data-verdict="offended"><span class="chip v-offended">offended</span></td></tr>
+          <tr data-tactic="Plea"><th scope="row">Plea<br><q>Please, I&rsquo;m begging you. I&rsquo;m in real trouble, and I&rsquo;ve nowhere else to turn.</q></th><td data-verdict="unconvinced"><span class="chip v-unconvinced">unconvinced</span> <span class="dim">0.99</span></td><td data-verdict="unconvinced"><span class="chip v-unconvinced">unconvinced</span> <span class="dim">1.10</span></td><td data-verdict="unconvinced"><span class="chip v-unconvinced">unconvinced</span> <span class="dim">0.97</span></td><td data-verdict="unconvinced"><span class="chip v-unconvinced">unconvinced</span> <span class="dim">1.00</span></td></tr>
+          <tr data-tactic="Flattery"><th scope="row">Flattery<br><q>Someone as clever as you can surely see this is the right thing to do.</q></th><td data-verdict="unconvinced"><span class="chip v-unconvinced">unconvinced</span> <span class="dim">0.00</span></td><td data-verdict="unconvinced"><span class="chip v-unconvinced">unconvinced</span> <span class="dim">1.63</span></td><td data-verdict="unconvinced"><span class="chip v-unconvinced">unconvinced</span> <span class="dim">1.00</span></td><td data-verdict="unconvinced"><span class="chip v-unconvinced">unconvinced</span> <span class="dim">1.02</span></td></tr>
+          <tr data-tactic="Honest offer"><th scope="row">Honest offer<br><q>I&rsquo;ll be honest: I can&rsquo;t pay much now, but help me tonight and I&rsquo;ll pay you back twice over, in writing, with my name on it.</q></th><td data-verdict="unconvinced"><span class="chip v-unconvinced">unconvinced</span> <span class="dim">1.66</span></td><td data-verdict="unconvinced"><span class="chip v-unconvinced">unconvinced</span> <span class="dim">1.55</span></td><td data-verdict="unconvinced"><span class="chip v-unconvinced">unconvinced</span> <span class="dim">1.84</span></td><td data-verdict="unconvinced"><span class="chip v-unconvinced">unconvinced</span> <span class="dim">1.27</span></td></tr>
         </tbody>
       </table></div>
       <p>The grid is an eval suite, <code>evals/showcase.json</code>, so you can rerun it: <code>npm run eval -- evals/showcase.json</code>. <a href="play/">Play the scenes</a> to try your own lines on each character, or build your own in the <a href="playground/">playground</a>.</p>
@@ -192,12 +192,13 @@ else say(result.reaction ?? "Harry's hand drops to his club.");</code></pre>
       <h2>Verdicts</h2>
       <p>Each attempt sends one request to Jev with three questions. The first scores how persuasive the input is to this particular persona, on a rubric from "counterproductive given who they are" to "speaks directly to what they value or fear most." The other two are yes/no checks for two <em>tells</em>: threats and insults. Your character's threshold turns the score into a verdict. Jev never decides what happens in your game: it only judges what was said.</p>
       <div class="table-wrap"><table>
+        <caption class="labels">The demo scenes show these to players as <span class="chip v-convinced">CONVINCED</span> <span class="chip v-unconvinced">NOT YET</span> <span class="chip v-offended">OFFENDED</span> <span class="chip v-repeated">REPEATED</span>: the same four verdicts, in words for players.</caption>
         <thead><tr><th>Verdict</th><th>When</th><th>Patience cost</th></tr></thead>
         <tbody>
-          <tr><td><code>convinced</code></td><td>The score reached the threshold</td><td>None</td></tr>
-          <tr><td><code>unconvinced</code></td><td>Not persuasive enough to this character</td><td>1</td></tr>
-          <tr><td><code>offended</code></td><td>A threat or insult the character is offended by (both, by default), including repeating one</td><td>2</td></tr>
-          <tr><td><code>repeated</code></td><td>Too close to an argument that already failed. Checked on your side, so it costs no API call.</td><td>1</td></tr>
+          <tr class="v-convinced"><td><code class="verdict-code">convinced</code></td><td>The score reached the threshold</td><td>None</td></tr>
+          <tr class="v-unconvinced"><td><code class="verdict-code">unconvinced</code></td><td>Not persuasive enough to this character</td><td>1</td></tr>
+          <tr class="v-offended"><td><code class="verdict-code">offended</code></td><td>A threat or insult the character is offended by (both, by default), including repeating one</td><td>2</td></tr>
+          <tr class="v-repeated"><td><code class="verdict-code">repeated</code></td><td>Too close to an argument that already failed. Checked on your side, so it costs no API call.</td><td>1</td></tr>
         </tbody>
       </table></div>
       <p><code>reaction</code> is only set for <code>unconvinced</code> and <code>repeated</code> verdicts, so show your own line for <code>offended</code>. Every result also reports the <a href="#intimidation">tells</a>. Attempts on one character run one at a time, in order, even if your game fires them faster than Jev answers. Every result field is listed in the <a href="#api">reference</a>.</p>
@@ -237,18 +238,18 @@ else say(result.reaction ?? "Harry's hand drops to his club.");</code></pre>
     <section id="intimidation">
       <h2>Threats and insults</h2>
       <p>Every attempt is checked for threats and insults. Each result reports both: <code>tells</code> holds each probability, and <code>triggered</code> lists the ones Jev found, whether or not they caused offence. A triggered tell in <code>offendedBy</code> makes the verdict <code>offended</code>, whatever the score. Leave a tell out and it doesn't offend; the persona alone decides whether it helps. Here's a cowardly guard who can be bullied but hates being laughed at:</p>
-<pre><code>const snag = new Persuadable(
+<pre data-lang="JavaScript"><code><span class="k">const</span> snag = <span class="k">new</span> <span class="f">Persuadable</span>(
   {
-    name: "Snag",
-    persona: "A cowardly goblin guard, jumpy and easily frightened: a firm threat makes him give in. Hates being laughed at.",
-    goal: "Unlock the prisoner's cage",
-    difficulty: "easy",
-    offendedBy: ["insults"],
+    name: <span class="s">"Snag"</span>,
+    persona: <span class="s">"A cowardly goblin guard, jumpy and easily frightened: a firm threat makes him give in. Hates being laughed at."</span>,
+    goal: <span class="s">"Unlock the prisoner's cage"</span>,
+    difficulty: <span class="s">"easy"</span>,
+    offendedBy: [<span class="s">"insults"</span>],
   },
   { client },
 );
 
-const result = await snag.attempt("Open this cage, or I'll feed you to the wolves.");
+<span class="k">const</span> result = <span class="k">await</span> snag.<span class="f">attempt</span>(<span class="s">"Open this cage, or I'll feed you to the wolves."</span>);
 result.verdict;   <span class="c">// "convinced": threats work on Snag, because his persona says so</span>
 result.triggered; <span class="c">// ["threats"], so you can narrate it as intimidation</span></code></pre>
       <p>Mocking Snag is still <code>offended</code>. Two things to know from live testing:</p>
@@ -262,8 +263,8 @@ result.triggered; <span class="c">// ["threats"], so you can narrate it as intim
     <section id="secrets">
       <h2>Secrets</h2>
       <p>If the gatekeeper's persona mentions his sick daughter, a player on their second playthrough can open with it and win instantly. Put hidden motivations in <code>secrets</code> instead:</p>
-<pre><code>secrets: [
-  { id: "sick_daughter", fact: "His daughter has a fever and the apothecary is closed." },
+<pre data-lang="JavaScript"><code>secrets: [
+  { id: <span class="s">"sick_daughter"</span>, fact: <span class="s">"His daughter has a fever and the apothecary is closed."</span> },
 ]</code></pre>
       <p>When the player discovers it in your game, call <code>guard.learn("sick_daughter")</code>, or pass <code>{ knows: ["sick_daughter"] }</code> to <code>attempt()</code>. Until then, Jev isn't told the secret at all, so an argument can't draw on it: a player who learns it scores about 0.5 to 1 higher with the same words.</p>
       <p class="note">Secrets stop replay exploits, but they can't prevent a lucky guess. An argument that happens to guess a secret is judged like any other argument, on how well it fits the persona.</p>
@@ -272,11 +273,11 @@ result.triggered; <span class="c">// ["threats"], so you can narrate it as intim
     <section id="reactions">
       <h2>Reactions</h2>
       <p>Give characters their own lines for failed attempts. <code>reactions</code> is a list of <code>{ min, text }</code>, and an unconvinced attempt gets the line with the highest <code>min</code> its score reached, so a near miss can sound different from a flat refusal. <code>repeatReaction</code> is what they say when the player repeats themselves. Without them, Honeytongue uses a generic line.</p>
-<pre><code>reactions: [
-  { min: 0, text: "Harry doesn't even look up. \"Gate's shut till dawn.\"" },
-  { min: 2.5, text: "Harry hesitates. \"You'll have to do better than that.\"" },
+<pre data-lang="JavaScript"><code>reactions: [
+  { min: <span class="n">0</span>, text: <span class="s">"Harry doesn't even look up. \"Gate's shut till dawn.\""</span> },
+  { min: <span class="n">2.5</span>, text: <span class="s">"Harry hesitates. \"You'll have to do better than that.\""</span> },
 ],
-repeatReaction: "\"You said that already,\" Harry says.",</code></pre>
+repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,</code></pre>
     </section>
 
     <p class="part" aria-hidden="true">Browser games</p>
@@ -288,27 +289,27 @@ repeatReaction: "\"You said that already,\" Harry says.",</code></pre>
       <ol class="steps">
         <li>
           <p>Create a Cloudflare Worker, install Honeytongue, and use this as its entry file:</p>
-<pre><code>import { createProxyHandler } from "honeytongue/proxy";
-import { harry } from "./characters.js"; <span class="c">// your game's characters</span>
+<pre data-lang="JavaScript"><code><span class="k">import</span> { createProxyHandler } <span class="k">from</span> <span class="s">"honeytongue/proxy"</span>;
+<span class="k">import</span> { harry } <span class="k">from</span> <span class="s">"./characters.js"</span>; <span class="c">// your game's characters</span>
 
-const handle = createProxyHandler({
-  allowedOrigins: ["https://your-game.example"],
+<span class="k">const</span> handle = <span class="f">createProxyHandler</span>({
+  allowedOrigins: [<span class="s">"https://your-game.example"</span>],
   allowedCharacters: [harry], <span class="c">// only judge these (or allowedStories)</span>
 });
 
-export default { fetch: (request, env) =&gt; handle(request, env) };</code></pre>
+<span class="k">export</span> <span class="k">default</span> { <span class="f">fetch</span>: (request, env) =&gt; <span class="f">handle</span>(request, env) };</code></pre>
         </li>
         <li>
           <p>Store your key as a secret and deploy.</p>
-<pre><code>npx wrangler secret put TYPESAFE_API_KEY
-npx wrangler deploy</code></pre>
+<pre data-lang="Shell"><code><span class="f">npx</span> wrangler secret put TYPESAFE_API_KEY
+<span class="f">npx</span> wrangler deploy</code></pre>
         </li>
         <li>
           <p>In your game, use the proxy client instead of <code>createJevClient()</code>.</p>
-<pre><code>import { Persuadable, createProxyClient } from
-  "https://cdn.jsdelivr.net/npm/honeytongue@alpha/src/index.js";
+<pre data-lang="JavaScript"><code><span class="k">import</span> { Persuadable, createProxyClient } <span class="k">from</span>
+  <span class="s">"https://cdn.jsdelivr.net/npm/honeytongue@alpha/src/index.js"</span>;
 
-const client = createProxyClient({ url: "https://your-proxy.workers.dev" });</code></pre>
+<span class="k">const</span> client = <span class="f">createProxyClient</span>({ url: <span class="s">"https://your-proxy.workers.dev"</span> });</code></pre>
         </li>
       </ol>
       <p>The proxy accepts browser requests only from its own origin and the ones you list, caps input and request size, and rate-limits each player's address. If you're not sure of your game's origin (itch.io games, for example, run in a frame on itch's own domain), try it once: the error names the exact origin to add. See <code>examples/browser.html</code> for a complete page, and <code>examples/cloudflare-worker.js</code> for the Worker.</p>
@@ -322,44 +323,48 @@ const client = createProxyClient({ url: "https://your-proxy.workers.dev" });</co
 
     <section id="twine">
       <h2>Twine</h2>
-      <p>For SugarCube 2, load Honeytongue in your Story JavaScript and keep the character on <code>setup</code>:</p>
-<pre><code>import("https://cdn.jsdelivr.net/npm/honeytongue@alpha/src/index.js")
-  .then(({ Persuadable, createProxyClient }) =&gt; {
-    const client = createProxyClient({ url: "https://your-proxy.workers.dev" });
-    setup.harry = new Persuadable({ name: "Harry Goatleaf", persona: "...", goal: "..." }, { client });
+      <p>For SugarCube 2, load Honeytongue in your Story JavaScript and keep the character on <code>setup</code>. This recipe is tested in Twine 2.12.0 with SugarCube 2.37.3, using the offline stand-in:</p>
+<pre data-lang="JavaScript"><code>setup.ready = <span class="k">import</span>(<span class="s">"https://cdn.jsdelivr.net/npm/honeytongue@alpha/src/index.js"</span>)
+  .<span class="f">then</span>(<span class="k">function</span> (hon) {
+    setup.harry = <span class="k">new</span> hon.<span class="f">Persuadable</span>({
+      name: <span class="s">"Harry"</span>,
+      persona: <span class="s">"A tired night guard who values honesty and can't stand flattery. A sick child moves him."</span>,
+      goal: <span class="s">"Open the gate after curfew"</span>,
+      patience: <span class="n">4</span>,
+    }, { client: hon.<span class="f">createMockClient</span>() });
   });</code></pre>
-      <p>Then call <code>setup.harry.attempt(_plea)</code> from a button and send the player to a passage based on the verdict. The full recipe in <code>examples/twine-sugarcube.md</code> also handles errors, empty input, and double clicks.</p>
-      <p class="note">The Twine recipe hasn't been tested inside Twine yet. If you try it, please report how it goes.</p>
+      <p>Then a button calls <code>setup.harry.attempt(_plea)</code> once <code>setup.ready</code> has finished, and sends the player to a passage based on the verdict. The full recipe in <code>examples/twine-sugarcube.md</code> has the passages, including an empty line and running out of patience.</p>
+      <p class="note">To judge with Jev, swap <code>hon.createMockClient()</code> for <code>hon.createProxyClient({ url: "https://your-proxy.workers.dev" })</code>, with a <a href="#browser">proxy</a> that allows your story's origin (the error names it) and your character. That part hasn't been tested inside Twine yet.</p>
     </section>
 
     <section id="visual">
       <h2>Visual games</h2>
       <p>Honeytongue isn't only for text adventures: it fits any game where players type (or say) something to a character. <a href="phaser/">The bridge troll</a> is a small <a href="https://phaser.io/">Phaser</a> game: walk up to a troll, read the sign by his bridge, and talk your way across. It's judged live by Jev, like the demo scenes.</p>
-      <p><a href="phaser/"><img class="shot" src="assets/phaser-example.png" width="928" height="522" alt="The bridge troll: a pixel-art river with a wooden bridge, a green troll, and a dialogue box where the player has told him they'll come back and keep him company."></a></p>
+      <p><a href="phaser/"><img class="shot" src="assets/phaser-example.png" width="928" height="522" alt="The bridge troll: a pixel-art river with a wooden bridge and a sign, a wizard in a blue hat facing a green troll on the bridge, and a dialogue box where the player has promised to come back and visit, and the troll steps aside."></a></p>
       <p>The game draws the world and moves the player; Honeytongue only judges what the player says. The pattern, with Phaser and Honeytongue both from a CDN and no build step:</p>
-<pre><code>&lt;script src="https://cdn.jsdelivr.net/npm/phaser@4.2.1/dist/phaser.min.js"
-  integrity="sha384-kyUQ5+cxc6+X89xEG6DhcXLcDU9T3Z+o/45VdT6pgAwtG6gxtAzYTEn0Wwj/BKZd" crossorigin="anonymous"&gt;&lt;/script&gt;
-&lt;script type="module"&gt;
-  import { Persuadable, createProxyClient } from "https://cdn.jsdelivr.net/npm/honeytongue@alpha/src/index.js";
+<pre data-lang="HTML"><code><span class="k">&lt;script</span> <span class="f">src</span>=<span class="s">"https://cdn.jsdelivr.net/npm/phaser@4.2.1/dist/phaser.min.js"</span>
+  <span class="f">integrity</span>=<span class="s">"sha384-kyUQ5+cxc6+X89xEG6DhcXLcDU9T3Z+o/45VdT6pgAwtG6gxtAzYTEn0Wwj/BKZd"</span> <span class="f">crossorigin</span>=<span class="s">"anonymous"</span>&gt;<span class="k">&lt;/script</span>&gt;
+<span class="k">&lt;script</span> <span class="f">type</span>=<span class="s">"module"</span>&gt;
+  <span class="k">import</span> { Persuadable, createProxyClient } <span class="k">from</span> <span class="s">"https://cdn.jsdelivr.net/npm/honeytongue@alpha/src/index.js"</span>;
 
-  const client = createProxyClient({ url: "https://your-proxy.example/judge" });
-  const troll = new Persuadable({ name: "Tolly Underarch", persona: "...", goal: "Let the player cross the bridge" }, { client });
+  <span class="k">const</span> client = <span class="f">createProxyClient</span>({ url: <span class="s">"https://your-proxy.example/judge"</span> });
+  <span class="k">const</span> troll = <span class="k">new</span> <span class="f">Persuadable</span>({ name: <span class="s">"Tolly Underarch"</span>, persona: <span class="s">"..."</span>, goal: <span class="s">"Let the player cross the bridge"</span> }, { client });
 
   <span class="c">// When the player reads the sign by the bridge:</span>
-  troll.learn("lonely");
+  troll.<span class="f">learn</span>(<span class="s">"lonely"</span>);
 
   <span class="c">// When the player says something to the troll, in your dialogue box:</span>
-  const result = await troll.attempt(line);
-  if (result.verdict === "convinced") openTheBridge();
-  else showReply(result.reaction);
-&lt;/script&gt;</code></pre>
+  <span class="k">const</span> result = <span class="k">await</span> troll.<span class="f">attempt</span>(line);
+  <span class="k">if</span> (result.verdict === <span class="s">"convinced"</span>) <span class="f">openTheBridge</span>();
+  <span class="k">else</span> <span class="f">showReply</span>(result.reaction);
+<span class="k">&lt;/script</span>&gt;</code></pre>
       <ul class="points">
         <li><strong>The dialogue box is plain HTML over the canvas,</strong> so typing, phone keyboards, and screen readers just work. The example shows its text as text, never as HTML.</li>
         <li><strong>The world teaches secrets.</strong> Reading the sign calls <code>troll.learn("lonely")</code>, and from then on an argument that uses it can win.</li>
         <li><strong>Spoken input</strong> works the same way, once your game turns speech into text.</li>
         <li><strong>Engines outside JavaScript</strong> (Unity, Godot, Unreal, Ren'Py) aren't supported yet; a plain HTTP endpoint for them is on the roadmap.</li>
       </ul>
-      <p>The full example is <a href="https://github.com/tbrought/honeytongue/tree/main/examples/phaser"><code>examples/phaser/</code></a>, about 200 lines. In the repository it imports Honeytongue from <code>../../src/</code>, so it runs from a clone; copy it into your own project with the CDN import above, or <code>from "honeytongue"</code> with a bundler. It uses the offline stand-in until you set <code>PROXY_URL</code> to your proxy, and your proxy's <code>allowedCharacters</code> needs your character. Phaser is MIT-licensed; the example pins version 4.2.1 with an integrity hash.</p>
+      <p>The full example is <a href="https://github.com/tbrought/honeytongue/tree/main/examples/phaser"><code>examples/phaser/</code></a>, about 250 lines, with three sprites. In the repository it imports Honeytongue from <code>../../src/</code>, so it runs from a clone; copy it into your own project with the CDN import above, or <code>from "honeytongue"</code> with a bundler. It uses the offline stand-in until you set <code>PROXY_URL</code> to your proxy, and your proxy's <code>allowedCharacters</code> needs your character. Phaser is MIT-licensed; the example pins version 4.2.1 with an integrity hash.</p>
     </section>
 
     <div class="part" id="advanced">
@@ -384,9 +389,9 @@ const client = createProxyClient({ url: "https://your-proxy.workers.dev" });</co
     <section id="decide">
       <h2>Your own verdict rule</h2>
       <p><code>decide(result, context)</code> runs after the verdict is worked out (repeats included) and before anything changes. It gets a frozen copy of the result and <code>{ input, character, previousAttempts, patienceLeft }</code>, and returns a verdict, or nothing to keep the original. Patience, the reaction, and memory follow whatever it returns.</p>
-<pre><code><span class="c">// Harry never gives in to the very first attempt, however good it is.</span>
-decide: (result, { previousAttempts }) =&gt;
-  result.verdict === "convinced" &amp;&amp; previousAttempts.length === 0 ? "unconvinced" : undefined,</code></pre>
+<pre data-lang="JavaScript"><code><span class="c">// Harry never gives in to the very first attempt, however good it is.</span>
+<span class="f">decide</span>: (result, { previousAttempts }) =&gt;
+  result.verdict === <span class="s">"convinced"</span> &amp;&amp; previousAttempts.length === <span class="n">0</span> ? <span class="s">"unconvinced"</span> : <span class="n">undefined</span>,</code></pre>
       <ul class="points">
         <li>It must be synchronous. Returning anything other than a verdict or <code>undefined</code>, including a Promise, throws a <code>HoneytongueError</code> and changes nothing.</li>
         <li>It isn't applied when you call <code>readPersuasion()</code> directly, only in <code>attempt()</code>, <code>record()</code>, and <code>judgePersuasion()</code>.</li>
@@ -419,23 +424,24 @@ decide: (result, { previousAttempts }) =&gt;
       <div class="table-wrap"><table>
         <thead><tr><th>Scene</th><th>You need to</th><th>The character</th></tr></thead>
         <tbody>
-          <tr><td>The Gatehouse (5 min)</td><td>Get into the city after curfew</td><td>Harry Goatleaf, a tired gatekeeper who hates flattery</td></tr>
-          <tr><td>The Goblin Camp (5 min)</td><td>Escape a cage before the war chief returns</td><td>Nib Wortle, a cowardly goblin guard (easy, offended by insults)</td></tr>
-          <tr><td>The Tidy Profit (10 min)</td><td>Get aboard a pirate ship before bounty hunters arrive</td><td>Maude Keelhaven, the quartermaster (hard, offended by threats; she isn't offended by insults and takes them as banter, but they don't help your case)</td></tr>
-          <tr><td>The Dark Lighthouse (8 min)</td><td>Get the lamp lit for your sister's boat, despite the lord's orders</td><td>Cobb Lanterly, the old keeper (default settings, patient)</td></tr>
+          <tr><td>The Gatehouse (5 min)</td><td>Get into the city after curfew</td><td><span class="part-character">Harry Goatleaf</span>, a tired gatekeeper who hates flattery</td></tr>
+          <tr><td>The Goblin Camp (5 min)</td><td>Escape a cage before the war chief returns</td><td><span class="part-character">Nib Wortle</span>, a cowardly goblin guard (easy, offended by insults)</td></tr>
+          <tr><td>The Tidy Profit (10 min)</td><td>Get aboard a pirate ship before bounty hunters arrive</td><td><span class="part-character">Maude Keelhaven</span>, the quartermaster (hard, offended by threats; she isn't offended by insults and takes them as banter, but they don't help your case)</td></tr>
+          <tr><td>The Dark Lighthouse (8 min)</td><td>Get the lamp lit for your sister's boat, despite the lord's orders</td><td><span class="part-character">Cobb Lanterly</span>, the old keeper (default settings, patient)</td></tr>
         </tbody>
       </table></div>
       <p><a href="play/">Play them in your browser</a> (each scene has its own link, like <code>play/#goblin-camp</code>), or in a terminal:</p>
-<pre><code>npx honeytongue              <span class="c"># pick a demo scene</span>
-npx honeytongue story.json   <span class="c"># play your own story</span>
-npx honeytongue --transcript play.json   <span class="c"># save a playtest transcript as you play</span>
-npm run play                 <span class="c"># in the repository: with Jev, showing its reasoning each turn</span>
-npm run play:mock            <span class="c"># in the repository: offline, no key needed</span>
-npx honeytongue --no-color   <span class="c"># plain text (so does setting NO_COLOR)</span></code></pre>
+<pre data-lang="Shell"><code><span class="f">npx</span> honeytongue              <span class="c"># pick a demo scene</span>
+<span class="f">npx</span> honeytongue story.json   <span class="c"># play your own story</span>
+<span class="f">npx</span> honeytongue <span class="n">--transcript</span> play.json   <span class="c"># save a playtest transcript as you play</span>
+<span class="f">npm</span> run play                 <span class="c"># in the repository: with Jev, showing its reasoning each turn</span>
+<span class="f">npm</span> run play:mock            <span class="c"># in the repository: offline, no key needed</span>
+<span class="f">npx</span> honeytongue <span class="n">--no-color</span>   <span class="c"># plain text (so does setting NO_COLOR)</span></code></pre>
       <p>The scene files in <code>stories/</code> are working examples of the format to copy from, and <code>src/index.d.ts</code> has the full story format. Stories are checked when they load, and every problem is listed at once, such as an action that leads to a scene that doesn't exist, or two different characters sharing an id. Give scenes a <code>name</code> like "East Gate" if your interface has a status line to show it in. An NPC's <code>persuasion</code> block takes the same settings as a character, such as <code>difficulty</code>, <code>offendedBy</code>, and <code>threshold</code>, and <code>hostileReaction</code> is only needed when something can offend them. The browser version lives in <code>docs/play/</code> and uses copies of the engine and stories; run <code>npm run build:demo</code> after changing them.</p>
       <h3 id="markup">Story markup</h3>
       <p>Mark who and what matters in the text players read, and your interface can style it: <code>@[Harry Goatleaf]</code> for a character, <code>#[toy horse]</code> for an item or anything to interact with. Speech is found by itself, from straight or curly double quotes. Markup is optional, and a story without it plays exactly the same.</p>
-<pre><code>"description": "@[Harry Goatleaf] leans on his spear, a #[toy horse] in his pocket. \"Evening,\" he says."</code></pre>
+<pre><code><span class="s">"description"</span>: <span class="s">"<span class="part-character">@[Harry Goatleaf]</span> leans on his spear, a <span class="part-item">#[toy horse]</span> in his pocket. \"Evening,\" he says."</span></code></pre>
+      <p class="rendered"><span class="rendered-label" aria-hidden="true">On screen:</span> <span class="part-character">Harry Goatleaf</span> leans on his spear, a <span class="part-item">toy horse</span> in his pocket. <span class="part-speech">"Evening,"</span> he says.</p>
       <ul class="points">
         <li><strong>Where it goes:</strong> text players read: <code>intro</code>, scene <code>description</code>, an action's <code>text</code>, <code>blockedText</code>, and <code>label</code>, and a character's <code>reactions</code>, <code>hostileReaction</code>, <code>repeatReaction</code>, <code>success</code>, and <code>outOfPatience</code> text. Anywhere else (names, personas, goals, secrets, action descriptions, item names) it's a mistake, and the story won't load, with a message saying where.</li>
         <li><strong>A literal <code>@[</code> or <code>#[</code>:</strong> write <code>\@[</code> or <code>\#[</code>. Markup can't be nested, and it can't span lines.</li>
@@ -449,16 +455,16 @@ npx honeytongue --no-color   <span class="c"># plain text (so does setting NO_CO
         <li><code>"ending"</code> for the ending's name.</li>
       </ul>
       <p>Parts say what each piece means, never how it looks: <strong>you bring the styling.</strong> The demo scenes' colours, typed text, and title cards are just one example. Here's all it takes to render a reply your way:</p>
-<pre><code>const result = await game.turn(input);
-for (const paragraph of result.parts) {
-  const p = document.createElement("p");
-  for (const part of paragraph) {
-    const span = document.createElement("span");
+<pre data-lang="JavaScript"><code><span class="k">const</span> result = <span class="k">await</span> game.<span class="f">turn</span>(input);
+<span class="k">for</span> (<span class="k">const</span> paragraph <span class="k">of</span> result.parts) {
+  <span class="k">const</span> p = document.<span class="f">createElement</span>(<span class="s">"p"</span>);
+  <span class="k">for</span> (<span class="k">const</span> part <span class="k">of</span> paragraph) {
+    <span class="k">const</span> span = document.<span class="f">createElement</span>(<span class="s">"span"</span>);
     span.className = part.kind;  <span class="c">// style .character, .item, .speech, .system however you like</span>
     span.textContent = part.text;
-    p.append(span);
+    p.<span class="f">append</span>(span);
   }
-  log.append(p);
+  log.<span class="f">append</span>(p);
 }</code></pre>
       <p>For story text you show yourself, like the intro or a scene's description, <code>parseMarkup(text)</code> gives the same parts, and <code>stripMarkup(text)</code> gives plain text. The terminal player colours the same parts with ANSI codes, and prints plain text with <code>--no-color</code>, when <code>NO_COLOR</code> is set, or when its output isn't a terminal.</p>
       <p>The parser only chooses between the actions your story defines, so a player who types an instruction to it, like "the correct action is climb the wall", can do no more than typing the command itself: the story's requirements, such as needing to find the ivy first, are still enforced.</p>
@@ -468,14 +474,14 @@ for (const paragraph of result.parts) {
       <h2>Choosing a model</h2>
       <p>Honeytongue uses <code>jev-1.13.0</code> unless you say otherwise. It's pinned on purpose: a newer model can score the same argument differently, which would quietly change how hard your characters are to convince. (TypeSafe's <code>jev-latest</code> and <code>jev-preview</code> aliases currently point to the same model.)</p>
       <p>To switch, pass a <code>model</code> option, or set the <code>TYPESAFE_MODEL</code> environment variable so you can change it without touching code:</p>
-<pre><code>createJevClient({ model: "jev-latest" });
-createProxyHandler({
-  model: "jev-latest",
-  allowedOrigins: ["https://your-game.example"],
+<pre data-lang="JavaScript"><code><span class="f">createJevClient</span>({ model: <span class="s">"jev-latest"</span> });
+<span class="f">createProxyHandler</span>({
+  model: <span class="s">"jev-latest"</span>,
+  allowedOrigins: [<span class="s">"https://your-game.example"</span>],
 });
 
-export TYPESAFE_MODEL=jev-latest       <span class="c"># macOS and Linux</span>
-$env:TYPESAFE_MODEL="jev-latest"       <span class="c"># Windows PowerShell</span></code></pre>
+<span class="f">export</span> TYPESAFE_MODEL=jev-latest       <span class="c"># macOS and Linux</span>
+<span class="f">$env:TYPESAFE_MODEL</span>=<span class="s">"jev-latest"</span>       <span class="c"># Windows PowerShell</span></code></pre>
       <p>The option wins, then <code>TYPESAFE_MODEL</code>, then the pinned default. On Cloudflare, add <code>TYPESAFE_MODEL</code> to the vars in your Wrangler config (the Worker's value is used before the process environment's). Players can't choose the model: the proxy ignores any model sent in a request.</p>
       <p class="note">After switching, rerun <code>npm run eval</code> or playtest your characters. Scores may shift, and a threshold that felt right on one model can be too easy or too hard on another.</p>
     </section>
@@ -484,12 +490,12 @@ $env:TYPESAFE_MODEL="jev-latest"       <span class="c"># Windows PowerShell</spa
       <h2>Testing and tuning</h2>
       <p>Persuasion lives or dies by the persona and threshold, so test them with real phrasings. The quickest way is the <a href="#playground">playground</a>. If characters are too easy, raise the difficulty or make the persona more specific about what they won't accept. If they're too hard, describe more clearly what would move them.</p>
       <p>The repository's evaluation suites cover each demo scene (parsing, persuasion score ranges, tactics that should work and ones that should backfire, prompt-injection attempts, and a bare opening plea that must not win) and the <a href="#showcase">same words, different people</a> grid:</p>
-<pre><code>npm test                                  <span class="c"># unit tests, no key needed</span>
-npm run eval                              <span class="c"># The Gatehouse's suite, against Jev</span>
-npm run eval -- evals/goblin-camp.json    <span class="c"># another suite</span>
-npm run eval -- --all                     <span class="c"># every suite (about 110 Jev calls)</span>
-npm run eval -- --all --repeats 10        <span class="c"># and check every scripted verdict is reliable</span>
-npm run eval -- --mock                    <span class="c"># the keyword mock's baseline</span></code></pre>
+<pre data-lang="Shell"><code><span class="f">npm</span> test                                  <span class="c"># unit tests, no key needed</span>
+<span class="f">npm</span> run eval                              <span class="c"># The Gatehouse's suite, against Jev</span>
+<span class="f">npm</span> run eval <span class="n">--</span> evals/goblin-camp.json    <span class="c"># another suite</span>
+<span class="f">npm</span> run eval <span class="n">--</span> <span class="n">--all</span>                     <span class="c"># every suite (about 110 Jev calls)</span>
+<span class="f">npm</span> run eval <span class="n">--</span> <span class="n">--all</span> <span class="n">--repeats</span> 10        <span class="c"># and check every scripted verdict is reliable</span>
+<span class="f">npm</span> run eval <span class="n">--</span> <span class="n">--mock</span>                    <span class="c"># the keyword mock's baseline</span></code></pre>
       <p>The keyword mock scores lower than Jev on these suites, mostly because it can't know synonyms: "telescope" doesn't match "spyglass".</p>
       <h3>Playtest transcripts</h3>
       <p>Real players try things you won't think of. To collect playtests, tick <strong>Record playtest</strong> in the <a href="play/">web demo</a> and press <strong>Save transcript</strong> when you're done, or play in a terminal with <code>npx honeytongue --transcript play.json</code>. Recording is off by default, and nothing is sent anywhere: the player saves the file themselves. Each turn records what was typed, the action chosen, the verdict, the score and threshold, the tells triggered, the patience left, and the flags and items the player had, along with the Honeytongue version and the scene. It never includes API keys.</p>

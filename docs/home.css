@@ -20,7 +20,15 @@
 .nowrap { white-space: nowrap; }
 
 .transcript { margin: 0; }
-.transcript .room-name { color: var(--bright); font-weight: 600; margin-bottom: 0.25rem; }
+/* The scene's name as a title card, and replies as the demo shows them */
+.transcript .room-name {
+  display: flex; align-items: center; gap: 0.75rem; margin: 0 0 0.9rem;
+  font: 400 1.6rem/1 var(--pixel); color: var(--bright); text-transform: uppercase; letter-spacing: 0.06em; text-shadow: var(--glow-strong);
+}
+.transcript .room-name::before, .transcript .room-name::after { content: ""; flex: 1; border-top: 3px double var(--line); }
+.transcript .readout { margin-top: 0.1rem; }
+.transcript .reply { margin: 0.2rem 0 0; }
+.transcript .reply p { margin: 0; }
 .transcript .turn:first-of-type .cmd { margin-top: 0.5rem; }
 .caption { font-size: 0.85rem; color: var(--dim); margin: 1rem 0 0; padding-top: 0.75rem; border-top: 1px dashed var(--line); }
 @media (prefers-reduced-motion: no-preference) {
@@ -41,13 +49,30 @@ nav.exits a[aria-current] { color: var(--bright); }
 nav.exits a[aria-current]::before { content: ">\00a0"; }
 nav.exits a:hover { color: var(--bg); }
 main { max-width: 72ch; min-width: 0; }
-section { padding-top: 2.75rem; }
+/* Sections: room to breathe, and a header with a marker and a rule, so long pages are easy to scan. */
+section { padding-top: 3.75rem; }
+main section > h2 { font-size: 2.6rem; padding-bottom: 0.55rem; border-bottom: 1px dashed var(--line); margin-bottom: 1.25rem; }
+main section > h2::before {
+  content: ""; display: inline-block; width: 0.32em; height: 0.42em; margin-right: 0.45rem; vertical-align: 0.12em;
+  background: var(--dim); clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+main h3 { margin-top: 2.25rem; }
 .faq h3::before { content: "> "; color: var(--dim); }
-/* Parts of the docs, simplest first: a divider before each group of sections, and a matching label in the exits. */
-.part { margin: 3.5rem 0 0; padding-top: 0.9rem; border-top: 3px double var(--line); font: 400 1.5rem/1.2 var(--pixel); color: var(--dim); }
+/* Parts of the docs, simplest first: a title card with the logo before each group of sections, and a matching
+   label in the exits. The logo is a background image and the rule a border, so no extra font or markup is needed. */
+.part { margin: 5rem 0 0; }
 .part p { margin: 0; }
-.part p.dim { font: 400 0.95rem/1.6 var(--mono); margin-top: 0.4rem; }
-.part + section { padding-top: 1rem; }
+p.part, div.part > p:first-child {
+  display: flex; align-items: center; gap: 0.75rem;
+  font: 400 1.7rem/1 var(--pixel); color: var(--bright); text-transform: uppercase; letter-spacing: 0.08em; text-shadow: var(--glow-strong);
+}
+p.part::before, div.part > p:first-child::before {
+  content: ""; flex: none; width: 32px; height: 32px;
+  background: url("assets/honeytongue-logo-32.png") center / 32px no-repeat; image-rendering: pixelated;
+}
+p.part::after, div.part > p:first-child::after { content: ""; flex: 1; border-top: 3px double var(--line); }
+.part p.dim { font: 400 0.95rem/1.6 var(--mono); margin-top: 0.6rem; }
+.part + section { padding-top: 1.5rem; }
 nav.exits li.group { color: var(--dim); font-size: 0.95rem; margin-top: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
 @media (max-width: 959px) { nav.exits li.group { flex-basis: 100%; } }
 ol.rubric { margin: 0 0 1rem; padding-left: 2rem; }
@@ -60,6 +85,24 @@ table.grid tbody th { text-transform: none; letter-spacing: 0; font-size: 0.8rem
 table.grid tbody th q { display: block; color: var(--fg); font-style: italic; font-size: 0.85rem; margin-top: 0.2rem; }
 table.grid thead th .dim { text-transform: none; letter-spacing: 0; }
 table.grid td .dim { display: block; }
+/* Verdicts in the grid: the words code returns, coloured by verdict. Unconvinced, the most common, is plain text,
+   so the offended and convinced cells stand out. */
+table.grid td .chip { margin: 0 0 0.25rem; text-transform: uppercase; }
+table.grid td .chip.v-unconvinced { border-color: transparent; padding-left: 0; }
+/* The Verdicts table: each verdict in its colour, with a matching rule, and the demo's labels underneath. */
+code.verdict-code { color: var(--mark); border-color: var(--mark); font-weight: 600; }
+tr[class*="v-"] td:first-child { border-left: 3px solid var(--mark); padding-left: 0.6rem; }
+table caption.labels { caption-side: bottom; text-align: left; color: var(--dim); font-size: 0.85rem; padding-top: 0.75rem; }
+table caption.labels .chip { font-size: 0.95rem; margin: 0.15rem 0.25rem 0.15rem 0; }
+
+/* How marked-up story text looks on screen */
+.rendered { background: var(--screen); border: 1px dashed var(--line); padding: 0.55rem 0.9rem; margin: -0.6rem 0 1.4rem; }
+.rendered-label { color: var(--dim); font: 400 1.05rem/1 var(--pixel); letter-spacing: 0.08em; text-transform: uppercase; margin-right: 0.3rem; }
+
+footer::before {
+  content: ""; display: inline-block; width: 20px; height: 20px; margin-right: 0.6rem; vertical-align: -4px;
+  background: url("assets/honeytongue-logo-32.png") center / 20px no-repeat; image-rendering: pixelated;
+}
 
 /* A screenshot in the docs */
 .shot { display: block; max-width: 100%; height: auto; border: 3px double var(--line); image-rendering: pixelated; }

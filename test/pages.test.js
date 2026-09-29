@@ -57,3 +57,25 @@ test("package.json describes the new positioning, with an author and relevant ke
   assert.ok(pkg.keywords.includes("phaser"), "the Phaser example ships, so the keyword can too");
   assert.equal(pkg.bugs.url, "https://github.com/tbrought/honeytongue/issues");
 });
+
+test("the Verdicts table names the labels players see in the demo, so they read as the same verdicts", async () => {
+  const { VERDICT_LABELS } = await import("../docs/play/present.js");
+  const html = read("docs/index.html");
+  const table = html.slice(html.indexOf("<table>", html.indexOf('id="how"')), html.indexOf("</table>", html.indexOf('id="how"')));
+  for (const [verdict, label] of Object.entries(VERDICT_LABELS)) {
+    assert.ok(table.includes(`<code class="verdict-code">${verdict}</code>`), verdict);
+    assert.ok(table.includes(`<span class="chip v-${verdict}">${label}</span>`), `${verdict} is shown to players as ${label}`);
+  }
+});
+
+test("the docs' Twine snippet is the tested recipe's Story JavaScript", () => {
+  const recipe = read("examples/twine-sugarcube.md").replace(/\r\n/g, "\n");
+  const story = recipe.match(/## 1\. Story JavaScript\n\n```js\n([\s\S]*?)\n```/)[1];
+  const html = read("docs/index.html");
+  const section = html.slice(html.indexOf('<section id="twine">'), html.indexOf("</section>", html.indexOf('<section id="twine">')));
+  const snippet = section.match(/<pre[^>]*><code>([\s\S]*?)<\/code><\/pre>/)[1]
+    .replace(/<\/?span[^>]*>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+  assert.equal(snippet, story);
+  for (const text of [recipe, section]) assert.match(text, /Twine 2\.12\.0 with SugarCube 2\.37\.3/, "names the versions it was tested with");
+  assert.match(section, /hasn't been tested inside Twine yet/, "live judging is still marked untested");
+});

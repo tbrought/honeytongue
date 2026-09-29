@@ -1,21 +1,35 @@
 // A small Phaser game with a Honeytongue character: walk to the bridge, read the sign, and talk the troll into
 // letting you cross. Phaser draws the world; Honeytongue judges what you say; this file decides what happens.
 //
-// startGame(Phaser, { parent, createNpc }) needs a <div id="dialogue"> dialogue box on the page (see index.html)
-// and a createNpc() that returns a new Persuadable (see main.js). Everything is drawn with shapes: no image files.
+// startGame(Phaser, { parent, createNpc, assets }) needs a <div id="dialogue"> dialogue box on the page (see
+// index.html), a createNpc() that returns a new Persuadable (see main.js), and the sprites in `assets` (a folder
+// URL, "assets/" by default, relative to the page).
+//
+// Sprites (assets/*.png) by Tristan Broughton, under the project's MIT license. They're 32x32 pixel art, drawn at a
+// whole-number scale with pixelArt on, so they stay crisp. The player faces right and the troll faces left.
 
 const W = 480, H = 270;                                   // the game's size; Phaser scales it to fit the page
-const RIVER = { left: 200, right: 280 };                  // where the water is
-const BRIDGE = { top: 118, bottom: 152 };                 // the band you can cross on, once the troll steps aside
+const SCALE = 2;                                          // sprites are drawn at 2x: 32x32 pixels become 64x64
+const RIVER = { left: 196, right: 292 };                  // where the water is
+const BRIDGE = { left: 184, right: 304, top: 106, bottom: 164 }; // the deck you can cross on, once the troll steps aside
 const SPEED = 90;                                         // walking speed, pixels per second
+const TOP = 1000;                                         // depth for text over the world, in front of every sprite
+// The player's feet (the robe's hem and boots), in pixels from the sprite's centre at 2x, from the art's rows
+// 19 to 28. They decide where the player can stand: on grass, or on the deck once the troll has moved.
+const FEET = { left: -12, right: 14, top: 6, bottom: 24 };
+const SPRITES = { player: "phaser-demo-player-32.png", troll: "phaser-demo-troll-32.png", sign: "phaser-demo-sign-32.png" };
 
-export function startGame(Phaser, { parent, createNpc }) {
+export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
   const box = document.getElementById("dialogue");
   const log = document.getElementById("dialogue-log");
   const form = document.getElementById("dialogue-form");
   const input = document.getElementById("dialogue-input");
 
   class Bridge extends Phaser.Scene {
+    preload() {
+      for (const [key, file] of Object.entries(SPRITES)) if (!this.textures.exists(key)) this.load.image(key, assets + file);
+    }
+
     create() {
       this.npc = createNpc();          // a fresh Persuadable each time the scene starts
       this.passed = false;             // has the troll stepped aside?
@@ -23,25 +37,23 @@ export function startGame(Phaser, { parent, createNpc }) {
       this.ended = false;              // has the player crossed?
       this.target = null;              // where a tap asked the player to walk
 
-      // The world: grass, the river, the bridge, the sign, and the far bank's flag.
+      // The world: grass, the river, the bridge's deck and planks, and the far bank's flag.
+      const deckY = (BRIDGE.top + BRIDGE.bottom) / 2, deckHeight = BRIDGE.bottom - BRIDGE.top;
       this.add.rectangle(W / 2, H / 2, W, H, 0x5a8f3c);
       this.add.rectangle((RIVER.left + RIVER.right) / 2, H / 2, RIVER.right - RIVER.left, H, 0x2f6f9f);
-      this.add.rectangle(240, 135, 100, BRIDGE.bottom - BRIDGE.top, 0x8a5a2b);
-      for (let x = 196; x < 290; x += 10) this.add.rectangle(x, 135, 2, 34, 0x6b4420);
-      this.add.rectangle(160, 112, 4, 24, 0x6b4420);
-      this.sign = this.add.rectangle(160, 100, 26, 14, 0xc89b5c);
+      this.add.rectangle((BRIDGE.left + BRIDGE.right) / 2, deckY, BRIDGE.right - BRIDGE.left, deckHeight, 0x8a5a2b);
+      for (let x = BRIDGE.left + 8; x < BRIDGE.right; x += 12) this.add.rectangle(x, deckY, 2, deckHeight, 0x6b4420);
       this.add.rectangle(440, 118, 3, 30, 0x3a2a14);
       this.add.triangle(452, 110, 0, 0, 22, 7, 0, 14, 0xf2b34d);
 
-      // The troll (a big green block with eyes) and the player (a small amber one).
-      this.troll = this.add.container(240, 128, [
-        this.add.rectangle(0, 0, 30, 38, 0x6b8f3a),
-        this.add.rectangle(-7, -8, 5, 5, 0xffffff), this.add.rectangle(7, -8, 5, 5, 0xffffff),
-        this.add.rectangle(-7, -8, 2, 2, 0x000000), this.add.rectangle(7, -8, 2, 2, 0x000000),
-      ]);
-      this.player = this.add.rectangle(60, 135, 12, 16, 0xf2b34d);
+      // The sign, the troll standing on the bridge, and the player. Whatever stands lower on the screen is drawn in
+      // front (depth follows the feet).
+      this.sign = this.add.image(130, 92, "sign").setScale(SCALE).setDepth(92 + 32);
+      this.troll = this.add.image((RIVER.left + RIVER.right) / 2, deckY, "troll").setScale(SCALE);
+      this.troll.setDepth(this.troll.y + 32);
+      this.player = this.add.image(60, 140, "player").setScale(SCALE);
       this.prompt = this.add.text(0, 0, "", { fontFamily: "VT323, monospace", fontSize: "16px", color: "#ffffff", backgroundColor: "#000000aa" })
-        .setPadding(3, 1).setResolution(4).setVisible(false);
+        .setPadding(3, 1).setResolution(4).setVisible(false).setDepth(TOP);
 
       // Arrow keys or WASD to walk, E, Space, or Enter to read or talk. No key capture, so typing in the box works.
       this.keys = this.input.keyboard.addKeys("W,A,S,D,UP,DOWN,LEFT,RIGHT,E,SPACE,ENTER,R", false);
@@ -54,7 +66,7 @@ export function startGame(Phaser, { parent, createNpc }) {
       this.input.on("pointerdown", (pointer) => {
         if (this.talking) return;
         const near = this.nearby();
-        const tapped = near && Phaser.Math.Distance.Between(pointer.worldX, pointer.worldY, near.x, near.y) < 30;
+        const tapped = near && Phaser.Math.Distance.Between(pointer.worldX, pointer.worldY, near.x, near.y) < 40;
         if (tapped) this.interact(); else this.target = { x: pointer.worldX, y: pointer.worldY };
       });
       form.onsubmit = (event) => { event.preventDefault(); this.say(input.value); };
@@ -64,8 +76,8 @@ export function startGame(Phaser, { parent, createNpc }) {
     /** The sign or the troll, if the player is close enough to use them. */
     nearby() {
       const d = (thing) => Phaser.Math.Distance.Between(this.player.x, this.player.y, thing.x, thing.y);
-      if (d(this.sign) < 34) return { x: this.sign.x, y: this.sign.y, what: "read", thing: "sign" };
-      if (!this.passed && d(this.troll) < 60) return { x: this.troll.x, y: this.troll.y, what: "talk", thing: "troll" };
+      if (d(this.sign) < 56) return { x: this.sign.x, y: this.sign.y, what: "read", thing: "sign" };
+      if (!this.passed && d(this.troll) < 72) return { x: this.troll.x, y: this.troll.y, what: "talk", thing: "troll" };
       return null;
     }
 
@@ -79,17 +91,26 @@ export function startGame(Phaser, { parent, createNpc }) {
         const tx = this.target.x - this.player.x, ty = this.target.y - this.player.y;
         if (Math.hypot(tx, ty) < 3) this.target = null; else [dx, dy] = [tx, ty];
       }
+      if (dx) this.player.setFlipX(dx < 0);   // the art faces right; walking left mirrors it
       const length = Math.hypot(dx, dy) || 1, step = (SPEED * delta) / 1000;
-      let x = this.player.x + (dx / length) * step, y = this.player.y + (dy / length) * step;
-      // The river: impassable, except on the bridge once the troll has stepped aside.
-      const onBridge = y > BRIDGE.top + 8 && y < BRIDGE.bottom - 8;
-      if (x > RIVER.left - 8 && x < RIVER.right + 8 && !(this.passed && onBridge)) x = this.player.x < RIVER.left ? RIVER.left - 8 : RIVER.right + 8;
-      this.player.setPosition(Phaser.Math.Clamp(x, 8, W - 8), Phaser.Math.Clamp(y, 16, H - 10));
+      const x = Phaser.Math.Clamp(this.player.x + (dx / length) * step, 24, W - 24);
+      const y = Phaser.Math.Clamp(this.player.y + (dy / length) * step, 30, H - FEET.bottom - 2);
+      // Move if the feet stay on dry land (or the deck), else slide along the bank, else stay put.
+      const spot = [[x, y], [x, this.player.y], [this.player.x, y]].find(([px, py]) => this.canStand(px, py));
+      if (spot) this.player.setPosition(...spot);
+      this.player.setDepth(this.player.y + FEET.bottom);
 
       const near = this.nearby();
       this.prompt.setVisible(Boolean(near));
-      if (near) this.prompt.setText(`E: ${near.what}`).setPosition(this.player.x - 16, this.player.y - 30);
+      if (near) this.prompt.setText(`E: ${near.what}`).setPosition(this.player.x - 16, Math.max(0, this.player.y - 54));
       if (this.player.x > 430) this.win();
+    }
+
+    /** Can the player stand here? Not with their feet in the river, except on the deck once the troll has moved. */
+    canStand(x, y) {
+      const inWater = x + FEET.right > RIVER.left && x + FEET.left < RIVER.right;
+      const onDeck = y + FEET.top >= BRIDGE.top && y + FEET.bottom <= BRIDGE.bottom;
+      return !inWater || (this.passed && onDeck);
     }
 
     interact() {
@@ -127,14 +148,16 @@ export function startGame(Phaser, { parent, createNpc }) {
 
     stepAside() {
       this.passed = true;
-      this.tweens.add({ targets: this.troll, y: 186, duration: 700, ease: "Sine.easeInOut" });
+      // He climbs down off the deck into the shallows, out of the way (and back under his bridge).
+      this.tweens.add({ targets: this.troll, y: BRIDGE.bottom + 44, duration: 700, ease: "Sine.easeInOut",
+        onUpdate: () => this.troll.setDepth(this.troll.y + 32) });
     }
 
     win() {
       this.ended = true;
-      this.add.rectangle(W / 2, H / 2, 300, 70, 0x000000, 0.75);
+      this.add.rectangle(W / 2, H / 2, 300, 70, 0x000000, 0.75).setDepth(TOP);
       this.add.text(W / 2, H / 2, "You crossed the bridge!\nPress R, or tap, to play again.", { fontFamily: "VT323, monospace", fontSize: "22px", color: "#f2b34d", align: "center" })
-        .setOrigin(0.5).setResolution(4);
+        .setOrigin(0.5).setResolution(4).setDepth(TOP);
       this.input.once("pointerdown", () => this.scene.restart());
     }
 
@@ -170,6 +193,8 @@ export function startGame(Phaser, { parent, createNpc }) {
   const game = new Phaser.Game({
     type: Phaser.AUTO, width: W, height: H, parent, pixelArt: true, backgroundColor: "#000000",
     audio: { noAudio: true },
+    // Load sprites as plain <img> elements, not through blob: URLs, so a strict CSP's img-src 'self' is enough.
+    loader: { imageLoadType: "HTMLImageElement" },
     scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
     scene: [],
   });
