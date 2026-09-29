@@ -16,7 +16,7 @@ Honeytongue was built on an offline mock until September 2026. This is what cali
 | Prompt injection | More than 50 attempts across 16 characters; none won |
 | Consistency | Identical attempts vary by a standard deviation of 0.09 at most; no verdict flipped in 130 repeats |
 | Cost | About 780 tokens per attempt, 1,400 per text adventure turn; about 30 and 50 cents per 10,000 |
-| Speed | About 100 ms median, 150 ms at the 95th percentile |
+| Speed | About 100 ms median, 150 ms at the 95th percentile (our own measurements, on `jev-1.13.0` in September 2026; results vary with network, region, and load) |
 
 The three action misses are reasonable readings: "sing a sea shanty" read as chatting to the guard, a threat to throw Cobb down the stairs as grabbing his key (he's still offended), and flattery aimed at Maude as small talk.
 

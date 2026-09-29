@@ -158,6 +158,8 @@ Work through the phases in order. At the start of each phase, send a short plan 
      - Give the human a matching list of GitHub repository topics (up to 20) and an updated one-line repository description, since only they can set those in the repository's About settings.
 4. **Stable `0.1.0`** (not `1.0`; see "Versioning" under "Releasing"). Remove the alpha notice, switch CDN links from `@alpha` to a `0.1` range, point `latest` at `0.1.0`, and follow the launch checklist under "Releasing".
 
+**In the next npm release, whichever phase it comes from:** add "Built on Jev by TypeSafe AI, and not affiliated with TypeSafe" to the README, as the docs site's footer already says (TypeSafe's terms; see the standing rules).
+
 **Anytime:** the human tests the Twine recipe; you fix what they find.
 
 **After Phase G, once people who don't know the scenes have played:** revisit Nib's patience (3). The human's own playtest isn't good evidence for difficulty, since they wrote the scenes; use playtest transcripts from other players (the web demo's "Record playtest").
