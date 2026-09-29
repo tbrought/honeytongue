@@ -134,6 +134,12 @@ async function run(args, lines) {
       }
       if (debug && result.debug) printDebug(result.debug);
       if (result.text) console.log("\n" + wrap(result.text));
+      // After a failed attempt, say how much patience is left, as the web demo's pips do.
+      const d = result.debug;
+      const npc = game.npc;
+      if (!game.over && npc && ["unconvinced", "offended", "repeated"].includes(d?.verdict) && Number.isFinite(npc.character.patience)) {
+        console.log(`\n(${npc.character.name.split(" ")[0]}'s patience: ${npc.patienceLeft} of ${npc.character.patience} left)`);
+      }
     } catch (err) {
       console.log(`\n(Something went wrong talking to Jev: ${err.message})`);
     }

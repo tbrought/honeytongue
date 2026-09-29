@@ -61,3 +61,11 @@ test("--transcript saves a playtest transcript as you play, and a scene picked f
   assert.equal(bare.code, 1);
   assert.match(bare.stderr, /--transcript needs a file name/);
 });
+
+test("after a failed attempt, the terminal says how much patience is left", async () => {
+  const { stdout } = await play(["--mock"], ["2", "Nib, please let me go", "ask Nib about his stew", "quit"]);
+  assert.match(stdout, /\(Nib's patience: 2 of 3 left\)/);
+  assert.equal(stdout.match(/patience: /g).length, 1, "not after an ordinary action");
+  const cobb = await play(["--mock"], ["4", "Cobb, please light the lamp", "quit"]);
+  assert.match(cobb.stdout, /\(Cobb's patience: 9 of 10 left\)/);
+});
