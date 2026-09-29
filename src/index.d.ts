@@ -89,7 +89,7 @@ export interface Character {
   failCost?: number;
   /** Patience lost per offensive attempt. Default 2. */
   offendedCost?: number;
-  /** How many previous attempts are sent as context. Default 4. */
+  /** How many previous attempts are sent as context. Default 10. */
   memory?: number;
   /** Word overlap (above 0, at most 1) with a failed attempt that counts as repeating. Default 0.8. */
   repeatSimilarity?: number;

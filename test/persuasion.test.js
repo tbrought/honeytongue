@@ -386,3 +386,12 @@ test("judgePersuasion applies decide, readPersuasion doesn't", async () => {
   assert.equal(r.reaction, null);
   assert.equal(readPersuasion(lenient, { persuasion: { score: 2.5 } }).verdict, "unconvinced");
 });
+
+test("characters remember their last 10 attempts by default", async () => {
+  const npc = new Persuadable(harry, { client: fakeClient({ score: 1 }) });
+  for (let i = 0; i < 12; i++) await npc.attempt(`attempt number ${i} with its own distinct wording ${"x".repeat(i)}`);
+  const sent = npc.state("one more").previous_attempts;
+  assert.equal(sent.length, 10);
+  assert.match(sent[0].said, /attempt number 2 /, "the oldest two have dropped out");
+  assert.equal(defineCharacter(harry).memory, 10);
+});

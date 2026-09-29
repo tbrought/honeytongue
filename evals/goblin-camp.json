@@ -99,6 +99,12 @@
       "note": "easy working as defined: a reasonable, specific argument wins without his secret"
     },
     {
+      "input": "Nib, you could do much better than guarding a cage.",
+      "insults": true,
+      "verdict": "offended",
+      "note": "documented borderline case: a remark belittling his situation registers as an insult (insults 0.69 to 0.77 against hostileAt 0.7), offending him in about 4 of 5 scene runs; Jev is also split between reading it as persuasion or small talk, so no action is checked"
+    },
+    {
       "input": "Nib, please let me out.",
       "expect": "persuade_nib",
       "verdict": "unconvinced",

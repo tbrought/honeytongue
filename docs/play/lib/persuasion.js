@@ -32,7 +32,7 @@ const DEFAULTS = {
   patience: Infinity,     // attempts allowed before the character gives up
   failCost: 1,            // patience lost per unconvinced or repeated attempt
   offendedCost: 2,        // patience lost per offensive attempt
-  memory: 4,              // previous attempts sent to Jev as context
+  memory: 10,             // previous attempts sent to Jev as context (4 until 0.1.0-alpha.5: a point could regain full weight once it dropped out)
   repeatSimilarity: 0.8,  // word overlap (0-1) that counts as repeating yourself
   maxInputLength: 500,    // longer input is truncated before it's sent
 };

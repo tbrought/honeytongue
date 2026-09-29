@@ -248,7 +248,14 @@ else say(result.reaction ?? "Harry's hand drops to his club.");</code></pre>
     <section id="patience">
       <h2>Patience</h2>
       <p>Characters have unlimited patience unless you set <code>patience</code>. Each failed or repeated attempt costs 1 and each offensive one costs 2. When <code>patienceLeft</code> reaches 0, <code>outOfPatience</code> is <code>true</code>, and what happens next is up to your game. Patience never drops below zero, and <code>losePatience()</code> with a negative amount restores it, if your game gives the player a second chance.</p>
-      <p>Characters also remember recent attempts, so a player who keeps pushing the same point gets less out of it each time, and a near-exact repeat of a failed argument is caught locally as <code>repeated</code>. The costs and memory settings are in the <a href="#api">reference</a>.</p>
+      <p>Characters remember their last 10 attempts (<code>memory</code>), and Jev sees them with each new one. Live testing of whole conversations showed what that means for players:</p>
+      <ul class="points">
+        <li><strong>A reworded point usually counts for less.</strong> Saying the same thing in new words scored about 0.3 to 0.8 lower for most characters. Not always, though: a character who needs reassurance, like a keeper worried about raiders, can be moved further by hearing it again.</li>
+        <li><strong>A word-for-word repeat is always a repeat.</strong> It's caught locally as <code>repeated</code> and costs patience, even after the player learns something new, so a player who discovers a secret should say what they've learned in new words.</li>
+        <li><strong>No grudges beyond patience.</strong> After flattery or a threat, an honest offer scored as well as it would have on its own. Offence costs patience, not goodwill.</li>
+        <li><strong>Building an argument helps.</strong> Lines that add new information scored higher after a weak opening than they would alone, so a slow start doesn't count against the player.</li>
+      </ul>
+      <p>An attempt older than the last 10 is forgotten, and a reworded version of it is judged fresh again. Raise <code>memory</code> for characters with more patience than that, or lower it to save tokens. The costs and memory settings are in the <a href="#api">reference</a>. In a terminal, <code>npx honeytongue</code> shows the patience left after each failed attempt; the web demo shows it in the status line.</p>
     </section>
 
     <p class="part" aria-hidden="true">Shaping characters</p>
@@ -289,6 +296,7 @@ result.triggered; <span class="c">// ["threats"], so you can narrate it as intim
       <p>Mocking Snag is still <code>offended</code>. Two things to know from live testing:</p>
       <ul class="points">
         <li>A threat worded with contempt ("…or I'll throw you in the river, you worm") usually counts as an insult too, so a character offended only by insults may still be offended by it.</li>
+        <li>Remarks that belittle a character's situation can register as insults. "Nib, you could do much better than guarding a cage" offended Nib in most tests, though it was meant kindly.</li>
         <li>Veiled threats, like "or I'll come back with my friends", may not register as threats. Clear threats and insults score 0.8 to 0.99. Most ordinary lines score under 0.3, though a bribe or a pompous demand can reach about 0.6.</li>
       </ul>
     </section>
@@ -404,7 +412,7 @@ decide: (result, { previousAttempts }) =&gt;
           <tr><td>A text adventure turn</td><td>About 1,350 to 1,500</td><td>100 ms, 150 ms</td><td>About 50 cents</td></tr>
         </tbody>
       </table></div>
-      <p>Repeats are caught locally and cost nothing. To cut tokens further, lower <code>memory</code> (fewer previous attempts sent as context) or <code>maxInputLength</code>.</p>
+      <p>Repeats are caught locally and cost nothing. To cut tokens further, lower <code>memory</code> (each remembered attempt adds about 40 tokens for a short line, so the default 10 adds up to about 400 once a conversation is that long) or <code>maxInputLength</code>.</p>
     </section>
 
     <section id="merging">
@@ -489,7 +497,7 @@ npm run eval -- --mock                    <span class="c"># the keyword mock's b
           <tr><td><code>levels</code></td><td><code>DEFAULT_LEVELS</code></td><td>Your own rubric: 2 to 10 descriptions, weakest first (<a href="#control">Rubrics</a>)</td></tr>
           <tr><td><code>hostileAt</code></td><td>0.7</td><td>How sure Jev must be before a tell counts as triggered, above 0 and at most 1</td></tr>
           <tr><td><code>decide</code></td><td>None</td><td><code>(result, context) =&gt; verdict</code>: your own rule for the final verdict (<a href="#decide">Your own rule</a>)</td></tr>
-          <tr><td><code>memory</code></td><td>4</td><td>Previous attempts sent to Jev as context</td></tr>
+          <tr><td><code>memory</code></td><td>10</td><td>Previous attempts sent to Jev as context; older ones are forgotten</td></tr>
           <tr><td><code>repeatSimilarity</code></td><td>0.8</td><td>Word overlap with a failed attempt that counts as repeating it, above 0 and at most 1</td></tr>
           <tr><td><code>maxInputLength</code></td><td>500</td><td>Longer input is cut to this many characters</td></tr>
         </tbody>
