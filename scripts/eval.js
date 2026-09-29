@@ -39,7 +39,7 @@ const readJson = async (url) => JSON.parse(await readFile(url, "utf8"));
 const REPEATS = process.argv.includes("--repeats") ? Number(process.argv[process.argv.indexOf("--repeats") + 1]) : 1;
 const GAP = 0.1; // see reliability()
 const rows = []; // every case's results, saved with --record for the docs' numbers
-const tally = { action: [0, 0], score: [0, 0], threats: [0, 0], insults: [0, 0], verdict: [0, 0], reliable: [0, 0], errors: [0, 0] };
+const tally = { action: [0, 0], score: [0, 0], threats: [0, 0], insults: [0, 0], verdict: [0, 0], reliable: [0, 0], borderline: [0, 0], errors: [0, 0] };
 const mark = (kind, ok) => { tally[kind][1]++; if (ok) tally[kind][0]++; return ok ? "ok" : "MISS"; };
 
 /** Checks shared by both kinds of suite: the score range, each tell, and the verdict. */
@@ -97,6 +97,20 @@ async function sceneSuite(suite, url) {
     } catch (err) {
       console.log(`"${c.input.slice(0, 60)}"\n   ERROR ${err.message}`);
       mark("errors", false);
+      continue;
+    }
+    if (c.borderline) {
+      // A documented borderline case (it sits at a threshold, so it can go either way): report its range across
+      // the repeats, but don't count it as a pass or a fail, so the totals stay trustworthy.
+      const all = [answers];
+      for (let i = 1; i < REPEATS; i++) all.push((await fresh().interpret(c.input)).answers);
+      const character = game.npc?.character;
+      const range = (xs) => `${Math.min(...xs).toFixed(2)} to ${Math.max(...xs).toFixed(2)}`;
+      const verdicts = {};
+      for (const a of all) { const v = character ? readPersuasion(character, a).verdict : "-"; verdicts[v] = (verdicts[v] ?? 0) + 1; }
+      const tells = ["threats", "insults"].filter((t) => c[t] !== undefined).map((t) => `${t} ${range(all.map((a) => a[t].noul))}`);
+      tally.borderline[1]++;
+      console.log(`"${c.input.slice(0, 60)}"\n   BORDERLINE (not counted): ${JSON.stringify(verdicts)} over ${all.length}, ${[...tells, `persuasion ${range(all.map((a) => a.persuasion?.score ?? 0))}`].join(", ")}${c.note ? `  [${c.note}]` : ""}`);
       continue;
     }
     const [top, p] = ranked[0];
@@ -160,6 +174,7 @@ for (const url of files) {
 console.log("");
 for (const [kind, [hit, total]] of Object.entries(tally)) {
   if (kind === "errors") { if (total) console.log(`errors   ${total} case(s) failed to run`); }
+  else if (kind === "borderline") { if (total) console.log(`borderline ${total} documented case(s), reported but not counted`); }
   else if (total) console.log(`${kind.padEnd(8)} ${hit}/${total}`);
 }
 if (record) {

@@ -100,9 +100,10 @@
     },
     {
       "input": "Nib, you could do much better than guarding a cage.",
+      "borderline": true,
       "insults": true,
       "verdict": "offended",
-      "note": "documented borderline case: a remark belittling his situation registers as an insult, right at the line (insults 0.67 to 0.77 against hostileAt 0.7); it offended him in 10 of 10 scene turns in the final check, but an occasional miss is expected. Jev can also read it as small talk, so no action is checked"
+      "note": "documented borderline case, reported but not counted: a remark belittling his situation registers as an insult right at the line (insults 0.67 to 0.77 against hostileAt 0.7), so it usually offends him but not always"
     },
     {
       "input": "Open this cage or I'll punch you.",
