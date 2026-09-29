@@ -89,6 +89,7 @@ Agent (preparing a release):
    CDN links (docs site, README, `examples/`) load `honeytongue@alpha` while only prereleases exist, because jsDelivr can't resolve a range like `@0.1` to a prerelease. **When `0.1.0` ships, switch them back to a version range such as `@0.1`.**
 4. Move the CHANGELOG's Unreleased entries under a heading with the version and today's UTC date, keeping a "Breaking" heading where needed.
 5. Run `npm pack --dry-run` and check the version and file list (no tests, evals, secrets, or stray files).
+   **If the release changes stories, personas, or scene logic, run a full live rerun first**: `npm run eval -- --all --repeats 10` and `node scripts/live.js routes --repeats 10`, fixing anything that fails. Unit tests run on the mock, so they can't catch a change in how Jev routes or scores a line.
 6. Hand over with a summary and the exact commands for the human's steps.
 
 Human (shipping it):
@@ -99,6 +100,7 @@ Human (shipping it):
 4. `npm whoami`, then `npm publish --tag alpha` for prereleases, or plain `npm publish` for stable releases.
 5. `npm view honeytongue dist-tags` to confirm. npm pointed `latest` at alpha.0 on the first publish, so while there's no stable release, point `latest` at the newest alpha with `npm dist-tag add honeytongue@<version> latest`.
 6. `git tag v<version>` and `git push origin v<version>`, then optionally create a GitHub Release from the tag using the CHANGELOG section, marked as a pre-release for alphas.
+7. **If the release changes the persuasion questions, the stories, or the personas, redeploy the demo Worker** (`honeytongue-demo`) with the new version. It only accepts requests that match its own copy of the library exactly, so an old Worker refuses the new demo's requests, and the demo falls back to the offline mock with a note about the version mismatch.
 
 (Phase D replaces steps 4 to 6 with publishing from GitHub Actions: the human pushes the tag and approves the run.)
 
