@@ -61,14 +61,23 @@ test("the demo scenes' requests to Jev are exactly the same with their markup as
   }
 });
 
-test("everything sent to Jev is stripped at one point, what the player typed included", async () => {
-  const client = recording();
+test("story text sent to Jev is stripped at one point, and what the player typed goes exactly as typed", async () => {
+  // A judge that never convinces, so every line is an unconvinced attempt and the game goes on.
+  const client = fakeClient({ action: "persuade_harry", p: 0.95, score: 0 });
   const game = new Game(tiny(), client);
-  await game.turn("ask @[Harry] about the #[toy horse]");
-  await game.turn("look at the horse");
-  for (const request of client.sent) assert.doesNotMatch(request, /[@#]\[/);
-  assert.match(client.sent[0], /Harry leans on his spear\. A toy horse pokes out/);
-  assert.match(client.sent[0], /"player_input":"ask Harry about the toy horse"/);
+  const typed = ["ask @[Harry] about the #[toy horse] \\@[not markup]", "please @[open] up, #[now]", "what about the <b>weather</b> & #[rain]?"];
+  for (const line of typed) await game.turn(line);
+  assert.equal(client.calls.length, 3, "every line went to Jev");
+  const [first, , third] = client.calls;
+  // Story text: stripped.
+  assert.equal(first.state.scene, 'Harry leans on his spear. A toy horse pokes out of his pocket. "Evening," he says.');
+  assert.doesNotMatch(JSON.stringify(first.questions), /[@#]\[/);
+  // Player text: never read as markup, in any field.
+  assert.equal(first.state.player_input, typed[0]);
+  assert.equal(third.state.player_input, typed[2]);
+  assert.deepEqual(third.state.recent_turns.map((t) => t.player), typed.slice(0, 2));
+  assert.ok(third.state.previous_attempts.some((a) => a.said === typed[1]), "earlier attempts keep their exact words");
+  for (const turn of third.state.recent_turns) assert.doesNotMatch(turn.result, /[@#]\[/, "the engine's replies are plain");
 });
 
 test("result.text stays plain, and result.parts carries the same paragraphs as meaningful pieces", async () => {

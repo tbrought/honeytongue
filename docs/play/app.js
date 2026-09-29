@@ -10,15 +10,21 @@ import { createMockClient } from "./lib/mock.js";
 import { createTranscript, snapshot } from "./lib/transcript.js";
 import { VERSION } from "./lib/version.js";
 import { parseMarkup, stripMarkup } from "./lib/markup.js";
-import { createFallbackClient, TURN_CAP } from "./fallback.js";
-import { VERDICT_LABELS, spokenLabel, typingSpeed, endingSummary, scoreLine } from "./present.js";
+import { createFallbackClient, chooseJudge, TURN_CAP } from "./fallback.js";
+import { typingSpeed, endingSummary } from "./present.js";
+import { makeRenderer } from "./render.js";
 
 const $ = (id) => document.getElementById(id);
 const log = $("log");
 const choices = $("choices");
 const form = $("prompt");
 const input = $("cmd");
-const proxyUrl = document.querySelector('meta[name="honeytongue-proxy"]')?.content.trim();
+// The live proxy, unless the page is being previewed locally, which the proxy would refuse (see chooseJudge).
+const { judge, url: proxyUrl } = chooseJudge({
+  proxyUrl: document.querySelector('meta[name="honeytongue-proxy"]')?.content,
+  hostname: location.hostname,
+  search: location.search,
+});
 let tabStorage = null; // for the live turn count; reading sessionStorage can throw when storage is blocked
 try { tabStorage = sessionStorage; } catch { /* the count then lasts as long as the page */ }
 let fallback = null;  // why the mock is judging instead of Jev, when there's a proxy: { mode, why, err }
@@ -58,15 +64,9 @@ const saveSetting = (key, value) => { try { localStorage.setItem(key, value); } 
 let typedText = setting("honeytongue-typed-text", "on") === "on";
 let crt = setting("honeytongue-crt", "off") === "on";
 
-/** Build an element. Text is always set as text, never parsed as HTML. */
-function el(tag, props = {}, ...children) {
-  const node = document.createElement(tag);
-  Object.assign(node, props);
-  node.append(...children);
-  return node;
-}
+// Every element is built by render.js, which only ever sets text as text, never as HTML.
+const { el, paragraph, titleCard, commandLine, endingScreen } = makeRenderer(document);
 const line = (text, className = "") => log.appendChild(el("p", { className }, text));
-const hidden = (node) => { node.setAttribute("aria-hidden", "true"); return node; };
 
 function meter(score, max, threshold) {
   const m = el("span", { className: "meter", ariaHidden: "true" }, el("i"), el("b"));
@@ -81,38 +81,6 @@ function meter(score, max, threshold) {
 }
 
 // ---- Output ----------------------------------------------------------------------
-
-/** A paragraph's parts as spans, one class per kind: part-character, part-item, part-speech, part-system. */
-function partsNode(parts) {
-  const span = el("span");
-  for (const part of parts) {
-    if (part.kind === "text") span.append(part.text);
-    else span.append(el("span", { className: `part-${part.kind}${part.inSpeech ? " part-in-speech" : ""}` }, part.text));
-  }
-  return span;
-}
-
-/**
- * One paragraph. When it will type out, screen readers get the whole text at once from a hidden copy, and the
- * typing copy is hidden from them. A verdict label goes first, spoken as a word ("Not yet.").
- */
-function paragraph(parts, { verdict, animate, className = "" } = {}) {
-  const p = el("p", { className });
-  const plain = parts.map((x) => x.text).join("");
-  const spoken = verdict ? `${spokenLabel(verdict)} ` : "";
-  const body = partsNode(parts);
-  if (animate) { hidden(body); p.append(el("span", { className: "vh" }, spoken + plain)); }
-  else if (spoken) p.append(el("span", { className: "vh" }, spoken));
-  if (verdict) p.append(hidden(el("span", { className: "chip" }, VERDICT_LABELS[verdict])));
-  p.append(body);
-  return { p, body };
-}
-
-/** A title card for a named scene, as a heading. */
-function titleCard(name) {
-  const rule = () => hidden(el("span", { className: "card-rule" }, "════════════════"));
-  return el("h2", { className: "card" }, rule(), el("span", { className: "card-title" }, name), rule());
-}
 
 // ---- Typed text: never in the way. A click, any key, or a new command shows the rest at once. ----
 let typing = null;
@@ -241,18 +209,11 @@ function showEnding() {
   const who = lastNpc?.character.name.split(" ")[0];
   const stats = [`${moves} ${moves === 1 ? "turn" : "turns"}`, `${attempts} ${attempts === 1 ? "attempt" : "attempts"}`];
   if (lastNpc && Number.isFinite(lastNpc.character.patience)) stats.push(`${who}'s patience ${lastNpc.patienceLeft} of ${lastNpc.character.patience} left`);
-  const quote = (t, note) => el("li", {}, `"${t.input}"`, el("span", { className: "dim" }, note));
-  const again = el("button", { type: "button", className: "key", onclick: () => start() }, "Play again");
-  const section = el("section", { className: "end-screen", ariaLabel: "The end" },
-    hidden(el("p", { className: "ending-mark" }, "*** THE END ***")),
-    el("h2", { className: "ending-title", tabIndex: -1 }, game.scene.ending),
-    el("p", { className: "ending-stats" }, stats.join(" · ")),
-    ...(landed.length ? [el("h3", {}, "Arguments that landed"), el("ol", {}, ...landed.map((t) => quote(t, `Convinced ${who}: ${scoreLine(t)}`)))] : []),
-    ...(closest.length ? [el("h3", {}, "Closest misses"), el("ol", {}, ...closest.map((t) => quote(t, scoreLine(t))))] : []),
-    el("div", { className: "again" }, again,
-      el("a", { href: "#", className: "key" }, "Try another scene"),
-      ...(transcript ? [el("button", { type: "button", className: "key", onclick: () => $("save-transcript").click() }, "Save transcript")] : []),
-      el("a", { href: "../", className: "key" }, "Back to the docs")));
+  const { section, again } = endingScreen({
+    ending: game.scene.ending, stats, landed, closest, who,
+    onPlayAgain: () => start(),
+    onSave: transcript ? () => $("save-transcript").click() : null,
+  });
   log.append(section);
   section.scrollIntoView({ block: "start", behavior: reducedMotion.matches ? "auto" : "smooth" });
   again.focus({ preventScroll: true });
@@ -307,7 +268,7 @@ async function submit(raw) {
   skipTyping();
   if (busy || !game) return;
   const text = String(raw).trim();
-  line(text, "cmd");
+  log.append(commandLine(text));
   if (text && typed[typed.length - 1] !== text) typed.push(text);
   typedAt = typed.length;
 
@@ -446,7 +407,7 @@ function showMode(source) {
   }[fallback.why];
   mode.replaceChildren(live
     ? el("span", {}, el("strong", {}, "Live: "), "Jev judges everything you type, through the Honeytongue proxy. ", privacy())
-    : el("span", {}, el("strong", {}, proxyUrl ? "Offline stand-in. " : "Offline preview. "), why || "", STAND_IN,
+    : el("span", {}, el("strong", {}, judge === "local" ? "Local preview: judged offline. " : proxyUrl ? "Offline stand-in. " : "Offline preview. "), why || "", STAND_IN,
         ...(fallback?.mode === "paused" ? [" ", privacy()] : [])));
 }
 if (proxyUrl && client.turnsUsed >= TURN_CAP) fallback = { mode: "off", why: "cap" }; // used up before a reload

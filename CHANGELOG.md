@@ -18,9 +18,12 @@ Demo polish. Stories can mark who and what matters, the engine says what each pi
   - the meter and patience pips animate when they change;
   - an ending screen with the turns taken, the arguments that landed, and the closest misses.
 
+  Everything the demo shows (story text, replies, what players type, title cards, the ending screen) is inserted as text, never as HTML; a test plays hostile input such as `<img src=x onerror=alert(1)>` through to the ending screen to check it.
+
 ### Changed
 
-- Markup never reaches Jev: the engine strips it from everything it sends, in one place. The four demo scenes are marked up, and stripped they're exactly as before, so Jev, the evals, and the deployed demo proxy see the same requests.
+- Markup never reaches Jev: the engine strips it from the story text it sends, in one place. What players type is never read as markup, and reaches Jev exactly as typed. The four demo scenes are marked up, and stripped they're exactly as before, so Jev, the evals, and the deployed demo proxy see the same requests.
+- **A local preview of the web demo judges offline.** On localhost or 127.0.0.1 the page uses the offline stand-in, with a "Local preview: judged offline" note, instead of calling the live proxy (which refuses local pages). Add `?live` to the address to use the proxy anyway.
 - `Game.intro()` returns plain text, and no longer leaves an extra blank line when a story has no intro.
 - The terminal player's output now includes the verdict labels and title cards, as text, even without colour.
 

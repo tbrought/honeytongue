@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createFallbackClient, whyFailed, TURN_CAP } from "../docs/play/fallback.js";
+import { createFallbackClient, chooseJudge, whyFailed, TURN_CAP } from "../docs/play/fallback.js";
 
 const error = (status, reason) => Object.assign(new Error(`failed ${status}`), { status, reason });
 const answer = (source) => ({ [Symbol.for("honeytongue.source")]: source });
@@ -77,4 +77,16 @@ test("the cap still works when storage is blocked", async () => {
   const { client, calls } = setup({ cap: 2, storage: blocked });
   for (let i = 0; i < 4; i++) await client.ask({}, {});
   assert.deepEqual(calls, { live: 2, mock: 2 });
+});
+
+test("a local preview judges offline instead of calling the live proxy, unless ?live asks for it", () => {
+  const proxyUrl = " https://api.honeytongue.dev/judge ";
+  assert.deepEqual(chooseJudge({ proxyUrl, hostname: "honeytongue.dev" }), { judge: "live", url: "https://api.honeytongue.dev/judge" });
+  assert.deepEqual(chooseJudge({ proxyUrl, hostname: "tbrought.github.io" }).judge, "live");
+  for (const hostname of ["localhost", "127.0.0.1", "[::1]", "0.0.0.0", "demo.localhost"]) {
+    assert.deepEqual(chooseJudge({ proxyUrl, hostname }), { judge: "local", url: "" }, hostname);
+  }
+  assert.equal(chooseJudge({ proxyUrl, hostname: "127.0.0.1", search: "?live" }).judge, "live");
+  assert.deepEqual(chooseJudge({ proxyUrl: "", hostname: "honeytongue.dev" }), { judge: "offline", url: "" });
+  assert.deepEqual(chooseJudge({ proxyUrl: undefined, hostname: "localhost" }), { judge: "offline", url: "" });
 });

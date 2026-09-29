@@ -6,8 +6,9 @@
 //   \@[  \#[            a literal @[ or #[
 //
 // This module only says what each piece of text means. How it looks is up to whoever renders it: the web demo
-// and the terminal player are two examples. Nothing here is sent to Jev: the engine strips markup from everything
-// it sends (see stripMarkupDeep), so Jev judges the same plain text with or without it.
+// and the terminal player are two examples. Markup is never sent to Jev: the engine strips it from the story text
+// it sends (see stripMarkupDeep), so Jev judges the same plain text with or without it. What players type is never
+// read as markup, and goes to Jev exactly as typed.
 
 const OPEN = { "@": "character", "#": "item" };
 

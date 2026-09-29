@@ -19,6 +19,13 @@ const META = {
   impossible: "A clear intention, but it matches none of the other options available here",
 };
 const MAX_ACTIONS = 255 - Object.keys(META).length; // Jev allows 255 options per Choice
+// State fields holding what the player typed: sent exactly as typed, never read as markup. (recent_turns also holds
+// the engine's replies, which are already plain: turns keep result.text.)
+const PLAYER_TEXT = new Set(["player_input", "previous_attempts", "recent_turns"]);
+
+/** A request's state for Jev: story text with its markup stripped, and what the player typed left exactly as it is. */
+const stateForJev = (state) =>
+  Object.fromEntries(Object.entries(state).map(([key, value]) => [key, PLAYER_TEXT.has(key) ? value : stripMarkupDeep(value)]));
 
 // Answers to "Did you mean: 1) ... 2) ...?"
 const PICKS = [
@@ -271,9 +278,9 @@ export class Game {
 
   /** Ask Jev what the player meant. `ranked` only contains real options, most likely first. */
   async interpret(input) {
-    // The one place the engine talks to Jev. Markup is for display only, so it's stripped from everything sent
-    // (what the player typed included): Jev judges the same plain text with or without it.
-    const answers = await this.jev.ask(stripMarkupDeep(this.buildState(input)), stripMarkupDeep(this.buildQuestions()));
+    // The one place the engine talks to Jev. Markup is for display only, so it's stripped from all the story text
+    // sent: Jev judges the same plain text with or without it. What the player typed goes exactly as typed.
+    const answers = await this.jev.ask(stateForJev(this.buildState(input)), stripMarkupDeep(this.buildQuestions()));
     const known = (id) => has(this.scene.actions, id) || has(META, id);
     const action = answers?.action;
     const ranked = Object.entries(action?.probabilities ?? {})

@@ -7,6 +7,22 @@
 //   again after about a minute.
 // - After TURN_CAP live turns in this tab, the mock judges from then on, so one visitor can't spend the demo's credit.
 
+/** Addresses a page is served from when someone previews the site on their own computer. */
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]", "::1", "0.0.0.0"]);
+
+/**
+ * Which judge the page uses: "live" (the proxy in the page's honeytongue-proxy meta tag), "offline" (no proxy set),
+ * or "local" (previewing on this computer, which the live proxy would refuse, so the stand-in judges instead).
+ * Adding ?live to a local address uses the proxy anyway, for testing one that accepts it.
+ */
+export function chooseJudge({ proxyUrl, hostname = "", search = "" }) {
+  const url = String(proxyUrl ?? "").trim();
+  if (!url) return { judge: "offline", url: "" };
+  const local = LOCAL_HOSTS.has(hostname) || hostname.endsWith(".localhost");
+  if (local && !new URLSearchParams(search).has("live")) return { judge: "local", url: "" };
+  return { judge: "live", url };
+}
+
 export const TURN_CAP = 50;
 export const RETRY_AFTER_MS = 60_000;
 const COUNT_KEY = "honeytongue-live-turns";

@@ -81,6 +81,10 @@ Once the check passes, the agent prepares a one-line pull request that puts the 
 
 It only changes the website, so it needs no npm release. Once it's merged and GitHub Pages updates, the demo's banner says "Live", with the privacy note.
 
+## Testing the page locally
+
+When the demo page runs on `localhost` or `127.0.0.1` (for example with `npx serve docs`), it judges offline with a "Local preview" note instead of calling the proxy, which refuses local pages. To test against a proxy that accepts your local address, add `?live` to the page's address.
+
 ## Later
 
 - **Every release that changes the persuasion questions, the stories, or the personas:** deploy the Worker again from the release's commit, then rerun the check script (Releasing, step 7). Until you do, the demo explains the version mismatch and uses the offline stand-in.
