@@ -98,7 +98,7 @@ Human (shipping it):
 ## Current status and known unknowns
 
 - Local verification and CI are done (2026-09-25): unit tests pass on Node 18, 20, 22, and 24 (`node --test` counts every file under `test/`, including `test/helpers.js`). Keyword mock baseline across every eval suite (2026-09-26): action 52/62, score 19/19, tells 15/16, verdict 38/38 (The Gatehouse alone: action 15/17, score 7/7, tells 2/2). The action misses are synonyms a keyword matcher can't know.
-- **TypeSafe paused new signups on 2026-09-24, so there is no API key yet.** While waiting, the work that doesn't need Jev was done: a bug and edge-case pass over every module (see `CHANGELOG.md`), the docs site restyle and mobile/dark-mode check, and the browser demo (it runs on the offline mock, and the docs hero links it as an "offline preview"). See "Roadmap" for what's next.
+- **The human has a TypeSafe API key as of 2026-09-28** (signups had been paused since 2026-09-24, so everything up to `0.1.0-alpha.3` was built on the offline mock). Live validation is Phase F; see "Roadmap".
 - The public web demo and the hosted playground run on the mock, so the mock must be able to win each scene the way the story intends. `test/scenes.test.js` plays each scene's talking route to its success ending, and its non-talking route to its ending, on the mock; keep mock changes generic, never tuned to one story's wording or the eval set.
 - **Nothing has been run against live Jev yet.** The client was written from the API docs, and now checks every response's shape so a mismatch fails with a clear message. Thresholds, rubric wording, and the default levels are guesses until real evals run.
 - The Twine recipe (`examples/twine-sugarcube.md`) is untested inside Twine.
@@ -112,35 +112,32 @@ Work through the phases in order. At the start of each phase, send a short plan 
 
 **Done:**
 - Phase A, character settings (`0.1.0-alpha.1`).
-- The mock fix and Phase B, the character playground (`0.1.0-alpha.2`): `npx honeytongue playground`, a local server that judges with the developer's own key, and the hosted designer at `docs/playground/`, a mock-only preview.
-- Phase C, new scenes (`0.1.0-alpha.3`): The Goblin Camp (Nib, easy, offended by insults), The Tidy Profit (Maude, hard, offended by threats), and The Dark Lighthouse (Cobb, default settings, patience 10), with The Gatehouse kept as the introductory scene. Also the web demo's scene picker, the CLI's scene menu, an eval suite per scene, mock route tests per scene, and the "Same words, different people" showcase.
+- The mock fix and Phase B, the character playground (`0.1.0-alpha.2`).
+- Phase C, scenes and the "Same words, different people" showcase (`0.1.0-alpha.3`).
 
-**Phase D: Quality.**
-- A type test using `tsc --noEmit` in CI.
-- A CI check that `npm run build:demo` leaves `docs/` unchanged.
-- CI on Node 22 and 24, with `engines` raised to `>=20`.
+**In order from here:**
 
-**Phase E: Positioning** (release as `0.1.0-alpha.4`).
-- Reposition from "text games" to "any game where players type or speak to characters", across the README, docs site, and package description.
-- Add a Phaser example showing an NPC in a visual web game.
+1. **Phase F, live Jev validation** (now, `0.1.0-alpha.4`, branch `feature/live-validation`). The human sets `TYPESAFE_API_KEY` (a key named `honeytongue-local-dev`) themselves; never ask them to paste it, and never print, log, or write it anywhere. Keep a running total of tokens used and report it at each stop.
+   - Step 1, smoke test: one minimal request, confirming the real response matches `src/jev.js` for all three question types (fields, probabilities, legend, usage), with latency and tokens. Stop and report any mismatch before fixing.
+   - Step 2, measure: every eval suite (`npm run eval -- --all`), by question type next to the mock baseline, listing every miss; and each scene's talking and non-talking routes played through the engine.
+   - Step 3, consistency: ten varied lines, each sent ten times to the same character, with the spread of scores and tell probabilities.
+   - Step 4, cost and speed: tokens and latency per call (median and 95th percentile) for a standalone attempt and an engine turn, checking the "under 1,000 tokens" claim.
+   - **Stop** with findings and proposed changes backed by the data (difficulty fractions, default rubric wording, `hostileAt`, question wording, personas and thresholds in the story files, the engine's parser thresholds). Change nothing yet.
+   - Step 5, after approval: make the changes, rerun the affected evals, replace every illustrative score with real results (showcase grid, docs hero, README), update the alpha notice, record the key numbers here, commit a readable summary to `docs/live-results.md` (raw outputs stay out of git), then prepare `0.1.0-alpha.4`.
+2. **Phase G, live demo.** An `allowedCharacters` option on `createProxyHandler`, so the public proxy only judges the demo's own characters; a per-session turn cap (around 50); the web demo falling back to the offline mock with a friendly note when the proxy errors, rate-limits, or runs out of credit; and wiring the demo to the proxy URL. The human deploys the proxy with a separate key and a spending ceiling.
+3. **Phase D, quality.** A type test (`tsc --noEmit`) in CI, a CI check that `npm run build:demo` leaves `docs/` unchanged, a package smoke test, CI on Node 20, 22, and 24 on Ubuntu and Windows (with `engines` raised to match), `.gitattributes`, README badges, and `SECURITY.md`.
+4. **Phase E, positioning.** Reposition from "text games" to any game where players type or speak to characters, and add a Phaser example showing an NPC in a visual web game.
+5. **Stable `0.1.0`.** Remove the alpha notice, switch CDN links from `@alpha` to a `0.1` range, and point `latest` at `0.1.0`.
 
-**Twine:** the human builds a small SugarCube story using the local mock proxy (`npm run proxy`); you fix what they find.
+**Anytime:** the human tests the Twine recipe; you fix what they find.
 
-**Waiting on Jev keys:**
-- Live evals. Ask the human to set `TYPESAFE_API_KEY` in the terminal; never ask them to paste it into chat or a file. Make one small live request first and confirm the response shape matches `src/jev.js`. Then run the eval suites (`npm run eval -- --all`) and report every miss. Tune personas, rubric levels, and thresholds in the story files (not in code), and note typical latency and token usage per call.
-- A score-consistency check: the same input, repeated.
-- Calibrating the difficulty shares and the other defaults in `persuasion.js`, with the human.
-- Replacing the illustrative scores on the docs site with real ones.
-- Deploying the demo proxy, with an `allowedCharacters` option on `createProxyHandler` so the public proxy only forwards requests for the demo's own characters and rejects any other persona. Without it, anyone could use the demo's key to judge characters of their own.
-- Publishing `0.1.0`.
-
-**After launch:** an engine-agnostic persuasion endpoint (send a character and the player's words, get back a verdict), so Unity, Godot, Unreal, and Ren'Py games can use Honeytongue over plain HTTP.
-
-**Deferred until there are real results and user requests:** stages, extra tells, custom tells, closeness labels, rapport.
+**After launch:** an engine-agnostic persuasion endpoint for Unity, Godot, Unreal, and Ren'Py games over plain HTTP. Then stages, extra tells, custom tells, closeness labels, and rapport, only if real results and users call for them.
 
 **Standing rules:**
-- Jev only: don't add support for other AI models. The offline mock stays for tests and offline play.
+- Jev only: no other AI models, including open-weight alternatives. The offline mock stays for tests and offline play.
+- Harry Goatleaf keeps his name.
 - One branch per phase, started from `main` after the previous phase is merged.
+- Stop points before building: send a plan and wait for approval.
 - Follow "Releasing" for each release.
 
 ## Things only the human can do
