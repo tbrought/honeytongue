@@ -1,0 +1,90 @@
+/* The character playground's own styles. */
+
+.pg { padding-top: 2rem; padding-bottom: 2.5rem; }
+.pg h1 { font-size: clamp(2.4rem, 10vw, 3.6rem); line-height: 0.9; margin: 0 0 0.5rem; }
+.pg h2 { font-size: 1.9rem; margin: 0 0 0.75rem; }
+.lede { color: var(--dim); max-width: 70ch; }
+.mode { border: 1px dashed var(--dim); color: var(--dim); padding: 0.5rem 0.8rem; margin: 0 0 1.5rem; font-size: 0.9rem; }
+.mode strong { color: var(--bright); }
+.mode code { white-space: nowrap; }
+
+.panels { display: grid; gap: 2rem; }
+@media (min-width: 900px) {
+  .panels { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  /* The conversation stays in view while the character is edited. */
+  .talk { position: sticky; top: 3.25rem; max-height: calc(100vh - 4rem); display: flex; flex-direction: column; }
+  .talk #attempts { flex: 1; overflow-y: auto; min-height: 6rem; }
+}
+.panel { background: var(--screen); border: 3px double var(--line); padding: 1rem 1.1rem 1.25rem; min-width: 0; }
+
+/* Buttons that look like keys, as in the demo */
+.key {
+  font: 500 0.85rem var(--mono); color: var(--fg); text-shadow: inherit;
+  background: none; border: 1px solid var(--dim); padding: 0.35rem 0.7rem; cursor: pointer; text-align: left;
+}
+.key:hover:not(:disabled) { background: var(--fg); color: var(--bg); text-shadow: none; }
+.key:disabled { opacity: 0.45; cursor: not-allowed; }
+.key.primary { border-width: 2px; color: var(--bright); font-weight: 600; }
+.keys { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 1rem; }
+.keys:last-child { margin-bottom: 0; }
+
+/* Form */
+.field { margin: 0 0 1rem; }
+.field > label, fieldset > legend, .label { display: block; color: var(--bright); font-weight: 500; font-size: 0.9rem; margin: 0 0 0.25rem; }
+.hint { color: var(--dim); font-size: 0.8rem; margin: 0.2rem 0 0; }
+input[type="text"], input[type="number"], textarea, select {
+  width: 100%; font: 400 1rem/1.45 var(--mono); /* 16px or more stops phones zooming in */
+  color: var(--bright); caret-color: var(--bright); text-shadow: inherit;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 0; padding: 0.35rem 0.5rem;
+}
+textarea { resize: vertical; }
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--bright); outline-offset: 0; }
+[aria-invalid="true"] { border-color: var(--bright); border-style: dashed; }
+.error { color: var(--bright); font-size: 0.85rem; margin: 0.25rem 0 0; }
+.error::before { content: "[!] "; font-weight: 600; }
+.error:empty { display: none; }
+.pair { display: grid; gap: 0 1rem; grid-template-columns: 1fr 1fr; }
+@media (max-width: 420px) { .pair { grid-template-columns: 1fr; } }
+fieldset { border: 1px dashed var(--line); margin: 0 0 1rem; padding: 0.5rem 0.75rem 0.75rem; min-width: 0; }
+fieldset > legend { padding: 0 0.3rem; margin: 0; }
+.check { display: inline-flex; align-items: center; gap: 0.45rem; margin-right: 1.25rem; cursor: pointer; }
+.check input { width: 1.05rem; height: 1.05rem; accent-color: var(--fg); margin: 0; }
+.rows { list-style: none; padding: 0; margin: 0 0 0.5rem; }
+.rows > li { border-bottom: 1px dashed var(--line); padding: 0.5rem 0 0.75rem; }
+.row-foot { display: flex; flex-wrap: wrap; align-items: end; gap: 0.5rem 1rem; margin-top: 0.4rem; }
+.row-foot .grow { flex: 1 1 10rem; }
+.row-foot .min { flex: 0 0 6rem; }
+.row-foot label { font-size: 0.8rem; color: var(--dim); }
+details.advanced { border: 1px dashed var(--dim); padding: 0.5rem 0.75rem; margin: 0 0 1rem; }
+details.advanced > summary { cursor: pointer; color: var(--bright); font-weight: 500; }
+details.advanced[open] > summary { margin-bottom: 0.75rem; }
+.presets .key { font-size: 0.8rem; }
+#output { font-size: 0.85rem; min-height: 8rem; margin-top: 0.5rem; white-space: pre; overflow-wrap: normal; }
+
+/* Conversation */
+.stats { color: var(--dim); font-size: 0.85rem; margin: 0 0 0.75rem; }
+.stats strong { color: var(--bright); }
+.notice { border-left: 3px solid var(--dim); padding: 0.1rem 0 0.1rem 0.75rem; color: var(--dim); font-size: 0.9rem; margin: 0 0 1rem; }
+.notice:empty { display: none; }
+#attempts { list-style: none; padding: 0; margin: 0 0 1rem; }
+#attempts:empty::before { content: "Nothing tried yet. Type a line below, as the player would say it."; color: var(--dim); font-size: 0.9rem; }
+.attempt { border-bottom: 1px dashed var(--line); padding: 0 0 0.75rem; margin: 0 0 0.75rem; }
+.attempt .cmd { margin-top: 0; white-space: pre-wrap; }
+.attempt .reaction { margin: 0.35rem 0 0; font-style: italic; }
+.attempt .error { margin: 0.35rem 0 0; }
+.tag { color: var(--dim); }
+.why { margin: 0.35rem 0 0; padding: 0 0 0 0.75rem; border-left: 3px solid var(--line); font-size: 0.85rem; }
+.why p { margin: 0; color: var(--dim); }
+.why q { color: var(--fg); }
+.dist { display: inline-flex; align-items: flex-end; gap: 2px; height: 1.1rem; vertical-align: middle; }
+.dist i { width: 0.55rem; height: max(1px, calc(var(--p, 0) * 100%)); background: var(--lit); }
+.was { opacity: 0.75; }
+.was .meter > i { background: repeating-linear-gradient(90deg, var(--dim) 0 6px, transparent 6px 8px); }
+.meter.small { width: 6rem; }
+.thinking::after { content: "..."; }
+
+#try textarea { min-height: 3.2rem; }
+.try-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.4rem; }
+.count { color: var(--dim); font-size: 0.8rem; }
+
+.keys.spaced { margin-top: 0.6rem; }

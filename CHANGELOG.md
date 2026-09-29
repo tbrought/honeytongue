@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+Website security. The site went out with the pull request; the playground changes ship in the package with the next release.
+
+### Changed
+
+- **The playground's copied code and story JSON write `<` as `\u003c`** (the same character in JavaScript and JSON), so text like `</script>` in a character can't close a `<script>` element if the code is pasted into an HTML page, such as a Twine story's JavaScript. Line separators (U+2028, U+2029) are escaped too.
+- **Every page has a strict Content Security Policy:** scripts and styles only from the site itself (plus Google Fonts), connections only to the site and the demo's proxy, and no inline scripts or styles. The local playground server's policy matches, and also forbids framing.
+
+### Added
+
+- Tests that open playground share links with hostile text in every field, and check it round-trips exactly, is escaped in the copied code, and can't pollute prototypes or add fields; oversized and damaged links fail with a readable error. A test keeps every page's CSP strict and free of inline code.
+
 ## 0.1.0-alpha.8 (2026-09-29)
 
 Demo polish. Stories can mark who and what matters, the engine says what each piece of a reply means, and the web demo and the terminal player each show one way to style it. You bring the styling: nothing in the library says how anything looks.
