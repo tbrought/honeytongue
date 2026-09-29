@@ -22,6 +22,7 @@ test("every page has a strict Content Security Policy", () => {
     assert.deepEqual(csp["style-src"], ["'self'"], `${page}: styles only from the site itself`);
     assert.deepEqual(csp["font-src"], ["'self'"], `${page}: fonts only from the site itself (no Google Fonts)`);
     assert.deepEqual(csp["connect-src"], ["'self'", "https://api.honeytongue.dev"], `${page}: talks only to itself and the demo proxy`);
+    assert.deepEqual(csp["img-src"], ["'self'"], `${page}: images only from the site itself (the favicons are files)`);
     assert.deepEqual(csp["object-src"], ["'none'"], page);
     assert.deepEqual(csp["base-uri"], ["'none'"], page);
     assert.doesNotMatch(JSON.stringify(csp), /unsafe-inline|unsafe-eval|\*/, `${page}: no unsafe-inline, unsafe-eval, or wildcards`);

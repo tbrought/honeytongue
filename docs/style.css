@@ -247,6 +247,11 @@ a:focus-visible { background: var(--fg); color: var(--bg); text-shadow: none; ou
   text-shadow: none;
   font: 400 1.35rem/1.15 var(--pixel);
 }
+/* The logo: pixel art, so it's scaled without smoothing. */
+.logo { image-rendering: pixelated; vertical-align: middle; flex: none; }
+.status .logo { width: 20px; height: 20px; margin-right: 0.4rem; }
+.status .room a .logo { margin-right: 0.45rem; vertical-align: -3px; }
+.logo-big { width: 1.05em; height: 1.05em; margin-right: 0.18em; vertical-align: -0.12em; }
 .status .room { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .status .room a { color: inherit; text-decoration: none; }
 .status .room a:hover { background: none; text-decoration: underline; }
