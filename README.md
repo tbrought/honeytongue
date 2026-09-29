@@ -1,6 +1,6 @@
 # Honeytongue
 
-**Characters your players can actually argue with.** Give a character a name, a persona, and a goal, pass in whatever the player typed, and Honeytongue tells you whether they were convinced, judged by *that character's* values. The same line can win over a greedy merchant and offend an honest guard. It's powered by [Jev](https://docs.typesafe.ai), TypeSafe's typed decision model, and works in any JavaScript game: Node, the browser, Twine, or a Discord bot.
+**Characters your players can actually argue with.** Give a character a name, a persona, and a goal, pass in whatever the player typed, and Honeytongue tells you whether they were convinced, judged by *that character's* values. The same line can win over a greedy merchant and offend an honest guard. It's powered by [Jev](https://docs.typesafe.ai), TypeSafe's typed decision model, and works in any JavaScript game: Node, the browser, Twine, or a Discord bot. It has no dependencies and ships TypeScript types.
 
 **You only need three fields and one method. Everything else is optional.**
 

@@ -154,7 +154,7 @@ table.grid td .dim { display: block; }
   <main>
     <section id="start">
       <h2>Get started</h2>
-      <p><strong>You only need three fields and one method. Everything else is optional.</strong> A character needs a <code>name</code>, a <code>persona</code>, and a <code>goal</code>, and <code>attempt()</code> judges whatever the player typed. Honeytongue runs on <a href="https://docs.typesafe.ai">Jev</a>, a model from TypeSafe that makes typed judgements instead of writing text.</p>
+      <p><strong>You only need three fields and one method. Everything else is optional.</strong> A character needs a <code>name</code>, a <code>persona</code>, and a <code>goal</code>, and <code>attempt()</code> judges whatever the player typed. Honeytongue runs on <a href="https://docs.typesafe.ai">Jev</a>, a model from TypeSafe that makes typed judgements instead of writing text. It has no dependencies and ships TypeScript types.</p>
       <ol class="steps">
         <li>
           <p>You need Node 18 or later. In an empty folder, install the package:</p>
@@ -460,6 +460,7 @@ npm run eval -- evals/goblin-camp.json    <span class="c"># another suite</span>
 npm run eval -- --all                     <span class="c"># every suite (about 90 Jev calls)</span>
 npm run eval -- --all --repeats 10        <span class="c"># and check every scripted verdict is reliable</span>
 npm run eval -- --mock                    <span class="c"># the keyword mock's baseline</span></code></pre>
+      <p>The keyword mock scores lower than Jev on these suites, mostly because it can't know synonyms: "telescope" doesn't match "spyglass".</p>
       <h3>Writing lines that win reliably</h3>
       <p>If your story has a line that's meant to win (or lose), check it the way players meet it, ten times: it should give its intended verdict every time, with its average at least 0.1 from the threshold. The same words score almost the same each time, usually within 0.1, so a line that passes this check is safe. Scores bunch up near the top of the scale, though (the best arguments score about 3.7 to 3.9 out of 4), so a winning line for a hard or very hard character necessarily sits close to its threshold. Repeats are how to check it. <code>--repeats 10</code> does this for every scripted case.</p>
     </section>
