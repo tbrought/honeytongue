@@ -11,7 +11,7 @@ routes = [{ pattern = "api.honeytongue.dev", custom_domain = true }]
 workers_dev = false
 
 [vars]
-# Pages allowed to call the proxy, comma-separated, with no trailing slash. The demo is on honeytongue.dev;
-# tbrought.github.io stays as a fallback while GitHub redirects it. Deploy again after changing this.
-ALLOWED_ORIGINS = "https://honeytongue.dev,https://tbrought.github.io"
+# Pages allowed to call the proxy, comma-separated, with no trailing slash. Deploy again after changing this.
+# (tbrought.github.io was removed in 0.1.0-alpha.11: GitHub redirects it to honeytongue.dev, so no demo page runs there.)
+ALLOWED_ORIGINS = "https://honeytongue.dev"
 # The secret TYPESAFE_API_KEY is set with `npx wrangler secret put`, never here.

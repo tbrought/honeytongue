@@ -3,10 +3,11 @@
 //   node scripts/check-demo-proxy.js https://api.honeytongue.dev/judge
 //   node scripts/check-demo-proxy.js <url> --origin <page origin>     (act as another page; repeat for more)
 //
-// By default it acts as the demo's pages, https://honeytongue.dev and then the fallback https://tbrought.github.io.
-// It checks that each may call the proxy, that other paths, sites, and characters are refused, that the proxy
-// runs this checkout's Honeytongue version, plays one Gatehouse turn as the first page, and makes one attempt on the
-// Phaser example's troll: two live Jev calls (about 2,100 tokens).
+// By default it acts as the demo's page, https://honeytongue.dev. It checks that the page may call the proxy; that
+// other paths, other sites (the old https://tbrought.github.io included), other characters, oversized bodies, and
+// histories longer than the library sends are refused; and that the proxy runs this checkout's Honeytongue version.
+// Then it plays one Gatehouse turn and makes one attempt on the Phaser example's troll: two live Jev calls (about
+// 2,100 tokens). The refusals cost nothing: they never reach Jev.
 import { readFileSync } from "node:fs";
 import { Game, Persuadable, createProxyClient, persuasionQuestions, persuasionState, VERSION } from "../src/index.js";
 import { troll } from "../examples/phaser/character.js";
@@ -14,7 +15,7 @@ import { troll } from "../examples/phaser/character.js";
 const args = process.argv.slice(2);
 const url = args.find((a, i) => !a.startsWith("--") && args[i - 1] !== "--origin");
 const given = args.flatMap((a, i) => (a === "--origin" && args[i + 1] ? [args[i + 1]] : []));
-const origins = given.length ? given : ["https://honeytongue.dev", "https://tbrought.github.io"];
+const origins = given.length ? given : ["https://honeytongue.dev"];
 if (!url) {
   console.error("Usage: node scripts/check-demo-proxy.js <proxy url> [--origin <page origin>]...");
   process.exit(1);
@@ -41,8 +42,20 @@ if (root !== new URL(url).href) {
   report(other.status === 404, "other paths answer 404, so the rate limiting rule sees every request", String(other.status));
 }
 
-const elsewhere = await fetch(url, { method: "POST", headers: { ...json, Origin: "https://elsewhere.example" }, body: "{}" });
-report(elsewhere.status === 403, "other sites are refused", String(elsewhere.status));
+for (const site of ["https://elsewhere.example", "https://tbrought.github.io"]) {
+  const other = await fetch(url, { method: "POST", headers: { ...json, Origin: site }, body: "{}" });
+  report(other.status === 403, `pages on ${site} are refused`, String(other.status));
+}
+
+// Its limits: a body over 15,000 bytes, and more remembered attempts than the library sends (Tolly's memoryLength is
+// 1,500 characters). Neither reaches Jev.
+const huge = await fetch(url, { method: "POST", headers: { ...json, Origin: origin }, body: "x".repeat(15_001) });
+report(huge.status === 413, "bodies over 15,000 bytes are refused", String(huge.status));
+const padded = { state: { ...persuasionState(troll, "Let me cross."), previous_attempts: Array.from({ length: 4 }, (_, i) => ({ said: `${i}`.repeat(450), outcome: "unconvinced" })) },
+  questions: persuasionQuestions(troll), honeytongue: VERSION };
+const long = await fetch(url, { method: "POST", headers: { ...json, Origin: origin }, body: JSON.stringify(padded) });
+const longBody = await long.json().catch(() => ({}));
+report(long.status === 403 && /memoryLength of 1500/.test(longBody.error ?? ""), "histories longer than the library sends are refused, naming the limit", `${long.status} ${longBody.error ?? ""}`.slice(0, 140));
 
 const stranger = { name: "Vesk", persona: "A bored clerk.", goal: "Stamp the form" };
 const client = createProxyClient({ url, maxRetries: 0, fetch: asPage(origin) });

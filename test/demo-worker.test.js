@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { Game, Persuadable, createProxyClient, createMockClient, persuasionQuestions, persuasionState, VERSION } from "../src/index.js";
+import { Game, Persuadable, createProxyClient, createMockClient, persuasionQuestions, persuasionState, defineCharacter, VERSION } from "../src/index.js";
 import { troll } from "../examples/phaser/character.js";
 
 import * as worker from "../examples/demo-worker.js";
@@ -16,9 +16,9 @@ test("the demo Worker bundles exactly the scenes the demo lists", () => {
   assert.deepEqual(worker.DEMO_STORIES.map((s) => s.title), titles);
 });
 
-test("the demo Worker's config: honeytongue.dev first, api.honeytongue.dev as its only address", () => {
+test("the demo Worker's config: honeytongue.dev as its only page, api.honeytongue.dev as its only address", () => {
   assert.match(config, /^name = "honeytongue-demo"$/m);
-  assert.deepEqual(worker.parseOrigins(configOrigins), ["https://honeytongue.dev", "https://tbrought.github.io"]);
+  assert.deepEqual(worker.parseOrigins(configOrigins), ["https://honeytongue.dev"]);
   assert.match(config, /^routes = \[\{ pattern = "api\.honeytongue\.dev", custom_domain = true \}\]$/m);
   assert.match(config, /^workers_dev = false$/m, "a workers.dev address would get round the rate limiting rule");
   // Origins come from the variable, so a new address needs no code change.
@@ -39,10 +39,10 @@ test("the demo Worker judges the demo's turns from its pages, only at /judge, an
     return new Response(JSON.stringify({ model: "jev-1.13.0", answers: await mock.ask(state, questions), usage: {} }), { status: 200 });
   };
   try {
-    for (const origin of ["https://honeytongue.dev", "https://tbrought.github.io"]) {
-      const game = new Game(load("stories/goblin-camp.json"), client(origin));
-      assert.equal((await game.turn("Nib, please let me go")).debug.verdict, "unconvinced", origin);
-    }
+    const played = new Game(load("stories/goblin-camp.json"), client("https://honeytongue.dev"));
+    assert.equal((await played.turn("Nib, please let me go")).debug.verdict, "unconvinced");
+    await assert.rejects(new Game(load("stories/goblin-camp.json"), client("https://tbrought.github.io")).turn("Nib, please let me go"),
+      (e) => e.status === 403, "the old github.io address is no longer allowed");
     const game = new Game(load("stories/goblin-camp.json"), client("https://honeytongue.dev", "https://api.honeytongue.dev/"));
     await assert.rejects(game.turn("Nib, please let me go"), (e) => e.status === 404);
 
@@ -59,6 +59,61 @@ test("the demo Worker judges the demo's turns from its pages, only at /judge, an
     const stranger = { name: "Vesk", persona: "A clerk.", goal: "Stamp the form" };
     await assert.rejects(client("https://honeytongue.dev").ask(persuasionState(stranger, "hi"), persuasionQuestions(stranger)),
       (e) => e.status === 403 && e.reason === "not-allowed" && e.proxyVersion === VERSION);
+  } finally {
+    globalThis.fetch = saved;
+  }
+});
+
+/** The largest request the library can send for the demo: every field a player controls at its limit, in `fill`. */
+function largestRequest(fill, { replies = fill } = {}) {
+  const t = (s, n) => s.repeat(n);
+  const requests = [];
+  for (const story of worker.DEMO_STORIES) {
+    const items = new Set(story.player?.inventory ?? []), flags = new Set(story.player?.flags ?? []);
+    JSON.stringify(story, (k, v) => { if (k === "giveItems") v.forEach((i) => items.add(i)); if (k === "setFlags") v.forEach((f) => flags.add(f)); return v; });
+    for (const r of Game.requests(story)) {
+      const c = r.character;
+      requests.push({ state: { scene: r.scene, player: { inventory: [...items], knows: [...flags] },
+        recent_turns: Array.from({ length: 4 }, () => ({ player: t(fill, story.recentTurnLength ?? 200), result: t(replies, 160) })),
+        ...(c && { ...persuasionState(c, "", { knows: c.secrets.map((s) => s.id) }),
+          previous_attempts: Array.from({ length: c.memory }, () => ({ said: t(fill, Math.floor(c.memoryLength / c.memory)), outcome: "unconvinced" })) }),
+        player_input: t(fill, c?.maxInputLength ?? 500) }, questions: r.questions });
+    }
+  }
+  for (const ch of worker.DEMO_CHARACTERS) {
+    const c = defineCharacter(ch);
+    requests.push({ state: { ...persuasionState(c, "", { knows: c.secrets.map((s) => s.id) }),
+      previous_attempts: Array.from({ length: c.memory }, () => ({ said: t(fill, Math.floor(c.memoryLength / c.memory)), outcome: "unconvinced" })),
+      player_input: t(fill, c.maxInputLength) }, questions: persuasionQuestions(c) });
+  }
+  const bytes = (r) => new TextEncoder().encode(JSON.stringify({ ...r, honeytongue: VERSION })).length;
+  return requests.reduce((a, b) => (bytes(b) > bytes(a) ? b : a));
+}
+
+test("the demo Worker reads at most MAX_BYTES, which fits the largest request the library can send, in any script", async () => {
+  const bytes = (r) => new TextEncoder().encode(JSON.stringify({ ...r, honeytongue: VERSION })).length;
+  // Players writing Japanese (3 bytes a character) at every limit; the replies in recent turns are the stories' own text.
+  const japanese = largestRequest("語", { replies: "r" });
+  assert.ok(bytes(japanese) <= worker.MAX_BYTES * 0.95, `the largest real request is ${bytes(japanese)} bytes, with a margin under ${worker.MAX_BYTES}`);
+  const env = { ALLOWED_ORIGINS: configOrigins, TYPESAFE_API_KEY: "test-key-not-real" };
+  const send = (body) => worker.default.fetch(new Request(URL_, { method: "POST", headers: { Origin: "https://honeytongue.dev" }, body }), env);
+  const saved = globalThis.fetch;
+  const mock = createMockClient();
+  globalThis.fetch = async (url, init) => {
+    const { state, questions } = JSON.parse(init.body);
+    return new Response(JSON.stringify({ model: "jev-1.13.0", answers: await mock.ask(state, questions), usage: {} }), { status: 200 });
+  };
+  try {
+    assert.equal((await send(JSON.stringify({ ...japanese, honeytongue: VERSION }))).status, 200, "the largest real request is judged");
+    const huge = await send("x".repeat(worker.MAX_BYTES + 1));
+    assert.equal(huge.status, 413);
+    assert.match((await huge.json()).error, /maxStateBytes of 15000 bytes/);
+    // Padding a field past what the library sends is refused, even when it fits in the byte limit.
+    const padded = largestRequest("a");
+    padded.state.previous_attempts = Array.from({ length: 4 }, () => ({ said: "a".repeat(450), outcome: "unconvinced" }));
+    const refused = await send(JSON.stringify({ ...padded, honeytongue: VERSION }));
+    assert.equal(refused.status, 403);
+    assert.match((await refused.json()).error, /more than .*memoryLength of 1500/);
   } finally {
     globalThis.fetch = saved;
   }

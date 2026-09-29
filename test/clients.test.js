@@ -124,21 +124,21 @@ const post = (body, headers = {}) => new Request("https://proxy.test/", {
 const valid = { state: { player_input: "hi" }, questions: { persuasion: { type: "score" } } };
 
 test("proxy forwards valid requests", async () => {
-  const handle = createProxyHandler({ client: fakeClient({ score: 2 }) });
+  const handle = createProxyHandler({ dangerouslyAllowAnyRequest: true, client: fakeClient({ score: 2 }) });
   const res = await handle(post(valid));
   assert.equal(res.status, 200);
   assert.equal((await res.json()).answers.persuasion.score, 2);
 });
 
 test("proxy rejects bad input, long input, and wrong methods", async () => {
-  const handle = createProxyHandler({ client: fakeClient() });
+  const handle = createProxyHandler({ dangerouslyAllowAnyRequest: true, client: fakeClient() });
   assert.equal((await handle(new Request("https://proxy.test/"))).status, 405);
   assert.equal((await handle(post({ state: {}, questions: { x: { type: "chat" } } }))).status, 400);
   assert.equal((await handle(post({ ...valid, state: { player_input: "x".repeat(600) } }))).status, 413);
 });
 
 test("proxy rate limits per IP and enforces allowed origins", async () => {
-  const handle = createProxyHandler({ client: fakeClient(), rateLimit: { requests: 2, windowMs: 60_000 }, allowedOrigins: ["https://game.test"] });
+  const handle = createProxyHandler({ dangerouslyAllowAnyRequest: true, client: fakeClient(), rateLimit: { requests: 2, windowMs: 60_000 }, allowedOrigins: ["https://game.test"] });
   const from = { "X-Forwarded-For": "1.2.3.4", Origin: "https://game.test" };
   assert.equal((await handle(post(valid, from))).status, 200);
   assert.equal((await handle(post(valid, from))).status, 200);
@@ -151,14 +151,14 @@ test("proxy rate limits per IP and enforces allowed origins", async () => {
 });
 
 test("with no allowedOrigins, the proxy only serves its own origin", async () => {
-  const handle = createProxyHandler({ client: fakeClient() });
+  const handle = createProxyHandler({ dangerouslyAllowAnyRequest: true, client: fakeClient() });
   assert.equal((await handle(post(valid, { Origin: "https://proxy.test" }))).status, 200);
   assert.equal((await handle(post(valid, { Origin: "https://evil.test" }))).status, 403);
   assert.equal((await handle(post(valid))).status, 200); // no Origin: not a browser, so the rate limit is the guard
 });
 
 test("a forged CF-Connecting-IP header can't dodge the rate limit", async () => {
-  const handle = createProxyHandler({ client: fakeClient(), rateLimit: { requests: 2, windowMs: 60_000 } });
+  const handle = createProxyHandler({ dangerouslyAllowAnyRequest: true, client: fakeClient(), rateLimit: { requests: 2, windowMs: 60_000 } });
   const statuses = [];
   for (let i = 0; i < 4; i++) statuses.push((await handle(post(valid, { "CF-Connecting-IP": `10.0.0.${i}` }))).status);
   assert.deepEqual(statuses, [200, 200, 429, 429]);
@@ -167,7 +167,7 @@ test("a forged CF-Connecting-IP header can't dodge the rate limit", async () => 
 });
 
 test("the proxy can be told how to find the client's address", async () => {
-  const handle = createProxyHandler({ client: fakeClient(), rateLimit: { requests: 1, windowMs: 60_000 }, clientIp: (req, env) => env.ip });
+  const handle = createProxyHandler({ dangerouslyAllowAnyRequest: true, client: fakeClient(), rateLimit: { requests: 1, windowMs: 60_000 }, clientIp: (req, env) => env.ip });
   assert.equal((await handle(post(valid), { ip: "a" })).status, 200);
   assert.equal((await handle(post(valid), { ip: "b" })).status, 200);
   assert.equal((await handle(post(valid), { ip: "a" })).status, 429);
@@ -175,7 +175,7 @@ test("the proxy can be told how to find the client's address", async () => {
 
 test("the proxy rejects oversized and malformed bodies before calling Jev", async () => {
   const client = fakeClient();
-  const handle = createProxyHandler({ client, maxStateBytes: 100 });
+  const handle = createProxyHandler({ dangerouslyAllowAnyRequest: true, client, maxStateBytes: 100 });
   assert.equal((await handle(post({ ...valid, state: { player_input: "é".repeat(60) } }))).status, 413); // 60 characters, 120 bytes
   assert.equal((await handle(post({ state: { a: 1 }, questions: [{ type: "score" }] }))).status, 400);
   assert.equal((await handle(post({ state: null, questions: { q: { type: "score" } } }))).status, 400);
@@ -187,7 +187,7 @@ test("the proxy tells players when Jev is busy", async () => {
   const original = console.error;
   console.error = () => {};
   try {
-    const res = await createProxyHandler({ client: busy })(post(valid));
+    const res = await createProxyHandler({ dangerouslyAllowAnyRequest: true, client: busy })(post(valid));
     assert.equal(res.status, 502);
     assert.match((await res.json()).error, /busy/);
   } finally {
@@ -197,14 +197,14 @@ test("the proxy tells players when Jev is busy", async () => {
 
 test("proxy replies say whether Jev or the mock answered, beside the answers", async () => {
   const tell = { state: { player_input: "hi" }, questions: { threats: { type: "noul" } } };
-  const mock = await (await createProxyHandler({ client: createMockClient() })(post(tell))).json();
+  const mock = await (await createProxyHandler({ dangerouslyAllowAnyRequest: true, client: createMockClient() })(post(tell))).json();
   assert.equal(mock.source, "mock");
   assert.equal("source" in mock.answers, false);
 
   const jev = createJevClient({ apiKey: "k", fetch: async () => ok({ answers: { persuasion: { type: "score", score: 1 } } }) });
-  assert.equal((await (await createProxyHandler({ client: jev })(post(valid))).json()).source, "jev");
+  assert.equal((await (await createProxyHandler({ dangerouslyAllowAnyRequest: true, client: jev })(post(valid))).json()).source, "jev");
   // A client that doesn't say where its answers came from gets no label, not a guess.
-  assert.equal((await (await createProxyHandler({ client: fakeClient() })(post(valid))).json()).source, undefined);
+  assert.equal((await (await createProxyHandler({ dangerouslyAllowAnyRequest: true, client: fakeClient() })(post(valid))).json()).source, undefined);
 });
 
 test("the proxy client reads the source from each reply", async () => {
@@ -226,7 +226,7 @@ test("a proxy with no key and no client returns an error, never the mock", async
   const original = console.error;
   console.error = (...args) => logged.push(args.join(" "));
   try {
-    const res = await createProxyHandler()(post(valid), {});
+    const res = await createProxyHandler({ dangerouslyAllowAnyRequest: true })(post(valid), {});
     const body = await res.json();
     assert.equal(res.status, 502);
     assert.equal(body.answers, undefined);
@@ -246,16 +246,18 @@ test("the engine's debug output says which client answered", async () => {
   assert.equal((await new Game(story, fakeClient()).turn("Chat with Harry")).debug.source, undefined);
 });
 
-test("a worst-case Gatehouse turn fits the proxy's default size limit", () => {
+test("a worst-case Gatehouse turn fits the proxy's default size limit, with the library's caps applied", () => {
   const story = JSON.parse(readFileSync(new URL("../stories/gatehouse.json", import.meta.url), "utf8"));
   const game = new Game(story, createMockClient());
   const long = (c) => c.repeat(500);
-  game.history = Array.from({ length: 4 }, () => ({ player: long("p"), result: "r".repeat(160) }));
-  game.npc.attempts = Array.from({ length: 10 }, (_, i) => ({ said: long(String(i)), outcome: "unconvinced" }));
+  game.history = Array.from({ length: 4 }, () => ({ player: "p".repeat(200), result: "r".repeat(160) }));
+  for (let i = 0; i < 10; i++) game.npc.record(long(String(i)), null); // ten failed 500-character attempts
   game.flags.add("knows_daughter_is_sick");
-  const body = JSON.stringify(stripMarkupDeep({ state: game.buildState(long("x")), questions: game.buildQuestions() }));
+  const state = game.buildState(long("x"));
+  assert.equal(state.previous_attempts.length, 3, "only the latest 1,500 characters of attempts are sent");
+  const body = JSON.stringify(stripMarkupDeep({ state, questions: game.buildQuestions() }));
   const bytes = new TextEncoder().encode(body).length;
-  assert.ok(bytes < 16_000, `worst case is ${bytes} bytes`);
+  assert.ok(bytes < 8_000, `worst case is ${bytes} bytes`);
 });
 
 test("the mock answers threats and insults separately", async () => {
@@ -349,7 +351,7 @@ test("the proxy's model comes from the option, then the Worker's TYPESAFE_MODEL,
     let sent;
     globalThis.fetch = async (url, init) => { sent = JSON.parse(init.body); return ok({ answers: { persuasion: { score: 1 } } }); };
     try {
-      const res = await createProxyHandler(options)(post(body), { TYPESAFE_API_KEY: "k", ...workerEnv });
+      const res = await createProxyHandler({ dangerouslyAllowAnyRequest: true, ...options })(post(body), { TYPESAFE_API_KEY: "k", ...workerEnv });
       assert.equal(res.status, 200);
       return sent.model;
     } finally {
@@ -371,7 +373,7 @@ test("the proxy's model comes from the option, then the Worker's TYPESAFE_MODEL,
 
 test("a full engine turn fits within the proxy's default limits", async () => {
   const story = JSON.parse(readFileSync(new URL("../stories/gatehouse.json", import.meta.url), "utf8"));
-  const handle = createProxyHandler({ client: createMockClient() });
+  const handle = createProxyHandler({ dangerouslyAllowAnyRequest: true, client: createMockClient() });
   const sizes = [];
   const client = createProxyClient({
     url: "https://proxy.test/",

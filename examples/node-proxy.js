@@ -3,40 +3,36 @@
 //   npm run proxy                      (uses the offline mock if TYPESAFE_API_KEY isn't set)
 //   PORT=9000 npm run proxy            (bash)    $env:PORT=9000; npm run proxy   (PowerShell)
 //
-// Then point createProxyClient({ url: "http://localhost:8787" }) at it.
-// Node's http server speaks IncomingMessage, not Request, so this file converts between them.
+// Then point createProxyClient({ url: "http://127.0.0.1:8787" }) at it. It listens on this machine only
+// (127.0.0.1), and only judges the demo scenes and examples/browser.html's character. In your own project, import
+// from "honeytongue/proxy" and allow your own stories or characters.
 
 import { createServer } from "node:http";
-import { createProxyHandler, createMockClient } from "../src/index.js";
+import { createProxyHandler, toNodeListener } from "../src/proxy.js";
+import { createMockClient } from "../src/mock.js";
+import gatehouse from "../stories/gatehouse.json" with { type: "json" };
+import goblinCamp from "../stories/goblin-camp.json" with { type: "json" };
+import tidyProfit from "../stories/tidy-profit.json" with { type: "json" };
+import lighthouse from "../stories/lighthouse.json" with { type: "json" };
+import { harry } from "./harry.js";
 
 const port = Number(process.env.PORT ?? 8787);
 const useMock = !process.env.TYPESAFE_API_KEY;
+const maxStateBytes = 16_000;
 
 const handle = createProxyHandler({
   // Pages allowed to call this proxy. Add your game's address when you serve it from somewhere else.
   allowedOrigins: ["http://localhost:8000", "http://127.0.0.1:8000"],
+  // Only these stories' and characters' requests, so nobody can use your key for other Jev questions.
+  allowedStories: [gatehouse, goblinCamp, tidyProfit, lighthouse],
+  allowedCharacters: [harry],
   client: useMock ? createMockClient() : undefined,
+  maxStateBytes,
   // Nothing sits in front of this server, so use the socket's address, not a header a client could forge.
   clientIp: (request, env) => env.remoteAddress,
 });
 
-createServer(async (req, res) => {
-  try {
-    const chunks = [];
-    for await (const chunk of req) chunks.push(chunk);
-    const request = new Request(`http://${req.headers.host ?? `localhost:${port}`}${req.url}`, {
-      method: req.method,
-      headers: Object.entries(req.headers).map(([k, v]) => [k, Array.isArray(v) ? v.join(", ") : v]),
-      body: ["GET", "HEAD"].includes(req.method) ? undefined : Buffer.concat(chunks),
-    });
-    const response = await handle(request, { remoteAddress: req.socket.remoteAddress });
-    res.writeHead(response.status, Object.fromEntries(response.headers));
-    res.end(Buffer.from(await response.arrayBuffer()));
-  } catch (err) {
-    console.error("node-proxy:", err);
-    res.writeHead(500, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ error: "Proxy error" }));
-  }
-}).listen(port, () => {
-  console.log(`Honeytongue proxy on http://localhost:${port} (${useMock ? "offline mock" : "Jev"})`);
+// toNodeListener turns Node's request into a standard Request, refusing bodies over the limit as they arrive.
+createServer(toNodeListener(handle, { maxBytes: maxStateBytes })).listen(port, "127.0.0.1", () => {
+  console.log(`Honeytongue proxy on http://127.0.0.1:${port} (${useMock ? "offline mock" : "Jev"})`);
 });

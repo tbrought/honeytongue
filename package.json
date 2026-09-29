@@ -1,6 +1,6 @@
 {
   "name": "honeytongue",
-  "version": "0.1.0-alpha.10",
+  "version": "0.1.0-alpha.11",
   "description": "Characters players can actually argue with: a persuasion mechanic for games where players type or speak to NPCs, judged by each character's own values. Powered by Jev.",
   "repository": {
     "type": "git",
@@ -41,7 +41,9 @@
     "build:demo": "node scripts/build-demo.js",
     "typecheck": "node node_modules/typescript/bin/tsc -p typetest",
     "typecheck:oldest": "node node_modules/typescript-5/bin/tsc -p typetest",
-    "check:package": "node scripts/check-package.js"
+    "check:package": "node scripts/check-package.js",
+    "check:browser": "node scripts/browser-check.js",
+    "check:screenshots": "node scripts/check-screenshots.js"
   },
   "engines": {
     "node": ">=22"
@@ -74,8 +76,19 @@
     "src",
     "stories",
     "examples",
+    "!examples/demo-worker.js",
+    "!examples/demo-wrangler.toml",
     "docs/playground",
-    "docs/assets/fonts",
+    "docs/assets/fonts/IBMPlexMono-Regular-Latin1.woff2",
+    "docs/assets/fonts/IBMPlexMono-Regular-Latin2.woff2",
+    "docs/assets/fonts/IBMPlexMono-Medium-Latin1.woff2",
+    "docs/assets/fonts/IBMPlexMono-Medium-Latin2.woff2",
+    "docs/assets/fonts/IBMPlexMono-SemiBold-Latin1.woff2",
+    "docs/assets/fonts/IBMPlexMono-SemiBold-Latin2.woff2",
+    "docs/assets/fonts/vt323-400-latin.woff2",
+    "docs/assets/fonts/vt323-400-latin-ext.woff2",
+    "docs/assets/fonts/IBMPlexMono-OFL.txt",
+    "docs/assets/fonts/VT323-OFL.txt",
     "docs/assets/honeytongue-logo-32.png",
     "docs/assets/honeytongue-logo-192.png",
     "docs/style.css",

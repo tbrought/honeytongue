@@ -1,7 +1,10 @@
 name: test
 
+# Pull requests, and main after a merge. (Pushes to other branches are covered by their pull request, so they
+# don't run the matrix twice.)
 on:
   push:
+    branches: [main]
   pull_request:
 
 permissions:
@@ -64,3 +67,18 @@ jobs:
           fi
       - name: Pack, install, and smoke-test the package
         run: npm run check:package
+
+  browser:
+    name: Browser checks (Chrome)
+    # CSP, XSS, contrast, and the demo and Phaser walk-throughs, in the headless Chrome the runner has installed
+    # (scripts/browser-check.js). No npm ci: the checks have no dependencies.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - run: npm run check:browser

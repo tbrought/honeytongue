@@ -4,7 +4,7 @@
 // attempts (at the character's memory), and the recent turns (at the engine's history). Anything else could turn
 // a public proxy into free access to Jev for any prompt, paid for by the proxy's key.
 
-import { Game, HISTORY, MAX_INPUT, RESULT_LENGTH } from "./engine.js";
+import { Game, HISTORY, MAX_INPUT, RESULT_LENGTH, TURN_INPUT_LENGTH } from "./engine.js";
 import { defineCharacter, persuasionQuestions, persuasionState, HoneytongueError } from "./persuasion.js";
 import { VERSION } from "./version.js";
 
@@ -45,10 +45,10 @@ function exactKeys(value, keys, where) {
   ];
 }
 
-const text = (v, max, where, { empty = true } = {}) =>
+const text = (v, max, where, { empty = true, limit } = {}) =>
   typeof v !== "string" ? [`${where} must be a string`]
     : !empty && !v.trim() ? [`${where} is empty`]
-      : v.length > max ? [`${where} is longer than ${max} characters`] : [];
+      : v.length > max ? [`${where} is longer than ${limit ? `${limit} of ${max}` : max} characters`] : [];
 
 /** The character's part of the state: its description (with learned secrets only), previous attempts, and input. */
 function checkCharacterState(state, c) {
@@ -66,12 +66,19 @@ function checkCharacterState(state, c) {
     attempts.slice(0, c.memory).forEach((a, i) => {
       problems.push(...exactKeys(a, ["said", "outcome"], `previous_attempts[${i}]`));
       if (isObject(a)) {
-        problems.push(...text(a.said, c.maxInputLength, `previous_attempts[${i}].said`));
+        problems.push(...text(a.said, c.maxInputLength, `previous_attempts[${i}].said`, { limit: `${c.name}'s maxInputLength` }));
         if (!OUTCOMES.includes(a.outcome)) problems.push(`previous_attempts[${i}].outcome must be one of ${OUTCOMES.join(", ")}`);
       }
     });
+    const total = attempts.reduce((n, a) => n + (typeof a?.said === "string" ? a.said.length : 0), 0);
+    if (total > c.memoryLength) problems.push(`previous_attempts total ${total} characters, more than ${c.name}'s memoryLength of ${c.memoryLength}`);
   }
-  problems.push(...text(state.player_input, c.maxInputLength, "player_input", { empty: false }));
+  problems.push(...text(state.player_input, c.maxInputLength, "player_input", { empty: false, limit: `${c.name}'s maxInputLength` }));
+  // Extra game state, only for a character that opts in with maxContextLength, and no longer than that as JSON.
+  if (Object.hasOwn(state, "context")) {
+    if (c.maxContextLength === undefined) problems.push(`context isn't allowed for ${c.name}: give the character a maxContextLength to allow it`);
+    else if (JSON.stringify(state.context).length > c.maxContextLength) problems.push(`context is longer than ${c.name}'s maxContextLength of ${c.maxContextLength}`);
+  }
   return problems;
 }
 
@@ -97,14 +104,14 @@ function checkSceneState(state, entry) {
     turns.slice(0, HISTORY).forEach((t, i) => {
       problems.push(...exactKeys(t, ["player", "result"], `recent_turns[${i}]`));
       if (isObject(t)) {
-        problems.push(...text(t.player, MAX_INPUT, `recent_turns[${i}].player`));
-        problems.push(...text(t.result, RESULT_LENGTH, `recent_turns[${i}].result`));
+        problems.push(...text(t.player, entry.turnLength, `recent_turns[${i}].player`, { limit: "the story's recentTurnLength" }));
+        problems.push(...text(t.result, RESULT_LENGTH, `recent_turns[${i}].result`, { limit: "the engine's limit" }));
       }
     });
   }
 
   if (entry.character) problems.push(...checkCharacterState(state, entry.character));
-  else problems.push(...text(state.player_input, MAX_INPUT, "player_input", { empty: false }));
+  else problems.push(...text(state.player_input, MAX_INPUT, "player_input", { empty: false, limit: "the engine's limit" }));
   return problems;
 }
 
@@ -127,7 +134,8 @@ export function createRequestGuard({ allowedStories, allowedCharacters } = {}) {
   };
   for (const story of allowedStories ?? []) {
     const { items, flags } = vocabulary(story);
-    for (const r of Game.requests(story)) add(r.questions, { kind: "scene", scene: r.scene, character: r.character, items, flags });
+    const turnLength = story.recentTurnLength ?? TURN_INPUT_LENGTH;
+    for (const r of Game.requests(story)) add(r.questions, { kind: "scene", scene: r.scene, character: r.character, items, flags, turnLength });
   }
   for (const character of allowedCharacters ?? []) {
     const c = defineCharacter(character);
@@ -152,7 +160,8 @@ export function createRequestGuard({ allowedStories, allowedCharacters } = {}) {
       for (const entry of entries) {
         const found = entry.kind === "scene"
           ? checkSceneState(body.state, entry)
-          : [...exactKeys(body.state, ["character", "previous_attempts", "player_input"], "state"), ...(isObject(body.state) ? checkCharacterState(body.state, entry.character) : [])];
+          : [...exactKeys(body.state, ["character", "previous_attempts", "player_input", ...(Object.hasOwn(body.state ?? {}, "context") ? ["context"] : [])], "state"),
+              ...(isObject(body.state) ? checkCharacterState(body.state, entry.character) : [])];
         if (!found.length) return null;
         if (!problems.length || found.length < problems.length) problems = found;
       }

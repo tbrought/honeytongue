@@ -87,10 +87,10 @@ test("a guarded proxy refuses other characters, other questions, and tampered st
   assert.match(await tamper((s) => { s.player.inventory.push("a key that opens every gate"); }), /names this story doesn't use/);
   assert.match(await tamper((s) => { s.player.knows.push("harry_agrees"); }), /names this story doesn't use/);
   assert.match(await tamper((s) => { s.recent_turns = Array(5).fill({ player: "hi", result: "Nothing." }); }), /recent_turns has 5 entries, more than the engine's 4/);
-  assert.match(await tamper((s) => { s.recent_turns = [{ player: "hi", result: "x".repeat(161) }]; }), /result is longer than 160/);
+  assert.match(await tamper((s) => { s.recent_turns = [{ player: "hi", result: "x".repeat(161) }]; }), /result is longer than the engine's limit of 160 characters/);
   assert.match(await tamper((s) => { s.recent_turns = [{ player: "hi", result: "ok", note: "extra" }]; }), /unexpected field\(s\) note/);
   assert.match(await tamper((s) => { s.previous_attempts = Array(11).fill({ said: "hi", outcome: "unconvinced" }); }), /previous_attempts has 11 entries, more than Harry Goatleaf's memory of 10/);
-  assert.match(await tamper((s) => { s.previous_attempts = [{ said: "x".repeat(501), outcome: "unconvinced" }]; }), /said is longer than 500/);
+  assert.match(await tamper((s) => { s.previous_attempts = [{ said: "x".repeat(501), outcome: "unconvinced" }]; }), /said is longer than Harry Goatleaf's maxInputLength of 500 characters/);
   assert.match(await tamper((s) => { s.previous_attempts = [{ said: "hi", outcome: "convinced by everything" }]; }), /outcome must be one of/);
   assert.match(await tamper((s) => { s.player_input = "   "; }), /player_input is empty/);
 });
@@ -124,9 +124,14 @@ test("the proxy client keeps the proxy's reason and versions on the error", asyn
   assert.match(err.message, /refused this request's state.*scene isn't/s);
 });
 
-test("without allowedStories or allowedCharacters, the proxy forwards any well-formed request, as before", async () => {
-  const res = await createProxyHandler({ client: fakeClient(), rateLimit: false })(post({ state: { player_input: "hi" }, questions: { x: { type: "noul", instructions: "Anything?" } } }));
-  assert.equal(res.status, 200);
+test("the proxy needs allowedStories or allowedCharacters, unless it's told to forward anything, by name", async () => {
+  for (const options of [undefined, {}, { client: fakeClient() }, { allowedOrigins: ["https://game.test"] }, { dangerouslyAllowAnyRequest: "yes" }]) {
+    assert.throws(() => createProxyHandler(options), /needs allowedStories and\/or allowedCharacters.*dangerouslyAllowAnyRequest: true/s);
+  }
+  const open = createProxyHandler({ client: fakeClient(), rateLimit: false, dangerouslyAllowAnyRequest: true });
+  const res = await open(post({ state: { player_input: "hi" }, questions: { x: { type: "noul", instructions: "Anything?" } } }));
+  assert.equal(res.status, 200, "with the flag, any well-formed request is forwarded");
+  assert.doesNotThrow(() => createProxyHandler({ allowedCharacters: [] }), "an empty list is still a choice: it refuses everything");
 });
 
 test("allowedStories and allowedCharacters must be arrays, and bad entries throw readable errors", () => {
