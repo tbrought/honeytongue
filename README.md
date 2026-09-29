@@ -4,7 +4,7 @@
 
 **You only need three fields and one method. Everything else is optional.**
 
-> **Alpha, tested against live Jev.** Version 0.1.0-alpha.4 was calibrated with about 2,600 live calls (see [the results](https://github.com/tbrought/honeytongue/blob/main/docs/live-results.md)). Defaults may still change before 0.1.0.
+> **Alpha, tested against live Jev.** Version 0.1.0-alpha.5 was calibrated with about 5,400 live calls, whole conversations included (see [the results](https://github.com/tbrought/honeytongue/blob/main/docs/live-results.md)). Defaults may still change before 0.1.0.
 
 ## Quick start
 

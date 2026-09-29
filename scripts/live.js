@@ -91,7 +91,7 @@ const ROUTES = {
   "tidy-profit": {
     talk: ["ask Maude about the voyage", "look over the cargo",
       "Maude, honestly: the captain is skimming the crew's shares. Six of his crates aren't on your manifest. Take me aboard and I'll give you the proof."],
-    plain: ["I can prove the captain is stealing from the crew's shares. Give me passage and I'll show you the proof."],
+    plain: ["I can prove the captain is stealing the crew's shares. Give me passage and I'll open his crates in front of you."],
     other: ["examine the crates", "hide in one of the captain's crates"],
   },
   lighthouse: {

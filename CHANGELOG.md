@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-alpha.5 (2026-09-29)
+
+Whole conversations, and real play. Multi-turn calibration against live Jev and the author's first playtests changed how memory, patience, and threats work, and added opt-in playtest transcripts. The findings are in `docs/live-results.md`.
 
 ### Changed
 
@@ -8,12 +10,13 @@
 - **The attempt that uses up a character's last patience shows only their out-of-patience text**, instead of an ordinary reaction ("Go on...") followed by the end of the scene.
 - **Spoken threats are judged as speech in every scene.** "Open the gate or I'll punch you" used to be read as attacking Harry, which ends The Gatehouse; the same happened in The Tidy Profit, and in The Dark Lighthouse threats were read as grabbing the key. Each scene's physical actions now say they mean actually doing it, and each persuasion action lists threatening, so threats go to the character (who may take offence) while physical commands still do what they say. Each scene's suite checks it.
 - **Maude has 5 patience instead of 3**, and her near-miss reaction now says what's missing ("Close. Now tell me what's in it for me, and how you'd prove it."). In a playtest, a good argument (3.44 against her 3.6) came with only one attempt left; with the hint and the extra patience, an improved argument won 10 of 10 times.
-
+- **Maude takes insults as banter, and the docs now say exactly what that means**: she isn't offended by them, but they don't help your case. Her persona now says she likes a bit of cheek and judges what's said, not how politely, which halved what an insult in front of a good argument costs (0.51 to 0.26).
 - **Characters remember their last 10 attempts instead of 4 (`memory`).** Live testing of whole conversations showed that once a point dropped out of a 4-attempt memory, a reworded version of it regained its full weight (2.41 against 2.45 fresh, where inside memory it scored 1.59). With 10, it's discounted as it should be (1.45 against 2.43). Each remembered attempt adds about 40 input tokens for a short line, so long conversations cost a little more. To keep the old behaviour, set `memory: 4`.
 
 ### Added
 
 - After a failed attempt against a character with limited patience, `npx honeytongue` shows how much patience is left, as the web demo's status line does.
+- `scripts/multiturn.js` runs whole conversations with each demo character against live Jev (building an argument, switching tactics, rephrasing, returning after learning a secret, and running out of patience), each line also scored fresh for comparison. Each scene's suite gains the author's playtest lines and checks that spoken threats are judged as speech.
 - Docs on how conversations work: reworded points usually count for less (but reassurance can help some characters), word-for-word repeats are always repeats, characters hold no grudges beyond the patience cost, building an argument helps, the memory limit, and that remarks belittling a character's situation can register as insults.
 
 - Playtest transcripts, off by default: tick "Record playtest" in the web demo and press "Save transcript", or play with `npx honeytongue --transcript play.json`. Each turn records the input, the action chosen, the verdict, the score and threshold, the tells triggered, the patience left, and the flags and items the player had, with the Honeytongue version, the scene, and a `formatVersion`. Nothing is sent anywhere, and no keys are included. `scripts/transcript-to-evals.js` turns a transcript into draft eval cases for review.

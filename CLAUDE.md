@@ -123,7 +123,7 @@ Human (shipping it):
 - The public web demo and the hosted playground run on the mock, so the mock must be able to win each scene the way the story intends. `test/scenes.test.js` plays each scene's talking route to its success ending, and its non-talking route to its ending, on the mock; keep mock changes generic, never tuned to one story's wording or the eval set.
 - The Twine recipe (`examples/twine-sugarcube.md`) is untested inside Twine.
 - **Harry Goatleaf keeps his name.** It's a deliberate nod to Tolkien, and the human has settled it: don't rename him or suggest renaming him. Every other character, place, and line should be original; web-search any new character's full name before proposing it.
-- The repository is github.com/tbrought/honeytongue (the site will be tbrought.github.io/honeytongue). The latest release is `0.1.0-alpha.4` (prepared 2026-09-28: live calibration and the docs restructure; alpha.3, the scenes, is published).
+- The repository is github.com/tbrought/honeytongue (the site will be tbrought.github.io/honeytongue). The latest release is `0.1.0-alpha.5` (prepared 2026-09-29: multi-turn calibration, playtest transcripts, memory 10, one penalty per turn, spoken threats judged as speech, and Maude's patience 5; alpha.4 is published).
 - Character settings: `difficulty` maps a word to a share of the top rubric level (`DIFFICULTY` in `persuasion.js`). `offendedBy` picks which tells offend; tells not in it are left to the persona. Results carry `tells` and `triggered`. `decide(result, context)` is a synchronous character hook applied in `record()` and `judgePersuasion()`, not `readPersuasion()`. Don't add stages, extra or custom tells, or closeness labels until multi-turn results and users call for them.
 ## Roadmap
 
@@ -134,30 +134,23 @@ Work through the phases in order. At the start of each phase, send a short plan 
 - The mock fix and Phase B, the character playground (`0.1.0-alpha.2`).
 - Phase C, scenes and the "Same words, different people" showcase (`0.1.0-alpha.3`).
 - Phase F, live Jev validation (`0.1.0-alpha.4`): calibration, rubric C, secrets sent only once learned, the reliability rule, and the docs restructured from simple to advanced. See `docs/live-results.md`.
+- Multi-turn calibration and playtest tooling (`0.1.0-alpha.5`): opt-in transcripts, memory 10, one penalty per turn, the out-of-patience text alone on the last turn, spoken threats judged as speech, patience shown in the terminal, and Maude's patience and banter.
 
 **In order from here:**
 
-1. **Multi-turn calibration and playtest tooling** (after `0.1.0-alpha.4` is handed over, before Phase G). So far the tests have mostly been single lines; test whole conversations, as engine turns in the scenes and as standalone attempts on the playground presets, 5 runs each:
-   - Building: a weak opening, then lines that add new information. Do scores rise as the argument improves, or does the weak start drag them down?
-   - Switching tactics: flattery, then a threat, then an honest offer. Does the earlier history help, hurt, or not matter?
-   - Rephrasing: the same point reworded three ways, each just different enough to pass the local repeat check. Does Jev give it less weight each time, as the docs claim?
-   - Returning: a line that failed early, repeated after the player learns the secret. Does it now win?
-   - Patience: does each scene run out of patience at a point that feels fair?
-   - Report whether memory behaves as the docs describe, flag anything that would feel unfair to a player, and propose changes only if the data shows a real problem.
-   - An opt-in transcript export in the web demo and the CLI (off by default, nothing sent anywhere), so the human can collect playtests from friends for you to turn into eval cases.
-2. **Phase G, live demo.** An `allowedCharacters` option on `createProxyHandler`, so the public proxy only judges the demo's own characters; a per-session turn cap (around 50); the web demo falling back to the offline mock with a friendly note when the proxy errors, rate-limits, or runs out of credit; and wiring the demo to the proxy URL. The human deploys the proxy with a separate key and a spending ceiling.
-3. **Phase D, quality.** A type test (`tsc --noEmit`) in CI, a CI check that `npm run build:demo` leaves `docs/` unchanged, a package smoke test, CI on Node 20, 22, and 24 on Ubuntu and Windows (with `engines` raised to match), `.gitattributes`, README badges, and `SECURITY.md`.
+1. **Phase G, live demo.** An `allowedCharacters` option on `createProxyHandler`, so the public proxy only judges the demo's own characters; a per-session turn cap (around 50); the web demo falling back to the offline mock with a friendly note when the proxy errors, rate-limits, or runs out of credit; and wiring the demo to the proxy URL. The human deploys the proxy with a separate key and a spending ceiling.
+2. **Phase D, quality.** A type test (`tsc --noEmit`) in CI, a CI check that `npm run build:demo` leaves `docs/` unchanged, a package smoke test, CI on Node 20, 22, and 24 on Ubuntu and Windows (with `engines` raised to match), `.gitattributes`, README badges, and `SECURITY.md`.
    - Publishing from GitHub Actions with npm trusted publishing (OIDC) and provenance, instead of from the human's laptop, so no long-lived npm token is stored anywhere. A release workflow triggered by pushing a version tag (`v*`) runs the full test suite, the typecheck, and the package check, then publishes prereleases with `--tag alpha` and stable versions as `latest`. It waits for the human's approval through a protected GitHub environment before publishing.
    - Tell the human exactly what to configure on npmjs.com (the trusted publisher) and in GitHub's settings (the protected environment and its reviewers), since only they can.
    - Update "Releasing" to match: the human's steps become pushing the tag and approving the run, instead of running `npm publish`.
-4. **Phase E, positioning.** Reposition from "text games" to any game where players type or speak to characters, and add a Phaser example showing an NPC in a visual web game.
+3. **Phase E, positioning.** Reposition from "text games" to any game where players type or speak to characters, and add a Phaser example showing an NPC in a visual web game.
    - **Discoverability.** npm search weighs the name, description, and keywords, so expand `package.json`'s `keywords` and update its `description` to match the new positioning at the same time.
      - Keep the list relevant and honest: only terms for things Honeytongue supports at that release. Around 20 keywords at most, all lowercase and hyphenated.
      - Starting list to refine: persuasion, npc, npc-dialogue, dialogue, dialogue-system, game-mechanic, gamedev, rpg, charisma, charisma-check, speech-check, social-mechanic, text-game, text-based-game, text-adventure, interactive-fiction, twine, sugarcube, browser-game, ai-npc, jev, typesafe.
      - Add `phaser` only once the Phaser example ships in that same release. Don't add unity, godot, unreal, renpy, or visual-novel until the engine-agnostic endpoint exists.
      - Check each term against what's already popular on npm (for example, `gamedev` or `game-dev`) and prefer the more common spelling.
      - Give the human a matching list of GitHub repository topics (up to 20) and an updated one-line repository description, since only they can set those in the repository's About settings.
-5. **Stable `0.1.0`** (not `1.0`; see "Versioning" under "Releasing"). Remove the alpha notice, switch CDN links from `@alpha` to a `0.1` range, point `latest` at `0.1.0`, and follow the launch checklist under "Releasing".
+4. **Stable `0.1.0`** (not `1.0`; see "Versioning" under "Releasing"). Remove the alpha notice, switch CDN links from `@alpha` to a `0.1` range, point `latest` at `0.1.0`, and follow the launch checklist under "Releasing".
 
 **Anytime:** the human tests the Twine recipe; you fix what they find.
 

@@ -66,6 +66,23 @@ Twelve characters written the way other developers might (short and long persona
 
 Ten lines were each sent ten times to Harry, and three lines ten times each as full engine turns. The largest standard deviation was 0.09, most were 0.02 or less, and no verdict flipped. The scene around an engine turn can shift the tells slightly (an insult to Maude scored 0.62 standalone and 0.72 to 0.76 in her scene), so engine turns and standalone attempts aren't interchangeable, but each is stable.
 
+## Conversations and playtests (0.1.0-alpha.5)
+
+Whole conversations with each demo character, 5 runs each, as standalone attempts and as scene turns, with every line also scored fresh for comparison (1,153 calls), then the author's first four playtests (one per scene, two won and two lost).
+
+| What was tested | What happened | What changed |
+|---|---|---|
+| Building: a weak opening, then lines adding new information | Later lines scored 0.3 to 0.8 higher than they would alone | Nothing; documented |
+| Switching: flattery, a threat, then an honest offer | The honest offer scored as well as it would alone: offence costs patience, not goodwill | Nothing; documented |
+| Rephrasing the same point | Harry and Maude gave it 0.3 to 0.8 less each time; Cobb, who needs reassurance, gave it more | The docs' claim is now precise |
+| Returning to a failed line after learning a secret | Word for word, it's caught as a repeat; letting it through to Jev didn't help, since Jev's memory discounted it too (0 of 20 won either way) | Not adopted; players are told to say what they've learned in new words |
+| A point made again after 4 other attempts | It regained its full weight (2.41 against 2.45 fresh; inside memory, 1.59) | Memory is now 10 attempts: 1.45 against 2.43 |
+| Patience | Maude's and Nib's 3 ran out before a good argument got a second try; in a playtest, Maude's "Close" (3.44 of 3.6) came with one attempt left | Maude 5 and a near miss that says what's missing (then an improved argument won 10 of 10); Nib waits for players who don't know the scenes |
+| Spoken threats (from a playtest) | "…or I'll punch you" was read as attacking, which ends two scenes, and a threat to Cobb as grabbing the key, costing 5 patience in one turn | Descriptions fixed in every scene (all eight threats now go to the character); a turn is charged once, at the larger cost |
+| Maude's banter | An insult in front of her evidence line cost it 0.51 | Persona fix (now 0.26); the claims say she isn't offended by insults, but they don't help |
+
+Final checks for alpha.5: every suite verdict held but one (53 cases; the miss is a documented borderline insult to Nib, which offended him in 10 of 10 scene turns in a separate check), every scripted line was reliable in 10 of 10 repeats (39 suite cases and 8 scene routes), and every spoken threat went to the character.
+
 ## Reproducing
 
 With `TYPESAFE_API_KEY` set:
@@ -75,6 +92,7 @@ npm run eval -- --all --record --repeats 10   # every suite, with the reliabilit
 node scripts/live.js routes --repeats 10      # every scene route
 node scripts/live.js consistency              # ten lines, ten times each
 node scripts/calibrate.js arguments           # difficulty calibration (also secrets, injections, threats, flattery, robustness)
+node scripts/multiturn.js                     # whole conversations with each demo character
 ```
 
 Calls are recorded in `live-runs/` (git-ignored), with a running token total that stops at a budget set in `scripts/live-recorder.js`. `--patch <file>` tries a candidate rubric or persona from `evals/calibration/` before it's adopted.
