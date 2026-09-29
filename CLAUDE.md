@@ -168,6 +168,9 @@ Work through the phases in order. At the start of each phase, send a short plan 
      - Add `phaser` only once the Phaser example ships in that same release. Don't add unity, godot, unreal, renpy, or visual-novel until the engine-agnostic endpoint exists.
      - Check each term against what's already popular on npm (for example, `gamedev` or `game-dev`) and prefer the more common spelling.
      - Give the human a matching list of GitHub repository topics (up to 20) and an updated one-line repository description, since only they can set those in the repository's About settings.
+   - **Self-hosted fonts.** Serve the web fonts (VT323 and IBM Plex Mono) from `docs/assets/` instead of Google Fonts, after checking their licenses allow it (and shipping the license files with them). Then drop Google Fonts from every page's CSP, so fonts and styles load only from 'self', and visitors' browsers no longer contact Google. Update `test/csp.test.js` to expect it.
+   - **Phaser without widening the CSP.** Prefer serving a pinned copy of Phaser from the site itself, so the policy stays 'self'. If a CDN is used instead, allow only that exact URL, on that page only, with an integrity hash (see "Third-party scripts" under the standing rules). `test/csp.test.js` must pass either way.
+   - **Not planned:** clickjacking headers (`frame-ancestors`). GitHub Pages can't send headers, the site's records aren't proxied through Cloudflare, and the site has no logins or sensitive actions, so the risk doesn't justify it.
 2. **Stable `0.1.0`** (not `1.0`; see "Versioning" under "Releasing"). Remove the alpha notice, switch CDN links from `@alpha` to a `0.1` range, point `latest` at `0.1.0`, and follow the launch checklist under "Releasing".
 
 **In the next npm release, whichever phase it comes from:** add "Built on Jev by TypeSafe AI, and not affiliated with TypeSafe" to the README, as the docs site's footer already says (TypeSafe's terms; see the standing rules).
