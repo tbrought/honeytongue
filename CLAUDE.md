@@ -137,23 +137,31 @@ Work through the phases in order. At the start of each phase, send a short plan 
    - Step 4, cost and speed: tokens and latency per call (median and 95th percentile) for a standalone attempt and an engine turn, checking the "under 1,000 tokens" claim.
    - **Stop** with findings and proposed changes backed by the data (difficulty fractions, default rubric wording, `hostileAt`, question wording, personas and thresholds in the story files, the engine's parser thresholds). Change nothing yet.
    - Step 5, after approval: make the changes, rerun the affected evals, replace every illustrative score with real results (showcase grid, docs hero, README), update the alpha notice, record the key numbers here, commit a readable summary to `docs/live-results.md` (raw outputs stay out of git), then prepare `0.1.0-alpha.4`.
-2. **Phase G, live demo.** An `allowedCharacters` option on `createProxyHandler`, so the public proxy only judges the demo's own characters; a per-session turn cap (around 50); the web demo falling back to the offline mock with a friendly note when the proxy errors, rate-limits, or runs out of credit; and wiring the demo to the proxy URL. The human deploys the proxy with a separate key and a spending ceiling.
-3. **Phase D, quality.** A type test (`tsc --noEmit`) in CI, a CI check that `npm run build:demo` leaves `docs/` unchanged, a package smoke test, CI on Node 20, 22, and 24 on Ubuntu and Windows (with `engines` raised to match), `.gitattributes`, README badges, and `SECURITY.md`.
+2. **Multi-turn calibration and playtest tooling** (after `0.1.0-alpha.4` is handed over, before Phase G). So far the tests have mostly been single lines; test whole conversations, as engine turns in the scenes and as standalone attempts on the playground presets, 5 runs each:
+   - Building: a weak opening, then lines that add new information. Do scores rise as the argument improves, or does the weak start drag them down?
+   - Switching tactics: flattery, then a threat, then an honest offer. Does the earlier history help, hurt, or not matter?
+   - Rephrasing: the same point reworded three ways, each just different enough to pass the local repeat check. Does Jev give it less weight each time, as the docs claim?
+   - Returning: a line that failed early, repeated after the player learns the secret. Does it now win?
+   - Patience: does each scene run out of patience at a point that feels fair?
+   - Report whether memory behaves as the docs describe, flag anything that would feel unfair to a player, and propose changes only if the data shows a real problem.
+   - An opt-in transcript export in the web demo and the CLI (off by default, nothing sent anywhere), so the human can collect playtests from friends for you to turn into eval cases.
+3. **Phase G, live demo.** An `allowedCharacters` option on `createProxyHandler`, so the public proxy only judges the demo's own characters; a per-session turn cap (around 50); the web demo falling back to the offline mock with a friendly note when the proxy errors, rate-limits, or runs out of credit; and wiring the demo to the proxy URL. The human deploys the proxy with a separate key and a spending ceiling.
+4. **Phase D, quality.** A type test (`tsc --noEmit`) in CI, a CI check that `npm run build:demo` leaves `docs/` unchanged, a package smoke test, CI on Node 20, 22, and 24 on Ubuntu and Windows (with `engines` raised to match), `.gitattributes`, README badges, and `SECURITY.md`.
    - Publishing from GitHub Actions with npm trusted publishing (OIDC) and provenance, instead of from the human's laptop, so no long-lived npm token is stored anywhere. A release workflow triggered by pushing a version tag (`v*`) runs the full test suite, the typecheck, and the package check, then publishes prereleases with `--tag alpha` and stable versions as `latest`. It waits for the human's approval through a protected GitHub environment before publishing.
    - Tell the human exactly what to configure on npmjs.com (the trusted publisher) and in GitHub's settings (the protected environment and its reviewers), since only they can.
    - Update "Releasing" to match: the human's steps become pushing the tag and approving the run, instead of running `npm publish`.
-4. **Phase E, positioning.** Reposition from "text games" to any game where players type or speak to characters, and add a Phaser example showing an NPC in a visual web game.
+5. **Phase E, positioning.** Reposition from "text games" to any game where players type or speak to characters, and add a Phaser example showing an NPC in a visual web game.
    - **Discoverability.** npm search weighs the name, description, and keywords, so expand `package.json`'s `keywords` and update its `description` to match the new positioning at the same time.
      - Keep the list relevant and honest: only terms for things Honeytongue supports at that release. Around 20 keywords at most, all lowercase and hyphenated.
      - Starting list to refine: persuasion, npc, npc-dialogue, dialogue, dialogue-system, game-mechanic, gamedev, rpg, charisma, charisma-check, speech-check, social-mechanic, text-game, text-based-game, text-adventure, interactive-fiction, twine, sugarcube, browser-game, ai-npc, jev, typesafe.
      - Add `phaser` only once the Phaser example ships in that same release. Don't add unity, godot, unreal, renpy, or visual-novel until the engine-agnostic endpoint exists.
      - Check each term against what's already popular on npm (for example, `gamedev` or `game-dev`) and prefer the more common spelling.
      - Give the human a matching list of GitHub repository topics (up to 20) and an updated one-line repository description, since only they can set those in the repository's About settings.
-5. **Stable `0.1.0`** (not `1.0`; see "Versioning" under "Releasing"). Remove the alpha notice, switch CDN links from `@alpha` to a `0.1` range, point `latest` at `0.1.0`, and follow the launch checklist under "Releasing".
+6. **Stable `0.1.0`** (not `1.0`; see "Versioning" under "Releasing"). Remove the alpha notice, switch CDN links from `@alpha` to a `0.1` range, point `latest` at `0.1.0`, and follow the launch checklist under "Releasing".
 
 **Anytime:** the human tests the Twine recipe; you fix what they find.
 
-**After launch:** an engine-agnostic persuasion endpoint for Unity, Godot, Unreal, and Ren'Py games over plain HTTP. Then stages, extra tells, custom tells, closeness labels, and rapport, only if real results and users call for them.
+**After launch:** persona hints in the playground, gently flagging personas that only describe dislikes and never say what would move the character. An engine-agnostic persuasion endpoint for Unity, Godot, Unreal, and Ren'Py games over plain HTTP. Then stages, extra tells, custom tells, closeness labels, and rapport, only if real results and users call for them.
 
 **Standing rules:**
 - Jev only: no other AI models, including open-weight alternatives. The offline mock stays for tests and offline play.
