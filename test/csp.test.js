@@ -62,7 +62,8 @@ test("Phaser is pinned: the example's CDN script carries an integrity hash that 
   assert.equal(`sha384-${createHash("sha384").update(vendored).digest("base64")}`, integrity, "the site's copy is byte-for-byte the pinned file");
   assert.match(read("docs/phaser/index.html"), new RegExp(`<script src="\\.\\./assets/vendor/phaser-${version.replace(/\./g, "\\.")}\\.min\\.js"></script>`), "the site serves the same version itself");
   assert.ok(existsSync(new URL("../docs/assets/vendor/phaser-LICENSE.md", import.meta.url)), "with its licence");
-  assert.ok(read("docs/index.html").includes(`phaser@${version}/dist/phaser.min.js"
+  // The snippet's text, without the syntax highlighting's spans.
+  assert.ok(read("docs/index.html").replace(/<\/?span[^>]*>/g, "").includes(`phaser@${version}/dist/phaser.min.js"
   integrity="${integrity}"`), "the docs' Visual games snippet shows the same version and hash");
 });
 

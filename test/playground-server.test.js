@@ -117,7 +117,7 @@ test("judging needs this server's token and a same-origin request", async () => 
 test("it serves only the playground's files", async () => {
   await withPlayground({ apiKey: "" }, async ({ port }) => {
     for (const path of ["/playground/", "/playground/app.js", "/playground/designer.js", "/style.css", "/theme.js",
-      "/play/lib/persuasion.js", "/play/lib/jev.js", "/play/lib/mock.js", "/play/lib/version.js", "/play/lib/characters.json"]) {
+      "/play/lib/persuasion.js", "/play/lib/jev.js", "/play/lib/mock.js", "/play/lib/markup.js", "/play/lib/version.js", "/play/lib/characters.json"]) {
       const res = await send(port, { path });
       assert.equal(res.status, 200, path);
       assert.ok(res.headers["content-security-policy"], path);

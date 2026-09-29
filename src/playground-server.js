@@ -30,6 +30,7 @@ const FILES = {
   "/play/lib/persuasion.js": "src/persuasion.js",
   "/play/lib/jev.js": "src/jev.js",
   "/play/lib/mock.js": "src/mock.js",
+  "/play/lib/markup.js": "src/markup.js",
   "/play/lib/version.js": "src/version.js",
   "/play/lib/characters.json": "stories/characters.json",
   // The logo, as the page's favicon, touch icon, and header image.

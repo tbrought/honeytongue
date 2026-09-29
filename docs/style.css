@@ -298,7 +298,23 @@ pre {
   line-height: 1.55;
   color: var(--bright);
 }
-pre .c { color: var(--dim); } /* comments */
+/* Syntax highlighting: static spans written by scripts/highlight-docs.js (run by npm run build:demo), in the story
+   colours. Decoration only: the code reads the same without it. Longer blocks name their language. */
+pre .k { color: var(--item); }  /* keywords and tags */
+pre .s { color: var(--good); }  /* strings */
+pre .n { color: var(--warn); }  /* numbers, literals, and flags */
+pre .f { color: var(--name); }  /* functions, commands, and attributes */
+pre .c { color: var(--dim); }   /* comments */
+pre[data-lang]::before {
+  content: attr(data-lang);
+  display: block;
+  margin: -0.3rem 0 0.45rem;
+  font: 400 1.05rem/1 var(--pixel);
+  color: var(--dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: none;
+}
 
 .table-wrap { overflow-x: auto; margin: 1rem 0 1.5rem; }
 table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
@@ -308,8 +324,8 @@ td code { white-space: nowrap; }
 /* Keep three-column tables readable on phones: they scroll sideways instead of crushing the last column. */
 table:has(th:nth-child(3)) { min-width: 32rem; }
 
-.note { border: 1px dashed var(--dim); padding: 0.6rem 0.9rem; margin: 1.25rem 0; }
-.note::before { content: "[!] "; color: var(--bright); font-weight: 600; }
+.note { border: 1px solid var(--line); border-left: 3px solid var(--warn); padding: 0.6rem 0.9rem; margin: 1.25rem 0; }
+.note::before { content: "[!] "; color: var(--warn); font-weight: 600; }
 
 /* Bulleted points as * lines */
 .points { list-style: none; padding: 0; margin: 1rem 0; }
@@ -326,8 +342,24 @@ table:has(th:nth-child(3)) { min-width: 32rem; }
 .cmd { color: var(--bright); margin: 1.1rem 0 0.2rem; font-weight: 500; }
 .cmd::before { content: "> "; color: var(--dim); }
 .readout { display: flex; flex-wrap: wrap; align-items: center; gap: 0.2rem 0.75rem; color: var(--dim); font-size: 0.85rem; margin: 0 0 0.35rem; }
-.verdict { text-transform: uppercase; letter-spacing: 0.08em; }
-.verdict.won { background: var(--inverse-bg); color: var(--inverse-fg); text-shadow: none; padding: 0 0.35em; }
+
+/* Verdicts, as every page shows them: a word first, and a matching colour and rule. Never colour alone. */
+.v-convinced { --mark: var(--good); }
+.v-unconvinced { --mark: var(--warn); }
+.v-offended { --mark: var(--bad); }
+.v-repeated { --mark: var(--system); }
+.reply[class*="v-"] { border-left: 3px solid var(--mark); padding-left: 0.75rem; }
+.chip {
+  display: inline-block;
+  font: 400 1.05rem/1 var(--pixel);
+  letter-spacing: 0.08em;
+  padding: 0.1rem 0.4rem;
+  margin-right: 0.5rem;
+  border: 1px solid currentColor;
+  color: var(--mark);
+  vertical-align: 0.1em;
+  text-shadow: none;
+}
 .cursor {
   display: inline-block;
   width: 0.62em;
@@ -357,5 +389,18 @@ table:has(th:nth-child(3)) { min-width: 32rem; }
   background: repeating-linear-gradient(90deg, var(--lit) 0 6px, transparent 6px 8px);
 }
 .meter > b { position: absolute; top: -3px; bottom: -3px; left: var(--mark, 80%); width: 2px; background: var(--bright); }
+
+/* Patience as pips, filled while it lasts. */
+.pips { display: inline-flex; gap: 3px; vertical-align: middle; margin-left: 0.35rem; }
+.pips i { width: 0.55rem; height: 0.8rem; border: 1px solid currentColor; }
+.pips i.on { background: currentColor; }
+
+/* Motion, only when the system allows it: a meter moves to a new reading, and a lost patience pip pulses. */
+@media (prefers-reduced-motion: no-preference) {
+  .meter > i { transition: width 600ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .pips i { transition: background-color 300ms; }
+  .pips i.lost { animation: lose 600ms ease-out; }
+  @keyframes lose { 35% { transform: scaleY(1.4); background: var(--bad); } }
+}
 
 footer { color: var(--dim); font-size: 0.9rem; border-top: 3px double var(--line); padding: 1.5rem 0 calc(2.5rem + env(safe-area-inset-bottom, 0px)); }

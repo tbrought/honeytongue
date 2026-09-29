@@ -3,6 +3,7 @@
 // only the settings the designer filled in, and `knows` lists the secret ids the player has learned.
 import { defineCharacter, persuasionQuestions, DEFAULT_LEVELS, HoneytongueError, Persuadable } from "../play/lib/persuasion.js";
 import { SOURCE } from "../play/lib/jev.js";
+import { parseMarkup } from "../play/lib/markup.js";
 
 const DIFFICULTIES = ["easy", "normal", "hard", "very hard"];
 const TELLS = ["threats", "insults"];
@@ -305,6 +306,31 @@ export async function replay(npc, lines, client, onResult = () => {}) {
     onResult(result, i);
   }
   return results;
+}
+
+// ---- Showing replies -------------------------------------------------------------
+
+/** The label on a reply, by verdict: the demo's words (docs/play/present.js; test/designer.test.js keeps them equal). */
+export const VERDICT_LABELS = { convinced: "CONVINCED", unconvinced: "NOT YET", offended: "OFFENDED", repeated: "REPEATED" };
+
+/** The spoken form of a label, for screen readers: "Not yet." */
+export const spokenLabel = (verdict) => `${VERDICT_LABELS[verdict][0]}${VERDICT_LABELS[verdict].slice(1).toLowerCase()}.`;
+
+/**
+ * A reaction as { kind, text } parts to style as the demo does: "speech" from double quotes, "character" where the
+ * character's full or first name appears outside speech, and "text". A Persuadable never reads story markup, so
+ * neither does this: text that parseMarkup would change (like "@[Harry]") is shown exactly as written, unstyled.
+ * Joining the parts' text always gives the reaction back.
+ */
+export function replyParts(text, name = "") {
+  const parsed = parseMarkup(text);
+  const parts = parsed.map((p) => p.text).join("") === text ? parsed : [{ kind: "text", text }];
+  const names = [...new Set([name.trim(), name.trim().split(/\s+/)[0]])].filter(Boolean)
+    .map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  if (!names.length) return parts;
+  const split = new RegExp(`(?<![\\p{L}\\p{N}])(${names.join("|")})(?![\\p{L}\\p{N}])`, "u");
+  return parts.flatMap((part) => (part.kind !== "text" ? [part]
+    : part.text.split(split).map((bit, i) => ({ kind: i % 2 ? "character" : "text", text: bit })).filter((p) => p.text)));
 }
 
 export { TELLS, DIFFICULTIES };

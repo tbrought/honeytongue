@@ -33,6 +33,9 @@ test("the docs site's grid shows the showcase suite's expected verdicts", () => 
     assert.ok(row.includes(line.input.replace(/'/g, "&rsquo;")), `${line.tactic} shows its line`);
     const verdicts = [...row.matchAll(/data-verdict="([^"]+)"/g)].map((m) => m[1]);
     assert.deepEqual(verdicts, columns.map((id) => line.expect[id]), line.tactic);
+    // Each cell's label says the same verdict, in its colour.
+    const labels = [...row.matchAll(/<td data-verdict="([^"]+)"><span class="chip v-([^"]+)">([^<]+)<\/span>/g)];
+    assert.deepEqual(labels.map((m) => [m[2], m[3]]), verdicts.map((v) => [v, v]), `${line.tactic}: labels match`);
   }
   assert.match(table, /10 live runs/, "the scores are labelled as live results");
 });

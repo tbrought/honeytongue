@@ -4,7 +4,9 @@ import { readFileSync } from "node:fs";
 import {
   fieldErrors, minimalCharacter, characterCode, characterLiteral, variableName, storyNpc, storyJson, TODO,
   readDraft, encodeShare, decodeShare, MAX_SHARE_LENGTH, readPresets, levelFor, distribution, tryLine, replay, conversation,
+  VERDICT_LABELS, spokenLabel, replyParts,
 } from "../docs/playground/designer.js";
+import * as present from "../docs/play/present.js";
 // The playground runs on the copies in docs/play/lib, so it's checked against those (demo.test.js keeps them current).
 import { defineCharacter, HoneytongueError, DEFAULT_LEVELS } from "../docs/play/lib/persuasion.js";
 import { validateStory } from "../docs/play/lib/engine.js";
@@ -211,4 +213,25 @@ test("replay reruns every line, in order, against a fresh conversation", async (
   // Without the secret, the same argument falls short.
   const unknown = await replay(conversation(preset("nib")), lines.slice(2), createMockClient());
   assert.ok(unknown[0].score < results[2].score);
+});
+
+test("replies are labelled with the demo's words", () => {
+  assert.deepEqual(VERDICT_LABELS, present.VERDICT_LABELS);
+  for (const verdict of Object.keys(VERDICT_LABELS)) assert.equal(spokenLabel(verdict), present.spokenLabel(verdict));
+});
+
+test("a reaction's speech and the character's name are styled, and nothing else changes", () => {
+  const kinds = (parts) => parts.map((p) => `${p.kind}:${p.text}`);
+  const reaction = "\"Everyone's got a reason,\" Harry says. \"Mine's keeping this job.\"";
+  const parts = replyParts(reaction, "Harry Goatleaf");
+  assert.deepEqual(kinds(parts), ["speech:\"Everyone's got a reason,\"", "text: ", "character:Harry", "text: says. ", "speech:\"Mine's keeping this job.\""]);
+  assert.deepEqual(kinds(replyParts("Harry Goatleaf sighs; Harrying won't help.", "Harry Goatleaf")),
+    ["character:Harry Goatleaf", "text: sighs; Harrying won't help."], "the full name, and never inside another word");
+  assert.deepEqual(kinds(replyParts("A (weird) name.", "(weird)")), ["text:A ", "character:(weird)", "text: name."], "names are matched literally");
+  // A Persuadable never reads story markup, so it's shown exactly as written.
+  for (const text of ["@[Harry] waves.", "He holds a #[key].", "A literal \\@[ here.", "Odd \"quote."]) {
+    assert.equal(replyParts(text, "Harry").map((p) => p.text).join(""), text, text);
+  }
+  assert.deepEqual(kinds(replyParts("@[Harry] says \"no\".", "")), ["text:@[Harry] says \"no\"."]);
+  for (const text of [reaction, "Harry, Harry, Harry!", "", "\"\""]) assert.equal(replyParts(text, "Harry").map((p) => p.text).join(""), text);
 });

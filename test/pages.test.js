@@ -57,3 +57,14 @@ test("package.json describes the new positioning, with an author and relevant ke
   assert.ok(pkg.keywords.includes("phaser"), "the Phaser example ships, so the keyword can too");
   assert.equal(pkg.bugs.url, "https://github.com/tbrought/honeytongue/issues");
 });
+
+test("the Verdicts table names the labels players see in the demo, so they read as the same verdicts", async () => {
+  const { VERDICT_LABELS } = await import("../docs/play/present.js");
+  const html = read("docs/index.html");
+  const table = html.slice(html.indexOf("<table>", html.indexOf('id="how"')), html.indexOf("</table>", html.indexOf('id="how"')));
+  for (const [verdict, label] of Object.entries(VERDICT_LABELS)) {
+    assert.ok(table.includes(`<code class="verdict-code">${verdict}</code>`), verdict);
+    assert.ok(table.includes(`<span class="chip v-${verdict}">${label}</span>`), `${verdict} is shown to players as ${label}`);
+  }
+});
+
