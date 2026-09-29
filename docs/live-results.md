@@ -98,6 +98,18 @@ The web demo now plays through a public proxy that only accepts the requests Hon
 
 The phase used 590 calls and about 757,000 tokens.
 
+## The Phaser example's troll (0.1.0-alpha.9)
+
+Tolly Underarch, the bridge troll in `examples/phaser/`, is meant to show secrets mattering: reading the sign by his bridge teaches that he's lonely, and only then should a promise of company win him over. The first version said so in his persona, so Jev let the caring argument win without the sign (3.98 either way). Moving "what he really wants" into the secret fixed it. Five repeats each, on `jev-1.13.0` in September 2026:
+
+| Line | Without the sign | After reading it |
+|---|---|---|
+| "Please let me cross, and I'll come back and visit you." | unconvinced, 1.14 to 1.20 | convinced, 3.97 to 3.98 |
+| "Please, I have no money and my family is waiting on the other side. Let me cross." | unconvinced, 1.00 | |
+| "Out of my way, you stupid lump." | offended | |
+
+The threshold is 3.2 (normal). The offline stand-in follows the same route (`test/phaser.test.js`). About 43,000 tokens.
+
 ## Reproducing
 
 With `TYPESAFE_API_KEY` set:

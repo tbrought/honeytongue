@@ -3,7 +3,9 @@
 /* ---- Title screen ---- */
 .hero { display: grid; gap: 2.5rem; padding: 2.5rem 0 3rem; }
 @media (min-width: 960px) { .hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: start; padding: 4rem 0 4.5rem; } }
-.title { font-size: clamp(3.4rem, 15vw, 6.5rem); line-height: 0.8; margin: 0 0 1rem; }
+.title { display: flex; align-items: center; gap: 0.15em; font-size: clamp(2.8rem, 13vw, 5.6rem); line-height: 0.8; margin: 0 0 1rem; }
+/* Two columns from 960px: the title (logo and name, on one line) sizes to its column, about 45% of the screen. */
+@media (min-width: 960px) { .title { font-size: min(5.2rem, 6.4vw); } }
 .credits { color: var(--dim); margin: 0 0 1.5rem; }
 .lede { font-size: 1.15rem; color: var(--bright); max-width: 34ch; margin: 0 0 1.75rem; }
 .install { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; border: 3px double var(--dim); padding: 0.55rem 0.7rem 0.55rem 0.9rem; max-width: 100%; }

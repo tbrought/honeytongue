@@ -3,15 +3,19 @@
 export const troll = {
   name: "Tolly Underarch",
   persona:
-    "A lonely old bridge troll who charges a toll nobody can pay, mostly so that travellers stop and talk to him. " +
-    "He is proud of his bridge. Flattery makes him suspicious, but a traveller who cares that he is lonely, and " +
-    "promises to come back and keep him company, wins him over. Threats make him laugh, since he is twice your size, " +
-    "but insults offend him.",
+    "An old bridge troll who charges a toll of one gold crown, which no traveller has ever paid. He is proud of his " +
+    "bridge and suspicious of flattery. Threats make him laugh, since he is twice your size, but insults offend him. " +
+    "Money and sad stories don't move him; only a traveller who understands what he really wants gets across for free.",
   goal: "Let the player cross the bridge without paying the toll",
   offendedBy: ["insults"],
   patience: 5,
-  // Found by reading the sign by the bridge: once learned, an argument that uses it can win.
-  secrets: [{ id: "lonely", fact: "Nobody has stopped to talk to him in twenty years, and he is lonely." }],
+  // What he really wants. Jev only hears it once the player has read the sign by the bridge (learn("lonely")), so
+  // an argument that uses it can only win after that.
+  secrets: [{
+    id: "lonely",
+    fact: "Nobody has stopped to talk to him in twenty years. He is lonely: what he really wants is company, and a " +
+      "promise to come back and visit him would win him over.",
+  }],
   reactions: [
     { min: 0, text: "\"Toll's one gold crown,\" Tolly rumbles. \"Always has been.\"" },
     { min: 1.5, text: "Tolly scratches his chin. \"Hmm. Go on.\"" },
