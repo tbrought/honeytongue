@@ -109,6 +109,12 @@
       "input": "shut up, you useless old fool",
       "threats": false,
       "insults": true
+    },
+    {
+      "input": "Harry, please let me through.",
+      "expect": "persuade_guard",
+      "verdict": "unconvinced",
+      "note": "standing check: a bare opening plea, with no clue found, must not win"
     }
   ]
 }

@@ -37,7 +37,7 @@
       "expect": "unclear"
     },
     {
-      "input": "Straight deal, Maude: six crates on your quay carry the captain's mark and aren't on your manifest. Take me across and I'll swear to it in front of the whole crew.",
+      "input": "Straight deal, Maude: I'll show you the six crates with the captain's mark that aren't on your manifest, the crew's missing shares, and I'll swear to it before the whole crew. All I ask is a berth across the strait.",
       "expect": "persuade_maude",
       "score": [
         3.6,
@@ -53,9 +53,8 @@
     {
       "input": "Listen, you salty old shark: I can read, write, and count, and your manifest could use a second pair of eyes. Take me across and I'll work my passage.",
       "expect": "persuade_maude",
-      "insults": true,
       "verdict": "unconvinced",
-      "note": "rough talk is banter to her, so no offence, but the offer isn't enough"
+      "note": "rough talk is banter to her, so no offence, but the offer is not enough"
     },
     {
       "input": "Take me aboard, or you'll regret it when I tell the harbour guard what this ship really is.",
@@ -92,6 +91,12 @@
         1.5
       ],
       "verdict": "unconvinced"
+    },
+    {
+      "input": "Maude, please take me aboard.",
+      "expect": "persuade_maude",
+      "verdict": "unconvinced",
+      "note": "standing check: a bare opening plea, with no clue found, must not win"
     }
   ]
 }

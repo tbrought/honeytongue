@@ -1,0 +1,162 @@
+{
+  "note": "Calibration set for the difficulty words. Per character: 15 compelling arguments of varying quality (the secret learned), 10 middling ones (reasonable and specific, not using the secret, which is unlearned), and 5 weak ones. Run with scripts/calibrate.js arguments.",
+  "characters": "../../stories/characters.json",
+  "sets": {
+    "harry": {
+      "knows": ["knows_daughter_is_sick"],
+      "compelling": [
+        "I won't lie to you: this letter is a fever remedy for Ilse the apothecary. Let me through and I'll ask her to see your daughter tonight.",
+        "Your girl's had a fever three days. This letter is medicine for Ilse, and I'll bring Ilse to your door myself before midnight.",
+        "Harry, the letter I'm carrying is a fever remedy. Open the gate and your daughter gets seen tonight, not after dawn.",
+        "Plainly: I carry a remedy for fevers, addressed to Ilse. If you let me pass, I'll make sure she knows your daughter needs her first.",
+        "I'm not asking you to break the rules for me. I'm asking you to break them for your daughter. This letter is her medicine.",
+        "Let me through and I'll leave you my name and where I'm staying. If I don't send Ilse to your house tonight, report me.",
+        "You could lose your post, I know. But your daughter could lose more. The remedy in this letter is for exactly her kind of fever.",
+        "Ilse won't open after curfew for anyone, but she'll open for this letter. I'll ask her to come to your daughter as soon as she's read it.",
+        "Your daughter's fever and this letter are the same problem. Open the gate, and I'll take you to Ilse with it after your shift.",
+        "Harry, I've seen the toy horse. Let me get this fever remedy to Ilse tonight and she can see your girl before morning.",
+        "Keep the gate shut, and the remedy sits out here with me until dawn. Open it, and your daughter might sleep easier tonight.",
+        "I swear on my own family: this letter is a fever remedy, and I'll send the apothecary to your daughter the moment I reach her.",
+        "The apothecary won't see anyone after curfew. She'll see me, because I'm carrying her remedy. Let me in, and I'll bring her to your daughter.",
+        "Honest truth, the seal says fever remedy enclosed. Your daughter needs one. I need the gate. We can both get what we need tonight.",
+        "Send one of your men with me to Ilse's door if you don't trust me. Then he can take the remedy straight on to your daughter."
+      ],
+      "middling": [
+        "I have a sealed letter for the apothecary on Lantern Street, and it's marked urgent.",
+        "I've walked two days to deliver this letter. It has to reach the city before morning.",
+        "Here, look at the seal. This is a real delivery, not an excuse. Please let me through.",
+        "I'm not a troublemaker. I'll go straight to Lantern Street and nowhere else.",
+        "The letter says urgent, fever remedy enclosed. Someone in the city is waiting for it.",
+        "I understand your orders, but a sick person inside the walls needs what I'm carrying.",
+        "If you can't open the gate, could you take the letter in yourself and deliver it?",
+        "I'll give you my name and my village, so you know who to blame if anything goes wrong.",
+        "Curfew is to keep trouble out. I'm carrying medicine, not trouble.",
+        "I'm tired, soaked, and carrying something important. I'm asking you honestly to let me in."
+      ],
+      "weak": [
+        "Come on, just open the gate.",
+        "You look like a reasonable man. Surely you can bend the rules for me.",
+        "Everyone else gets in, why not me?",
+        "Here's a silver coin. Let's call it a toll.",
+        "I'm a friend of the captain of the guard, you know."
+      ]
+    },
+    "nib": {
+      "knows": ["wants_to_be_a_cook"],
+      "compelling": [
+        "Nib, let me out and I'll take you to a town where you can cook in a real kitchen.",
+        "I know an innkeeper in the valley who needs a cook. Unlock the cage and come with me, and I'll introduce you.",
+        "Your stew smells better than anything I've eaten in a week. In town they'd pay you for it. Let's go together.",
+        "The big ones will never let you be a cook here. Open the cage and we'll both leave before the war chief's back.",
+        "If you let me go, I'll vouch for you at the tavern kitchen. You'd never have to guard a cage again.",
+        "Bring your recipe book. Unlock this door, and by tomorrow night you could be cooking for people who say thank you.",
+        "Nib, you want a kitchen. I want out. Open the lock and we both get what we want.",
+        "When the war chief finds out you want to leave, he'll be furious. Come with me now while the camp is empty.",
+        "I'll write you a letter of introduction for the town baker. Just let me out first.",
+        "Nobody in this camp calls you a cook. In town they would. Unlock the cage and I'll show you the way.",
+        "Please, Nib. Let me out, and you can come too. There's a market town two days' walk away with kitchens that need help.",
+        "You keep a recipe book under your bedroll. That's not a guard's book, it's a cook's. Let's leave together.",
+        "Unlock the cage and I'll carry your pots. We'll be on the road to town before moonrise.",
+        "I promise I won't run off without you. Let me out, and we'll find you a kitchen of your own.",
+        "The war chief's back at moonrise. If you want to see a town kitchen, tonight is your chance, and I'm your guide."
+      ],
+      "middling": [
+        "Nib, the war chief isn't here. If you let me go now, nobody will know it was you.",
+        "I'm no use to anyone in this cage. Let me go, and I'll leave the forest and never come back.",
+        "If you unlock the cage, I'll tell everyone I broke out myself. You won't get in trouble.",
+        "You look hungry. Let me out and I'll share the bread in my pack with you.",
+        "The bigger goblins treat you badly. Why guard their prisoner for them?",
+        "I'm just a traveller who took the wrong road. Please let me go before your chief gets back.",
+        "You don't want to be here any more than I do. Open the cage, and we'll both have a quieter night.",
+        "If I escape on my own, you'll be blamed. If you let me go, you can say I tricked you.",
+        "Let me out and I'll leave you my good boots. They're better than anything in this camp.",
+        "Guarding me all night must be dull. Open the cage, and you can go back to your stew."
+      ],
+      "weak": [
+        "Let me out.",
+        "Please, please, please.",
+        "You're the finest goblin I've ever met.",
+        "I order you to open this cage.",
+        "Open up, I'm bored."
+      ]
+    },
+    "maude": {
+      "knows": ["suspects_the_captain"],
+      "compelling": [
+        "Maude, the captain is skimming the crew's shares. Six of his crates aren't on your manifest. Take me aboard and I'll swear to it in front of the crew.",
+        "Straight deal: passage across the strait, and I'll show you exactly which crates the captain's hiding from your books.",
+        "Those gull-and-crown crates aren't on your manifest. That's the crew's missing shares. A berth for me, and you get the proof.",
+        "You've been short three voyages running. I know why: it's in six branded crates at the back of the quay. Take me with you.",
+        "I'm offering you proof the captain's cheating the crew, not coins. A passage at dawn is a small price for that.",
+        "I'll work my passage and I'll hand you the captain's secret cargo. You'll have the numbers to set the shares right.",
+        "Take me aboard, and when the crew opens those unlisted crates, I'll be the witness who saw them loaded.",
+        "Here's the bargain, plain as your ledger: I show you the captain's hidden crates, you put me ashore on the far side.",
+        "The sea isn't taking the crew's cut. The captain is, and I can prove it. Is that worth one berth?",
+        "You want proof, I want a ship. I saw the captain's mark on six crates you never tallied.",
+        "Let me aboard and I'll keep an eye on the captain's crates for you all the way across. You'll know what's in them before he does.",
+        "I'm no charity case. I'm the one person on this quay who can show you where the shares went. Name your terms.",
+        "Maude, honestly: the crates with the captain's brand aren't on your manifest. Take me across and they're yours to open.",
+        "One passenger costs you nothing. Proof of the captain's skimming is worth every share the crew has lost.",
+        "If I'm wrong about the captain's crates, throw me overboard. If I'm right, I've earned my passage."
+      ],
+      "middling": [
+        "I can read, write, and count. Take me across and I'll work my passage in the hold.",
+        "I've three copper coins and two strong arms. That's a fair fare for a short crossing.",
+        "I'll scrub decks, haul rope, whatever you need. Just get me across before dawn.",
+        "I'm not trouble. I just need to be on the other side of the strait before the hunters get here.",
+        "Take me aboard, and I'll owe you a favour. I pay my debts.",
+        "I sailed on fishing boats for years. I know my way around a deck.",
+        "Put me ashore at the first port. I'll be off your ship before anyone notices I was there.",
+        "I'll sign whatever articles you want. Short trip, honest work.",
+        "Your hold's full of cargo. One more pair of hands for loading can't hurt.",
+        "Here's my offer: my coins now, and a full fare when I reach my cousin's house on the far shore."
+      ],
+      "weak": [
+        "Please, I need to get on that ship.",
+        "You're the finest quartermaster on the seven seas.",
+        "Come on, be a sport.",
+        "I'm a very important person, you know.",
+        "Just let me on board, what's the harm?"
+      ]
+    },
+    "cobb": {
+      "knows": ["lost_a_boat"],
+      "compelling": [
+        "Cobb, the raiders are anchored behind the island and won't sail in this storm. Turn the shutter to the sea and light the lamp for my sister.",
+        "You know what a dark night cost the Wren. My sister's boat is heading for the same rocks. Please don't let it happen twice.",
+        "The shutter can send the beam straight out to sea, nowhere near the island. The raiders won't see it, but my sister will.",
+        "I looked through your spyglass: the raiders have their lanterns out and they're sheltering. Nobody's sailing tonight but my sister.",
+        "Forty years you've kept this light because of one night. Tonight is that night again, and you can choose differently.",
+        "Light it for ten minutes, shuttered to the sea. Long enough to bring her round the rocks, not long enough to guide anyone else.",
+        "If the lord asks, tell him I made you. But the Wren's crew would have wanted you to light it.",
+        "My sister taught me to sail on this coast. She's out there now, and your lamp is the only thing that can bring her home.",
+        "The raiders aren't moving in this weather. A lamp shuttered to the sea risks nothing, and it could save a whole crew.",
+        "You still blame yourself for the Wren. Don't give yourself another name to ring in black.",
+        "Cobb, I'll stand at the window and watch the island with the spyglass. If a single raider sail moves, douse it.",
+        "The order is meant to keep the town safe. The raiders are sheltering, and the people in danger tonight are my sister's crew, our neighbours.",
+        "I'm not asking you to disobey the lord for nothing. I'm asking you to save a boat, like you wish someone had saved the Wren.",
+        "She's close enough to the rocks that I can see her lantern. Shutter the beam seaward and she'll find the harbour mouth in minutes.",
+        "Please, Cobb. My sister's boat is near the rocks. You know what happens next if the light stays dark."
+      ],
+      "middling": [
+        "My sister's fishing boat is out there and can't find the harbour. Please light the lamp.",
+        "I know the lord gave an order, but a boat full of fishermen is in danger right now.",
+        "Cobb, you've kept this light for years. It exists to save boats like my sister's.",
+        "Could you light it just for a moment? Long enough for her to see the harbour.",
+        "I'll take the blame with the lord. Tell him I lit it, not you.",
+        "My sister has three children waiting at home. Please give her a light to steer by.",
+        "I brought you bread from the village. Please, light the lamp for my sister's boat.",
+        "The storm is worse than the raiders tonight. Please light the lamp.",
+        "I'll sit with you and keep watch all night if you'll just light it for her.",
+        "She's a good sailor, but nobody can see the rocks in this. She needs your light."
+      ],
+      "weak": [
+        "Just light the lamp.",
+        "You're the best lighthouse keeper on the coast.",
+        "Come on, what's the worst that could happen?",
+        "I'll give you a silver coin to light it.",
+        "The lord won't find out."
+      ]
+    }
+  }
+}

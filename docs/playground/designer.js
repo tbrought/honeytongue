@@ -236,13 +236,13 @@ export function decodeShare(hash) {
 
 // ---- Presets --------------------------------------------------------------------
 
-/** stories/characters.json as a list of { id, character }, checking each one. */
+/** stories/characters.json as a list of { id, character, note }, checking each one. A preset's optional note is for the playground, not the character. */
 export function readPresets(json) {
   if (!json || typeof json !== "object") throw new HoneytongueError("The preset characters file isn't an object");
-  return Object.entries(json).map(([id, character]) => {
+  return Object.entries(json).map(([id, { note, ...character }]) => {
     try { defineCharacter(character); }
     catch (err) { throw new HoneytongueError(`Preset "${id}" is invalid: ${err.message}`); }
-    return { id, character: readDraft({ character }).character };
+    return { id, character: readDraft({ character }).character, ...(typeof note === "string" && note && { note }) };
   });
 }
 

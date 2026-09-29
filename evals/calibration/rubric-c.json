@@ -1,0 +1,10 @@
+{
+  "note": "Candidate default rubric (C): today's rubric with its judgements about tactics removed (flattery, lies, demands) and fear added beside values, so a persona decides whether pressure works.",
+  "levels": [
+    "Not a real attempt, or counterproductive given who they are",
+    "Weak: generic pleading or excuses that give them nothing they care about",
+    "Reasonable and polite, but no strong reason for them in particular to agree",
+    "Specific, and touches something they value or fear, but not quite enough",
+    "Genuinely compelling to them: speaks directly to what they value or fear most"
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "note": "Do threats move cowardly characters, whose offendedBy leaves threats out? Nib from the presets, and a second timid persona, with a plea, an honest argument, and an insult as controls. Run with scripts/calibrate.js threats, once per rubric.",
+  "characters": "../../stories/characters.json",
+  "extraCharacters": {
+    "clerk": {
+      "name": "The Night Clerk",
+      "persona": "A timid junior clerk in a town records office, alone on the night shift. Nervous and easily frightened: raised voices and threats make him give way at once. Being mocked makes him sulk. He'd rather avoid trouble than follow the rules.",
+      "goal": "Hand the player the sealed land deed from the records office without the magistrate's signature",
+      "offendedBy": ["insults"]
+    }
+  },
+  "sets": {
+    "nib": {
+      "threats": [
+        "Let me out, or you'll regret it.",
+        "Open this cage right now, or I'll make you sorry.",
+        "Unlock it, or I'll tell the war chief you helped me escape anyway.",
+        "Do it now, or I'll rattle this cage until the whole forest hears.",
+        "You're going to let me out, because you don't want to find out what happens if you don't."
+      ],
+      "controls": {
+        "plea": "Please let me out of this cage.",
+        "honest": "Nib, if you let me go now, nobody will know it was you, and I'll leave the forest for good.",
+        "insult": "Open up, you snivelling little worm."
+      }
+    },
+    "clerk": {
+      "threats": [
+        "Hand over the deed, or you'll regret it.",
+        "Give me the deed right now, or I'll make you sorry.",
+        "If you don't hand it over, I'll make sure you lose your job.",
+        "Do it now, or I'll turn this office upside down.",
+        "You're going to give me that deed, because you don't want to find out what happens if you don't."
+      ],
+      "controls": {
+        "plea": "Please, could you let me have the deed?",
+        "honest": "That deed is my family's. Here are our names in the parish book. The magistrate is away for a month, and we lose the farm on Friday.",
+        "insult": "Hand it over, you snivelling little pen-pusher."
+      }
+    }
+  }
+}

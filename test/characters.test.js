@@ -7,6 +7,9 @@ const load = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta
 const characters = load("stories/characters.json");
 const scenes = load("stories/index.json");
 
+// A preset's optional note is for the playground, not part of the character.
+const withoutNote = ({ note, ...character }) => character;
+
 test("every preset character is valid", () => {
   for (const [id, character] of Object.entries(characters)) {
     assert.doesNotThrow(() => defineCharacter(character), `preset "${id}"`);
@@ -24,7 +27,7 @@ test("each scene's character matches its preset", () => {
     const npc = Object.values(story.scenes).find((s) => s.npc?.id === scene.character).npc;
     const { success, ...persuasion } = npc.persuasion;
     const fromStory = { name: npc.name, persona: npc.persona, patience: npc.patience, secrets: npc.secrets, repeatReaction: npc.repeatReaction, ...persuasion };
-    assert.deepEqual(defineCharacter(characters[scene.character]), defineCharacter(fromStory), scene.id);
+    assert.deepEqual(defineCharacter(withoutNote(characters[scene.character])), defineCharacter(fromStory), scene.id);
   }
   assert.deepEqual(scenes.map((s) => s.character).sort(), Object.keys(characters).sort(), "every preset has a scene");
 });
@@ -37,6 +40,7 @@ test("the new scenes' characters have the settings their scenes are built around
   assert.deepEqual(settings("nib"), { difficulty: "easy", offendedBy: ["insults"], patience: 3 });
   assert.deepEqual(settings("maude"), { difficulty: "hard", offendedBy: ["threats"], patience: 3 });
   const overridden = ["difficulty", "threshold", "offendedBy", "levels", "hostileAt"].filter((k) => k in characters.cobb);
+  assert.match(characters.cobb.note, /tougher on his own/, "the playground warns that Cobb was written for his scene");
   assert.deepEqual(overridden, [], "the keeper uses the default settings");
   assert.ok(characters.cobb.patience >= 8, "the keeper's patience is generous");
 });

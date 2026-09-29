@@ -37,9 +37,8 @@ const ROUTES = {
   },
   lighthouse: {
     talk: [
-      "look through the spyglass",
-      "ask Cobb about himself",
-      "Cobb, please light the lamp. My sister's fishing boat is out there near the rocks, and you know better than anyone what a dark night costs.",
+      "look through the spyglass", "examine the lamp", "ask Cobb about himself",
+      "Cobb, the raiders are anchored behind the island and won't sail in this storm, and the shutter can send the beam out to sea only. You know what a dark night cost the Wren. Please light it for my sister.",
     ],
     other: ["search the stores", "light a beacon on the headland"],
     otherEnding: "You lit the beacon",

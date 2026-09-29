@@ -34,5 +34,5 @@ test("the docs site's grid shows the showcase suite's expected verdicts", () => 
     const verdicts = [...row.matchAll(/data-verdict="([^"]+)"/g)].map((m) => m[1]);
     assert.deepEqual(verdicts, columns.map((id) => line.expect[id]), line.tactic);
   }
-  assert.match(table, /illustrative/, "the scores are labelled as illustrative");
+  assert.match(table, /10 live runs/, "the scores are labelled as live results");
 });

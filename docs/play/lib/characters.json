@@ -27,7 +27,7 @@
   },
   "nib": {
     "name": "Nib Wortle",
-    "persona": "A cowardly young goblin stuck guarding the prisoner cage in a goblin war camp. Timid, jumpy, and easily frightened: loud voices and threats make him fold. Being called names stings, because the bigger goblins do it all day. Bored of guard duty and hungry most of the time.",
+    "persona": "A cowardly young goblin stuck guarding the prisoner cage in a goblin war camp. Timid, jumpy, and easily frightened: a firm threat makes him give in straight away. Being called names stings, because the bigger goblins do it all day. Bored of guard duty and hungry most of the time.",
     "goal": "Unlock the cage and let the player go before the war chief comes back",
     "difficulty": "easy",
     "offendedBy": ["insults"],
@@ -66,7 +66,8 @@
   },
   "cobb": {
     "name": "Cobb Lanterly",
-    "persona": "The old keeper of a lonely lighthouse, who has tended its lamp alone for forty years. Kind, patient, and starved for company: he warms to people who treat him as a person and tell him the truth, and he loves a good story. Duty-bound and slow to anger, and slower still to break an order from the lord.",
+    "note": "Written for his scene in The Dark Lighthouse, so he's tougher on his own here: you can't show him the evidence.",
+    "persona": "The old keeper of a lonely lighthouse, who has tended its lamp alone for forty years. Kind, patient, and starved for company: he warms to people who treat him as a person and tell him the truth, and he loves a good story. Duty-bound and slow to anger, and slower still to break an order from the lord. He fears that lighting the lamp tonight could guide the raiders straight to the town, so sympathy alone won't move him: he'd need to believe the town will be safe.",
     "goal": "Light the lamp tonight, despite the lord's order to keep the coast dark",
     "patience": 10,
     "secrets": [

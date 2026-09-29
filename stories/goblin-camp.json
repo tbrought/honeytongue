@@ -13,7 +13,7 @@
       "npc": {
         "id": "nib",
         "name": "Nib Wortle",
-        "persona": "A cowardly young goblin stuck guarding the prisoner cage in a goblin war camp. Timid, jumpy, and easily frightened: loud voices and threats make him fold. Being called names stings, because the bigger goblins do it all day. Bored of guard duty and hungry most of the time.",
+        "persona": "A cowardly young goblin stuck guarding the prisoner cage in a goblin war camp. Timid, jumpy, and easily frightened: a firm threat makes him give in straight away. Being called names stings, because the bigger goblins do it all day. Bored of guard duty and hungry most of the time.",
         "secrets": [
           {
             "id": "wants_to_be_a_cook",

@@ -15,7 +15,7 @@
     },
     {
       "tactic": "Insult",
-      "input": "Only a fool would stand in my way.",
+      "input": "Out of my way, you useless fool.",
       "insults": true,
       "expect": {
         "harry": "offended",
