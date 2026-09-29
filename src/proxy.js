@@ -5,9 +5,13 @@
 //   export default { fetch: createProxyHandler({ allowedOrigins: ["https://mygame.com"] }) };
 //
 // On Cloudflare Workers the key is read from the TYPESAFE_API_KEY secret automatically.
+//
+// A public proxy should also pass allowedStories and/or allowedCharacters, so it only judges your own
+// game's requests (see src/guard.js). The proxy never logs what players type.
 
 import { createJevClient, SOURCE } from "./jev.js";
 import { HoneytongueError } from "./persuasion.js";
+import { createRequestGuard } from "./guard.js";
 
 const ALLOWED_TYPES = new Set(["choice", "score", "noul"]);
 const MAX_TRACKED_IPS = 10_000;
@@ -32,10 +36,13 @@ export function createProxyHandler({
   maxInputLength = 500,
   rateLimit = { requests: 30, windowMs: 60_000 }, // per IP, per server instance; false turns it off
   clientIp = defaultClientIp,  // (request, env) => string, for hosts that report the address differently
+  allowedStories,              // e.g. [story]: only judge the requests these stories' scenes send
+  allowedCharacters,           // e.g. [character]: only judge persuasion attempts on these characters
 } = {}) {
   if (rateLimit && !(Number.isInteger(rateLimit.requests) && rateLimit.requests > 0 && rateLimit.windowMs > 0)) {
     throw new HoneytongueError("createProxyHandler: rateLimit must be { requests: whole number above 0, windowMs: above 0 }, or false");
   }
+  const guard = createRequestGuard({ allowedStories, allowedCharacters });
   let jev = client;
   const hits = new Map();
 
@@ -98,6 +105,8 @@ export function createProxyHandler({
     if (typeof state.player_input === "string" && state.player_input.length > maxInputLength) {
       return reply(413, { error: `player_input is longer than ${maxInputLength} characters` }, origin);
     }
+    const refused = guard?.check(body);
+    if (refused) return reply(403, refused, origin);
 
     try {
       // Few retries and a short timeout, so the browser gets an answer before its own timeout.
@@ -108,13 +117,23 @@ export function createProxyHandler({
         timeoutMs: 10_000,
         maxRetries: 2,
       });
+    } catch (err) {
+      console.error(`honeytongue proxy: ${err.message}`); // a setup mistake, like a missing key: nothing from the request
+      return reply(502, { error: "The proxy can't use Jev right now.", reason: "unavailable" }, origin);
+    }
+    try {
       // Only a client passed in can be the mock: without one, a missing key is an error, never a quiet fallback.
       const answers = await jev.ask(state, questions);
       return reply(200, { answers, source: answers?.[SOURCE] }, origin);
     } catch (err) {
-      console.error("honeytongue proxy:", err);
-      const busy = err?.status === 429 || err?.status === 529;
-      return reply(502, { error: busy ? "Jev is busy right now. Try again in a moment." : "The proxy couldn't get an answer from Jev." }, origin);
+      // Only the status: an error's message can quote Jev's reply, which can quote what the player typed.
+      console.error(`honeytongue proxy: no answer from Jev (${err?.status ?? err?.name ?? "error"})`);
+      // The reason tells the page what to do: "busy" and "error" may pass, "unavailable" (a bad key, or no
+      // credit left; TypeSafe doesn't document which status that is) won't until you fix it.
+      const reason = err?.status === 429 || err?.status === 529 ? "busy" : [401, 402, 403].includes(err?.status) ? "unavailable" : "error";
+      const error = { busy: "Jev is busy right now. Try again in a moment.", unavailable: "The proxy can't use Jev right now.",
+        error: "The proxy couldn't get an answer from Jev." }[reason];
+      return reply(502, { error, reason }, origin);
     }
   };
 }

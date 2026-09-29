@@ -28,6 +28,14 @@ export interface JevClient {
 export class HoneytongueError extends Error {
   /** The HTTP status, when the error came from a failed request. */
   status?: number;
+  /**
+   * Why a proxy refused or failed, when it said: "version", "not-allowed", or "state" (a 403 from a guarded proxy),
+   * or "busy", "error", or "unavailable" (a 502: Jev didn't answer; "unavailable" means a bad key or no credit).
+   */
+  reason?: "version" | "not-allowed" | "state" | "busy" | "error" | "unavailable" | (string & {});
+  /** With a proxy's 403: the Honeytongue versions of the proxy and of the request (null if it didn't say). */
+  proxyVersion?: string | null;
+  requestVersion?: string | null;
 }
 export class StoryError extends HoneytongueError {
   problems: string[];
@@ -288,6 +296,8 @@ export class Game {
   /** Turns run one at a time, in the order they were sent. */
   turn(input: string): Promise<TurnResult>;
   interpret(input: string): Promise<{ answers: Record<string, any>; ranked: [string, number][] }>;
+  /** What a story sends to Jev from each playable scene (used by the proxy's allowedStories). */
+  static requests(story: Story): { scene: string; questions: Record<string, any>; character: Character | null }[];
 }
 
 // ---- Clients and the proxy -----------------------------------------------------
@@ -330,6 +340,13 @@ export interface ProxyHandlerOptions {
   rateLimit?: { requests: number; windowMs: number } | false;
   /** How to find the client's address. Defaults to CF-Connecting-IP on Cloudflare, else the last X-Forwarded-For entry. */
   clientIp?: (request: Request, env?: ProxyEnv) => string;
+  /**
+   * Only judge the requests these stories' scenes send: exactly the engine's questions, and state within the engine's
+   * limits. Anything else gets a 403 with a `reason`. Set this (and/or allowedCharacters) on any public proxy.
+   */
+  allowedStories?: Story[];
+  /** Only judge persuasion attempts (judgePersuasion, Persuadable) on these characters. */
+  allowedCharacters?: Character[];
 }
 
 export function createProxyHandler(options?: ProxyHandlerOptions): (request: Request, env?: ProxyEnv) => Promise<Response>;
