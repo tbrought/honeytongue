@@ -223,6 +223,24 @@ try {
     must(bad.length === 0, `CSP violations or console errors: ${bad.join("; ")}`);
   });
 
+  // ---- The Phaser game: a key press acts once, even when several key events arrive in one frame ----
+  // Phaser replays a frame's queued key events whenever another arrives, so without the game's guard an E that
+  // was just handled would reopen the sign's box when the next key (here, an arrow) came in the same frame.
+  await open("/phaser/");
+  await page.waitFor("window.__game?.scene?.getScene?.('bridge')?.player", { what: "the Phaser scene to start" });
+  await page.eval(`__game.scene.getScene("bridge").player.setPosition(115, 92); true`); // next to the sign
+  await page.settle(1280);
+  const once = JSON.parse(await page.eval(`(() => {
+    const key = (type, key, code, keyCode) => dispatchEvent(new KeyboardEvent(type, { key, code, keyCode, bubbles: true }));
+    const s = __game.scene.getScene("bridge");
+    key("keydown", "e", "KeyE", 69); key("keyup", "e", "KeyE", 69);
+    const opened = s.talking;
+    document.getElementById("dialogue-close").click();
+    key("keydown", "ArrowDown", "ArrowDown", 40); key("keyup", "ArrowDown", "ArrowDown", 40);
+    return JSON.stringify({ opened, reopened: s.talking });
+  })()`));
+  check(once.opened && !once.reopened, "Phaser: a key press acts once, even with several key events in one frame", JSON.stringify(once));
+
   // ---- The local playground server ----
   const local = await startPlayground({ port: 0, apiKey: "", mock: true });
   try {

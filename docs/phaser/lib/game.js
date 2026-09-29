@@ -57,7 +57,13 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
 
       // Arrow keys or WASD to walk, E, Space, or Enter to read or talk. No key capture, so typing in the box works.
       this.keys = this.input.keyboard.addKeys("W,A,S,D,UP,DOWN,LEFT,RIGHT,E,SPACE,ENTER,R", false);
+      // Phaser hands this frame's key events to listeners again each time another key event arrives, so remember
+      // which ones were handled: each press acts once. (Otherwise an E just handled, or a letter typed in the box,
+      // could reopen the box when the next key arrives in the same frame, such as Escape or an arrow key.)
+      const handled = new WeakSet();
       this.input.keyboard.on("keydown", (event) => {
+        if (handled.has(event)) return;
+        handled.add(event);
         if (this.talking) return;
         if (["e", " ", "Enter"].includes(event.key)) this.interact();
         if (event.key === "r" && (this.ended || this.npc.outOfPatience)) this.scene.restart();
