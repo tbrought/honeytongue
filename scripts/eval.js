@@ -20,6 +20,7 @@ import { createMockClient } from "../src/mock.js";
 import { liveClient, summarize, mean } from "./live-recorder.js";
 import { writeFileSync, mkdirSync } from "node:fs";
 import { loadPatches, describePatches, patchCharacter, patchStory } from "./patches.js";
+import { loadLiveEnv } from "./live-env.js";
 
 const evalsDir = new URL("../evals/", import.meta.url);
 // Suite paths given on the command line are relative to where you ran it (or absolute).
@@ -29,6 +30,8 @@ const files = process.argv.includes("--all")
   : process.argv.filter((a, i) => a.endsWith(".json") && process.argv[i - 1] !== "--patch").map((f) => pathToFileURL(resolve(f)));
 if (!files.length) files.push(new URL("gatehouse.json", evalsDir));
 
+// The key comes from .env.live, and only for a live run: --mock never loads it.
+if (!process.argv.includes("--mock")) loadLiveEnv();
 const useMock = process.argv.includes("--mock") || !process.env.TYPESAFE_API_KEY;
 const record = !useMock && process.argv.includes("--record");
 let current = ""; // what's being run, for the recording: "engine <suite>" or "standalone <suite>"

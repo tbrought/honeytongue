@@ -11,6 +11,9 @@ import { Game } from "../src/engine.js";
 import { Persuadable, similarity } from "../src/persuasion.js";
 import { liveClient, summarize, mean } from "./live-recorder.js";
 import { createMockClient } from "../src/mock.js";
+import { loadLiveEnv } from "./live-env.js";
+
+if (!process.argv.includes("--mock")) loadLiveEnv(); // the key, from .env.live, for live runs only
 
 const load = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), "utf8"));
 const data = load("evals/calibration/multiturn.json");

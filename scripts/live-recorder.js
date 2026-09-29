@@ -61,7 +61,7 @@ export function recordingFetch(label, sink = []) {
 
 /** A Jev client that records its calls. Retries (429, 5xx) are recorded as separate calls. */
 export function liveClient(label, sink) {
-  if (!process.env.TYPESAFE_API_KEY) throw new Error("TYPESAFE_API_KEY isn't set in this process.");
+  if (!process.env.TYPESAFE_API_KEY) throw new Error("TYPESAFE_API_KEY isn't set: put it in .env.live at the repository root (see scripts/live-env.js).");
   return createJevClient({ fetch: recordingFetch(label, sink) });
 }
 

@@ -13,6 +13,9 @@ import { Game } from "../src/engine.js";
 import { defineCharacter, judgePersuasion } from "../src/persuasion.js";
 import { liveClient, summarize, mean, percentile } from "./live-recorder.js";
 import { loadPatches, describePatches, patchCharacter, patchStory } from "./patches.js";
+import { loadLiveEnv } from "./live-env.js";
+
+loadLiveEnv(); // the key, from .env.live
 
 const load = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), "utf8"));
 const patches = loadPatches();

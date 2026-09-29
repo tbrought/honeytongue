@@ -31,13 +31,13 @@
     "honeytongue": "src/cli.js"
   },
   "scripts": {
-    "play": "node src/cli.js --debug",
+    "play": "node --env-file-if-exists=.env.live src/cli.js --debug",
     "play:mock": "node src/cli.js --mock --debug",
     "eval": "node scripts/eval.js",
-    "example": "node examples/standalone.js",
+    "example": "node --env-file-if-exists=.env.live examples/standalone.js",
     "test": "node --test",
-    "proxy": "node examples/node-proxy.js",
-    "playground": "node src/cli.js playground",
+    "proxy": "node --env-file-if-exists=.env.live examples/node-proxy.js",
+    "playground": "node --env-file-if-exists=.env.live src/cli.js playground",
     "build:demo": "node scripts/build-demo.js",
     "typecheck": "node node_modules/typescript/bin/tsc -p typetest",
     "typecheck:oldest": "node node_modules/typescript-5/bin/tsc -p typetest",
