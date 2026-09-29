@@ -50,6 +50,9 @@ try {
   const unshipped = [...tracked].filter((f) => /^(src|stories)\//.test(f) && !files.includes(f));
   report(unshipped.length === 0, "every library and scene file is packed", unshipped.join(", "));
   // A file git doesn't know about (a local .env, a scratch file) must never ship just because it sits in src/.
+  // Environment files hold keys (.env.live is where the TypeSafe key lives): none may ever ship, tracked or not.
+  const envFiles = files.filter((f) => /(^|\/)\.env(\.|$)|(^|\/)\.dev\.vars$|(^|\/)\.npmrc$/.test(f));
+  report(envFiles.length === 0, "no environment or credential file is packed", envFiles.join(", "));
   const untracked = files.filter((f) => !tracked.has(f));
   report(untracked.length === 0, "every packed file is tracked by git", untracked.length ? `untracked: ${untracked.join(", ")}` : "");
 

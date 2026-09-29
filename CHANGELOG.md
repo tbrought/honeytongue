@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Repository
+
+- **The key for live runs moves to `.env.live`**, a git-ignored file at the repository root that npm never packs. Only commands that call live Jev load it: the live scripts load it themselves, and `npm run play`, `example`, `proxy`, and `playground` use `node --env-file-if-exists=.env.live`. Everything else runs without the key. Package users are unaffected: the library still reads `TYPESAFE_API_KEY` from its environment.
+- `node scripts/headroom.js` measures how many tokens the largest request the demo Worker accepts can cost, against a normal turn. At worst, with Japanese text in every field, it's about 5 times a normal turn (`docs/demo-proxy.md`).
+- The package check refuses to pack any environment or credential file.
+
 ## 0.1.0-alpha.11 (2026-09-29)
 
 Hardening before 0.1.0, from a review of the whole project: a proxy that's secure by default, limits on what the library sends that a proxy enforces, and the site's browser checks in CI. This release has breaking changes.

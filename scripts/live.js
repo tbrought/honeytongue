@@ -14,6 +14,9 @@ import { SOURCE, createProxyClient } from "../src/jev.js";
 import { createProxyHandler } from "../src/proxy.js";
 import { liveClient, summarize, mean, sd } from "./live-recorder.js";
 import { loadPatches, describePatches, patchStory } from "./patches.js";
+import { loadLiveEnv } from "./live-env.js";
+
+loadLiveEnv(); // the key, from .env.live
 
 const load = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), "utf8"));
 const characters = load("stories/characters.json");

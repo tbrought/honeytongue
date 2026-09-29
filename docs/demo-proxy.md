@@ -83,6 +83,29 @@ Once the check passes, the agent prepares a one-line pull request that puts the 
 
 It only changes the website, so it needs no npm release. Once it's merged and GitHub Pages updates, the demo's banner says "Live", with the privacy note.
 
+## How much one request can cost
+
+The guard only accepts requests shaped like the demo's own, with every free-text field capped at what the library sends. So the most a single accepted request can cost is bounded. `node scripts/headroom.js` measures it:
+1. It builds a normal turn, and the largest request the guard accepts, padded with random text in several scripts.
+2. It checks each one locally against the Worker's own guard.
+3. It sends each to Jev once (5 live calls), and reports the input tokens Jev counts.
+
+`--dry-run` does steps 1 and 2 only, with no live calls.
+
+Measured on 2026-09-29, `jev-1.13.0`, 5 live calls (24,880 tokens in all):
+
+| Request | Bytes | Input tokens | Against a normal turn |
+|---|---|---|---|
+| A normal turn (the Gatehouse, a few turns in) | 4,193 | 1,450 | 1.00× |
+| The largest accepted, padded with ASCII | 7,820 | 4,071 | 2.81× |
+| The largest accepted, padded with emoji | 11,184 | 5,402 | 3.73× |
+| The largest accepted, padded with emoji and Japanese | 12,057 | 6,018 | 4.15× |
+| The largest accepted, padded with Japanese | 14,070 | 7,153 | 4.93× |
+
+**The worst case is Japanese text in every field, at about 5 times a normal turn:** about $0.0003 a request at $0.042 per million input tokens. At Cloudflare's rule (10 requests per 10 seconds per IP), one address sending nothing but worst-case requests could spend about $26 a day. More addresses spend it faster, and the spending cap stops all of it.
+
+That's within what the limits were designed for, so nothing was changed. If it ever needs lowering, the cheapest lever is the demo characters' `maxInputLength` and `memoryLength`. Lowering them trims what the demo sends, then the Worker needs redeploying.
+
 ## Testing the page locally
 
 When the demo page runs on `localhost` or `127.0.0.1` (for example with `npx serve docs`), it judges offline with a "Local preview" note instead of calling the proxy, which refuses local pages. To test against a proxy that accepts your local address, add `?live` to the page's address.
@@ -94,7 +117,7 @@ When the demo page runs on `localhost` or `127.0.0.1` (for example with `npx ser
 - **Limits, all together:**
   - Cloudflare's rule: 10 requests per 10 seconds per IP. Tighten it if the usage graph shows abuse.
   - The Worker's own limit: 20 requests a minute per address, per Worker instance. Cloudflare runs many instances, so this is only a first line of defence.
-  - The request guard: only the demo's own requests, no bigger than the library sends them (a scripted request can carry at most about twice the text of a typical turn).
+  - The request guard: only the demo's own requests, no bigger than the library sends them (a scripted request can cost at most about 5 times a normal turn's tokens: see "How much one request can cost").
   - 50 live turns per tab. This is a courtesy to players, kept in the browser: a script ignores it.
   - The spending cap behind all of them: the only hard limit on cost. If a script uses it up, the demo switches to the offline stand-in until the next top-up.
 - **If abuse appears:** tighten Cloudflare's rule first. After that, a daily quota per address (Workers KV or a Durable Object) or Cloudflare Turnstile before the first live turn; both are on the roadmap, only if needed.
