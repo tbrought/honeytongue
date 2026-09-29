@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-alpha.9 (2026-09-29)
 
 Positioning, a Phaser example, and the logo, plus the website security changes (the site went out with that pull request; its playground changes ship here).
 

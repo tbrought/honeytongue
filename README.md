@@ -10,7 +10,7 @@
 
 **You only need three fields and one method. Everything else is optional.**
 
-> **Alpha, tested against live Jev.** Version 0.1.0-alpha.8 has been calibrated and checked with about 6,000 live calls, whole conversations included (see [the results](https://github.com/tbrought/honeytongue/blob/main/docs/live-results.md)). Defaults may still change before 0.1.0.
+> **Alpha, tested against live Jev.** Version 0.1.0-alpha.9 has been calibrated and checked with about 6,000 live calls, whole conversations included (see [the results](https://github.com/tbrought/honeytongue/blob/main/docs/live-results.md)). Defaults may still change before 0.1.0.
 
 ## Quick start
 
