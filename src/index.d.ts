@@ -150,6 +150,8 @@ export interface Attempt {
 }
 
 export const DEFAULT_LEVELS: string[];
+/** This copy of Honeytongue's version, like "0.1.0-alpha.6". */
+export const VERSION: string;
 export function defineCharacter(character: Character): DefinedCharacter;
 export function cleanInput(input: unknown, maxLength?: number): string;
 export function similarity(a: string, b: string): number;

@@ -8,6 +8,7 @@ import { Game, StoryError } from "./engine.js";
 import { createJevClient } from "./jev.js";
 import { createMockClient } from "./mock.js";
 import { createTranscript, snapshot } from "./transcript.js";
+import { VERSION } from "./version.js";
 
 const wrap = (text, width = 72) =>
   text.split("\n").map((line) => {
@@ -107,8 +108,7 @@ async function run(args, lines) {
 
   let transcript = null;
   if (transcriptPath) {
-    const { version } = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
-    transcript = createTranscript({ version, scene: basename(String(storyPath instanceof URL ? storyPath.pathname : storyPath), ".json"), story });
+    transcript = createTranscript({ version: VERSION, scene: basename(String(storyPath instanceof URL ? storyPath.pathname : storyPath), ".json"), story });
     transcript.start();
     console.log(`(Recording a transcript to ${transcriptPath}. It stays on your computer.)\n`);
   }

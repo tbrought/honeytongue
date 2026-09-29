@@ -6,6 +6,7 @@ import { Game } from "./lib/engine.js";
 import { createProxyClient } from "./lib/jev.js";
 import { createMockClient } from "./lib/mock.js";
 import { createTranscript, snapshot } from "./lib/transcript.js";
+import { VERSION } from "./lib/version.js";
 
 const $ = (id) => document.getElementById(id);
 const log = $("log");
@@ -26,7 +27,6 @@ let moves = 0;
 let debug = false;
 // An opt-in playtest transcript for the current scene, saved by the player as a file. Nothing is sent anywhere.
 let transcript = null;
-let version = null; // lib/version.json, for the transcript
 let busy = false;
 const typed = [];      // command history for the up and down arrows
 let typedAt = 0;
@@ -126,7 +126,7 @@ function start() {
   showText(game.scene.description);
   if ($("record").checked) {
     // One transcript per scene; a restart adds another playthrough to it.
-    if (transcript?.data.scene !== scene.id) transcript = createTranscript({ version, scene: scene.id, story });
+    if (transcript?.data.scene !== scene.id) transcript = createTranscript({ version: VERSION, scene: scene.id, story });
     transcript.start();
     line("Recording this playtest. Nothing is sent anywhere: use Save transcript to download it.", "dim");
   }
@@ -138,7 +138,7 @@ $("record").addEventListener("change", () => {
   $("save-transcript").hidden = !on;
   if (!on) { transcript = null; line("Stopped recording. The transcript so far is discarded.", "dim"); return settle(); }
   if (!game) return;
-  transcript = createTranscript({ version, scene: scene.id, story });
+  transcript = createTranscript({ version: VERSION, scene: scene.id, story });
   transcript.start();
   line("Recording this playtest from here. Nothing is sent anywhere: use Save transcript to download it.", "dim");
   settle();
@@ -289,11 +289,6 @@ addEventListener("hashchange", async () => {
   scrollTo(0, 0);
 });
 
-try {
-  version = (await fetchJson("lib/version.json")).version;
-} catch {
-  version = null; // transcripts still work without it
-}
 try {
   scenes = await fetchJson("lib/index.json");
   showScenes();
