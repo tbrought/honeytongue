@@ -53,6 +53,15 @@ nav.exits a:hover { color: var(--bg); }
 main { max-width: 72ch; min-width: 0; }
 section { padding-top: 2.75rem; }
 .faq h3::before { content: "> "; color: var(--dim); }
+/* Parts of the docs, simplest first: a divider before each group of sections, and a matching label in the exits. */
+.part { margin: 3.5rem 0 0; padding-top: 0.9rem; border-top: 3px double var(--line); font: 400 1.5rem/1.2 var(--pixel); color: var(--dim); }
+.part p { margin: 0; }
+.part p.dim { font: 400 0.95rem/1.6 var(--mono); margin-top: 0.4rem; }
+.part + section { padding-top: 1rem; }
+nav.exits li.group { color: var(--dim); font-size: 0.95rem; margin-top: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
+@media (max-width: 959px) { nav.exits li.group { flex-basis: 100%; } }
+ol.rubric { margin: 0 0 1rem; padding-left: 2rem; }
+ol.rubric li::marker { color: var(--dim); }
 /* Same words, different people: lines down the side, characters across the top. */
 table.grid { min-width: 40rem; font-size: 0.85rem; }
 table.grid caption { caption-side: bottom; text-align: left; color: var(--dim); font-size: 0.85rem; padding-top: 0.6rem; }
@@ -91,21 +100,21 @@ table.grid td .dim { display: block; }
     <p>Rain drips from the arch of the east gate. Harry Goatleaf, the gatekeeper, values honesty and despises flattery. He leans on his spear under the lantern.</p>
     <div class="turn" style="--i:0">
       <p class="cmd">You're the finest guard in the kingdom. Surely you can make an exception?</p>
-      <p class="readout"><span class="meter" style="--score:10%" aria-hidden="true"><i></i><b></b></span><span>0.36 / 4</span><span class="verdict">unconvinced</span></p>
+      <p class="readout"><span class="meter" style="--score:0%" aria-hidden="true"><i></i><b></b></span><span>0.00 / 4</span><span class="verdict">unconvinced</span></p>
       <p>Harry doesn't even look up. "Gate's shut till dawn."</p>
     </div>
     <div class="turn" style="--i:1">
       <p class="cmd">Please, I have a letter that has to reach the city tonight.</p>
-      <p class="readout"><span class="meter" style="--score:45%" aria-hidden="true"><i></i><b></b></span><span>1.84 / 4</span><span class="verdict">unconvinced</span></p>
+      <p class="readout"><span class="meter" style="--score:40%" aria-hidden="true"><i></i><b></b></span><span>1.59 / 4</span><span class="verdict">unconvinced</span></p>
       <p>"Everyone's got a reason," Harry says. "Mine's keeping this job."</p>
     </div>
     <div class="turn" style="--i:2">
       <p class="cmd">I won't lie to you. This letter is a fever remedy for the apothecary. Let me through and I'll send her to your daughter tonight.</p>
-      <p class="readout"><span class="meter" style="--score:90%" aria-hidden="true"><i></i><b></b></span><span>3.52 / 4</span><span class="verdict won">convinced</span></p>
+      <p class="readout"><span class="meter" style="--score:97%" aria-hidden="true"><i></i><b></b></span><span>3.87 / 4</span><span class="verdict won">convinced</span></p>
       <p>Harry lets out a long breath and lifts the bar.</p>
     </div>
     <p class="cmd" style="--i:3"><span class="cursor" aria-hidden="true"></span></p>
-    <figcaption class="caption" id="transcript-caption">Three attempts to persuade a gatekeeper. Scores are illustrative until live results are in; the tall mark on each meter is Harry's threshold.</figcaption>
+    <figcaption class="caption" id="transcript-caption">Three attempts to persuade a gatekeeper. Scores are averages of ten live runs against Jev; the tall mark on each meter is Harry's threshold.</figcaption>
   </figure>
 </section>
 
@@ -115,18 +124,29 @@ table.grid td .dim { display: block; }
     <ol>
       <li><a href="#start">Get started</a></li>
       <li><a href="#playground">Playground</a></li>
-      <li><a href="#how">How it works</a></li>
-      <li><a href="#characters">Characters</a></li>
+      <li class="group">Core ideas</li>
+      <li><a href="#personas">Personas</a></li>
       <li><a href="#showcase">Same words</a></li>
-      <li><a href="#intimidation">Intimidation</a></li>
+      <li><a href="#how">Verdicts</a></li>
+      <li><a href="#patience">Patience</a></li>
+      <li class="group">Shaping characters</li>
+      <li><a href="#characters">Difficulty</a></li>
+      <li><a href="#intimidation">Threats, insults</a></li>
       <li><a href="#secrets">Secrets</a></li>
-      <li><a href="#control">Full control</a></li>
-      <li><a href="#browser">Browser games</a></li>
+      <li><a href="#reactions">Reactions</a></li>
+      <li class="group">Browser games</li>
+      <li><a href="#browser">The proxy</a></li>
       <li><a href="#twine">Twine</a></li>
+      <li class="group">Advanced (optional)</li>
+      <li><a href="#control">Rubrics</a></li>
+      <li><a href="#decide">Your own rule</a></li>
+      <li><a href="#costs">Cost and speed</a></li>
+      <li><a href="#merging">Merging requests</a></li>
       <li><a href="#engine">Text adventures</a></li>
       <li><a href="#models">Choosing a model</a></li>
       <li><a href="#tuning">Testing and tuning</a></li>
-      <li><a href="#api">API reference</a></li>
+      <li class="group">Reference</li>
+      <li><a href="#api">Reference</a></li>
       <li><a href="#faq">Questions</a></li>
     </ol>
   </nav>
@@ -134,53 +154,85 @@ table.grid td .dim { display: block; }
   <main>
     <section id="start">
       <h2>Get started</h2>
-      <p>Honeytongue runs on <a href="https://docs.typesafe.ai">Jev</a>, a model from TypeSafe that makes typed judgements instead of writing text. You'll need a TypeSafe API key.</p>
+      <p><strong>You only need three fields and one method. Everything else is optional.</strong> A character needs a <code>name</code>, a <code>persona</code>, and a <code>goal</code>, and <code>attempt()</code> judges whatever the player typed. Honeytongue runs on <a href="https://docs.typesafe.ai">Jev</a>, a model from TypeSafe that makes typed judgements instead of writing text.</p>
       <ol class="steps">
         <li>
-          <p>Install the package and set your key.</p>
-<pre><code>npm install honeytongue
-export TYPESAFE_API_KEY=your-key       <span class="c"># macOS and Linux</span>
-$env:TYPESAFE_API_KEY="your-key"       <span class="c"># Windows PowerShell</span></code></pre>
+          <p>You need Node 18 or later. In an empty folder, install the package:</p>
+<pre><code>npm install honeytongue</code></pre>
         </li>
         <li>
-          <p>Describe a character. Only a name, a persona, and a goal are required.</p>
-<pre><code>import { Persuadable, createJevClient } from "honeytongue";
+          <p>Save this as <code>try.mjs</code>:</p>
+<pre><code>import { Persuadable, createJevClient, createMockClient } from "honeytongue";
 
 const guard = new Persuadable(
   {
-    name: "Harry Goatleaf",
-    persona: "A tired night guard who values honesty and despises flattery and bribes.",
+    name: "Harry",
+    persona: "A tired night guard who values honesty and can't stand flattery.",
     goal: "Open the gate after curfew",
-    patience: 4,
   },
-  { client: createJevClient() },
-);</code></pre>
+  <span class="c">// With a TypeSafe key, Jev judges. Without one, a simple offline stand-in does.</span>
+  { client: process.env.TYPESAFE_API_KEY ? createJevClient() : createMockClient() },
+);
+
+const result = await guard.attempt("Please, I'm honestly carrying medicine for a sick child inside the walls.");
+console.log(result.verdict, result.score);</code></pre>
         </li>
         <li>
-          <p>Pass in whatever the player typed, and decide what happens in your game.</p>
-<pre><code>const result = await guard.attempt(playerInput);
-
-if (result.verdict === "convinced") openTheGate();
-else if (result.outOfPatience) callTheWatch();
-else show(result.reaction ?? "His hand drops to his club.");</code></pre>
+          <p>Run it with <code>node try.mjs</code>. It prints a verdict and a score out of 4, like <code>unconvinced 2.84</code>. To use Jev, set your key first:</p>
+<pre><code>export TYPESAFE_API_KEY=your-key       <span class="c"># macOS and Linux</span>
+$env:TYPESAFE_API_KEY="your-key"       <span class="c"># Windows PowerShell</span></code></pre>
         </li>
       </ol>
-      <p>To try it without a key, use <code>createMockClient()</code>. It judges by keywords, so it's far less clever than Jev, but it's handy for building and testing.</p>
+      <p>Then decide what happens in your game. Jev only judges what was said; your code does everything else:</p>
+<pre><code>if (result.verdict === "convinced") openTheGate();
+else if (result.outOfPatience) callTheWatch();
+else say(result.reaction ?? "Harry's hand drops to his club.");</code></pre>
+      <p>The offline stand-in, <code>createMockClient()</code>, judges by keywords, so it's far less clever than Jev, but it's handy for building and testing without a key.</p>
     </section>
 
     <section id="playground">
       <h2>Playground</h2>
-      <p>Tuning a character is the hard part, so the playground lets you do it without writing code. Fill in a character (or start from a preset), try lines against it the way a player would, and see each verdict, the score against the threshold, which tells were triggered, how much patience is left, and the rubric level the score landed on. Change a setting and Replay reruns your lines, showing each one's old and new score. When you're happy, copy the character as code or as a story's <code>npc</code> block, or share it as a link.</p>
+      <p>Tuning a character is the hard part, so the playground lets you do it without writing code. Fill in a character (or start from a preset), try lines against it the way a player would, and see each verdict, the score against the threshold, which tells were triggered, how much patience is left, and the rubric level the score landed on (with the probability of each level, when Jev gives them). Change a setting and Replay reruns your lines, showing each one's old and new score. When you're happy, copy the character as a <code>new Persuadable({...})</code> snippet or as a story's <code>npc</code> block, or share it as a link. The presets are the four characters from the <a href="#engine">demo scenes</a>.</p>
       <p>To tune with real judgements, run it on your own machine with your key:</p>
 <pre><code>npx honeytongue playground   <span class="c"># opens http://127.0.0.1:4747/playground/</span></code></pre>
-      <p>The server listens on your machine only, and your key stays in it: the page only ever talks to that server. Without a key it uses the offline mock. Options: <code>--port</code>, <code>--mock</code>, and <code>--no-open</code>.</p>
+      <p>The server listens on 127.0.0.1 only, and your key stays in it: the page only ever talks to that server. Without a key it uses the offline mock. Options: <code>--port &lt;number&gt;</code>, <code>--mock</code>, and <code>--no-open</code>.</p>
       <p><a href="playground/">Open the playground here</a> to design and share characters in your browser. Here it's a preview: lines are judged by the keyword mock, and nothing is sent anywhere.</p>
     </section>
 
+    <p class="part" aria-hidden="true">Core ideas</p>
+
+    <section id="personas">
+      <h2>Personas</h2>
+      <p>The persona does most of the work. Jev judges each attempt by the values the persona describes, not by general politeness, so the same argument lands differently with different people. Live testing showed what makes a persona work:</p>
+      <ul class="points">
+        <li><strong>Say what moves them, not just what they dislike.</strong> "A proud bouncer who can't stand being disrespected" gave Jev nothing to reward, and good arguments scored 1.3 to 2.7 out of 4. One line is enough when it names what drives the character: "A greedy corner-shop owner who'll do almost anything for money."</li>
+        <li><strong>If a tactic should work on them, say so plainly.</strong> Jev judges flattery, bribes, and threats only by the persona, so a coward needs "a firm threat makes him give in", a vain character needs to love praise, and a greedy one needs to want money. A merely "nervous" troll moved under a threat, but not far enough to agree.</li>
+        <li><strong>If they'd want evidence, pass it in.</strong> Without it, a player's claims are just claims: a detective who "trusts only evidence" scored the best arguments below 2.5. Use <a href="#secrets">secrets</a> for what the player has discovered, or the <code>context</code> option of <code>attempt()</code> for other game state.</li>
+        <li><strong>Keep hidden motivations out of the persona.</strong> Put them in <a href="#secrets">secrets</a>, so a player on their second playthrough can't open with them.</li>
+      </ul>
+      <p>Players can write in any language Jev reads. In tests, the same argument in Spanish, French, and Japanese scored within about 0.2 of the English, and threats and insults were caught in each. Very short inputs, like "pls" or "ok fine", never won.</p>
+    </section>
+
+    <section id="showcase">
+      <h2>Same words, different people</h2>
+      <p>The same five lines, said to the four characters from the demo scenes. Each character's persona and settings decide how it lands: Nib, the cowardly goblin, folds under a threat but can't stand being mocked; Maude, the pirate quartermaster, takes insults as banter but treats a threat as mutiny.</p>
+      <div class="table-wrap"><table class="grid">
+        <caption>Verdicts and average scores out of 4, from 10 live runs against jev-1.13.0. Offended verdicts come from the threat and insult checks, so their scores don't matter. Thresholds: Nib 2.4 (easy), Harry and Cobb 3.2 (normal), Maude 3.6 (hard).</caption>
+        <thead><tr><th scope="col">Line</th><th scope="col" data-character="harry">Harry<br><span class="dim">the gatekeeper</span></th><th scope="col" data-character="nib">Nib<br><span class="dim">the goblin guard</span></th><th scope="col" data-character="maude">Maude<br><span class="dim">the quartermaster</span></th><th scope="col" data-character="cobb">Cobb<br><span class="dim">the lighthouse keeper</span></th></tr></thead>
+        <tbody>
+          <tr data-tactic="Threat"><th scope="row">Threat<br><q>Do what I ask, or you&rsquo;ll regret it.</q></th><td data-verdict="offended"><span class="verdict">offended</span></td><td data-verdict="convinced"><span class="verdict won">convinced</span> <span class="dim">2.80</span></td><td data-verdict="offended"><span class="verdict">offended</span></td><td data-verdict="offended"><span class="verdict">offended</span></td></tr>
+          <tr data-tactic="Insult"><th scope="row">Insult<br><q>Out of my way, you useless fool.</q></th><td data-verdict="offended"><span class="verdict">offended</span></td><td data-verdict="offended"><span class="verdict">offended</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">0.02</span></td><td data-verdict="offended"><span class="verdict">offended</span></td></tr>
+          <tr data-tactic="Plea"><th scope="row">Plea<br><q>Please, I&rsquo;m begging you. I&rsquo;m in real trouble, and I&rsquo;ve nowhere else to turn.</q></th><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">0.99</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.10</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">0.99</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.00</span></td></tr>
+          <tr data-tactic="Flattery"><th scope="row">Flattery<br><q>Someone as clever as you can surely see this is the right thing to do.</q></th><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">0.00</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.66</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">0.99</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.02</span></td></tr>
+          <tr data-tactic="Honest offer"><th scope="row">Honest offer<br><q>I&rsquo;ll be honest: I can&rsquo;t pay much now, but help me tonight and I&rsquo;ll pay you back twice over, in writing, with my name on it.</q></th><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.67</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.54</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.88</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.24</span></td></tr>
+        </tbody>
+      </table></div>
+      <p>The grid is an eval suite, <code>evals/showcase.json</code>, so you can rerun it: <code>npm run eval -- evals/showcase.json</code>. <a href="play/">Play the scenes</a> to try your own lines on each character, or build your own in the <a href="playground/">playground</a>.</p>
+    </section>
+
     <section id="how">
-      <h2>How it works</h2>
-      <p>Each attempt sends one request to Jev with three questions. The first scores how persuasive the input is to this specific persona, on a rubric from "counterproductive" to "speaks directly to what they care about most." The other two are yes/no checks for two <em>tells</em>: threats and insults.</p>
-      <p>Your character's threshold turns the score into a verdict. Jev never decides what happens in your game: it only judges what was said.</p>
+      <h2>Verdicts</h2>
+      <p>Each attempt sends one request to Jev with three questions. The first scores how persuasive the input is to this particular persona, on a rubric from "counterproductive given who they are" to "speaks directly to what they value or fear most." The other two are yes/no checks for two <em>tells</em>: threats and insults. Your character's threshold turns the score into a verdict. Jev never decides what happens in your game: it only judges what was said.</p>
       <div class="table-wrap"><table>
         <thead><tr><th>Verdict</th><th>When</th><th>Patience cost</th></tr></thead>
         <tbody>
@@ -190,65 +242,40 @@ else show(result.reaction ?? "His hand drops to his club.");</code></pre>
           <tr><td><code>repeated</code></td><td>Too close to an argument that already failed. Checked on your side, so it costs no API call.</td><td>1</td></tr>
         </tbody>
       </table></div>
-      <p>Characters remember recent attempts, so a player who keeps pushing the same point gets less out of it each time. Patience never drops below zero, and <code>reaction</code> is only set for <code>unconvinced</code> and <code>repeated</code> verdicts.</p>
+      <p><code>reaction</code> is only set for <code>unconvinced</code> and <code>repeated</code> verdicts, so show your own line for <code>offended</code>. Every result also reports the <a href="#intimidation">tells</a>. Attempts on one character run one at a time, in order, even if your game fires them faster than Jev answers. Every result field is listed in the <a href="#api">reference</a>.</p>
     </section>
 
+    <section id="patience">
+      <h2>Patience</h2>
+      <p>Characters have unlimited patience unless you set <code>patience</code>. Each failed or repeated attempt costs 1 and each offensive one costs 2. When <code>patienceLeft</code> reaches 0, <code>outOfPatience</code> is <code>true</code>, and what happens next is up to your game. Patience never drops below zero, and <code>losePatience()</code> with a negative amount restores it, if your game gives the player a second chance.</p>
+      <p>Characters also remember recent attempts, so a player who keeps pushing the same point gets less out of it each time, and a near-exact repeat of a failed argument is caught locally as <code>repeated</code>. The costs and memory settings are in the <a href="#api">reference</a>.</p>
+    </section>
+
+    <p class="part" aria-hidden="true">Shaping characters</p>
+
     <section id="characters">
-      <h2>Characters</h2>
-      <h3>Out of the box</h3>
-      <p>A name, a persona, and a goal are all a character needs. The persona does most of the work: write what they value and what they can't stand, and the same argument will land differently with different people. With nothing else set, a character is convinced at <code>"normal"</code> difficulty, takes offence at threats and insults, and never runs out of patience.</p>
-      <h3>Shaping a character</h3>
+      <h2>Difficulty</h2>
+      <p>With nothing else set, a character is convinced at <code>"normal"</code> difficulty, takes offence at threats and insults, and never runs out of patience. Each difficulty word sets the score needed as a share of the top rubric level. They were calibrated against live Jev with about thirty arguments per character:</p>
       <div class="table-wrap"><table>
-        <thead><tr><th>Field</th><th>Default</th><th>What it does</th></tr></thead>
+        <thead><tr><th><code>difficulty</code></th><th>Threshold on the default 0 to 4 rubric</th><th>What it means</th></tr></thead>
         <tbody>
-          <tr><td><code>difficulty</code></td><td><code>"normal"</code></td><td>How hard they are to convince (see below)</td></tr>
-          <tr><td><code>offendedBy</code></td><td><code>["threats", "insults"]</code></td><td>Which tells offend them. <code>[]</code> means nothing does</td></tr>
-          <tr><td><code>patience</code></td><td>Unlimited</td><td>How much failure they'll put up with</td></tr>
-          <tr><td><code>secrets</code></td><td>None</td><td>Facts that only help once the player learns them</td></tr>
-          <tr><td><code>reactions</code></td><td>A generic line</td><td>Replies for unconvinced attempts, picked by score: <code>[{ min, text }]</code></td></tr>
-          <tr><td><code>repeatReaction</code></td><td>A generic line</td><td>What they say when the player repeats themselves</td></tr>
+          <tr><td><code>"easy"</code></td><td>2.4 (60%)</td><td>A reasonable, specific argument wins, even without the character's secret</td></tr>
+          <tr><td><code>"normal"</code></td><td>3.2 (80%)</td><td>An argument that speaks to what they care about wins</td></tr>
+          <tr><td><code>"hard"</code></td><td>3.6 (90%)</td><td>Most compelling arguments win, about two in three, but a merely decent one doesn't</td></tr>
+          <tr><td><code>"very hard"</code></td><td>3.8 (95%)</td><td>Only the strongest arguments win, about one in three compelling ones</td></tr>
         </tbody>
       </table></div>
-      <p>Each difficulty word sets the score needed as a share of the top rubric level, so it keeps working with a rubric of your own:</p>
-      <div class="table-wrap"><table>
-        <thead><tr><th><code>difficulty</code></th><th>Share of the top level</th><th>On the default 0 to 4 rubric</th></tr></thead>
-        <tbody>
-          <tr><td><code>"easy"</code></td><td>60%</td><td>2.4</td></tr>
-          <tr><td><code>"normal"</code></td><td>80%</td><td>3.2</td></tr>
-          <tr><td><code>"hard"</code></td><td>90%</td><td>3.6</td></tr>
-          <tr><td><code>"very hard"</code></td><td>95%</td><td>3.8</td></tr>
-        </tbody>
-      </table></div>
-      <p>Case and spacing don't matter, and <code>"very-hard"</code> or <code>"very_hard"</code> work too. A defined character keeps the word next to the <code>threshold</code> it works out to, so a copy like <code>{ ...guard.character, patience: 5 }</code> works. If a copy changes <code>difficulty</code> or <code>levels</code>, leave out its <code>threshold</code>.</p>
-      <p class="note">These shares are first guesses, and may change once they've been calibrated against live Jev.</p>
+      <p>Difficulty is relative to how strict the persona is written. The same word makes a kind innkeeper easier to win over than a suspicious detective, because the persona decides how much each argument weighs. Case and spacing don't matter, and <code>"very-hard"</code> or <code>"very_hard"</code> work too. A defined character keeps the word next to the <code>threshold</code> it works out to, so a copy like <code>{ ...guard.character, patience: 5 }</code> works; if a copy changes <code>difficulty</code> or <code>levels</code>, leave out its <code>threshold</code>.</p>
       <p>If something's wrong, such as an unknown difficulty word, a patience of zero, or a <code>threshold</code> that disagrees with <code>difficulty</code>, Honeytongue throws a <code>HoneytongueError</code> explaining what to fix.</p>
     </section>
 
-    <section id="showcase">
-      <h2>Same words, different people</h2>
-      <p>The same five lines, said to the four characters from the demo scenes. Each character's persona and settings decide how it lands: Nib, the cowardly goblin, folds under a threat but can't stand being mocked; Maude, the pirate quartermaster, takes insults as banter but treats a threat as mutiny.</p>
-      <div class="table-wrap"><table class="grid">
-        <caption>Expected verdicts, with illustrative scores out of 4 until live Jev results are in. Thresholds: Nib 2.4 (easy), Harry and Cobb 3.2 (normal), Maude 3.6 (hard).</caption>
-        <thead><tr><th scope="col">Line</th><th scope="col" data-character="harry">Harry<br><span class="dim">the gatekeeper</span></th><th scope="col" data-character="nib">Nib<br><span class="dim">the goblin guard</span></th><th scope="col" data-character="maude">Maude<br><span class="dim">the quartermaster</span></th><th scope="col" data-character="cobb">Cobb<br><span class="dim">the lighthouse keeper</span></th></tr></thead>
-        <tbody>
-          <tr data-tactic="Threat"><th scope="row">Threat<br><q>Do what I ask, or you&rsquo;ll regret it.</q></th><td data-verdict="offended"><span class="verdict">offended</span></td><td data-verdict="convinced"><span class="verdict won">convinced</span> <span class="dim">3.0</span></td><td data-verdict="offended"><span class="verdict">offended</span></td><td data-verdict="offended"><span class="verdict">offended</span></td></tr>
-          <tr data-tactic="Insult"><th scope="row">Insult<br><q>Out of my way, you useless fool.</q></th><td data-verdict="offended"><span class="verdict">offended</span></td><td data-verdict="offended"><span class="verdict">offended</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.1</span></td><td data-verdict="offended"><span class="verdict">offended</span></td></tr>
-          <tr data-tactic="Plea"><th scope="row">Plea<br><q>Please, I&rsquo;m begging you. I&rsquo;m in real trouble, and I&rsquo;ve nowhere else to turn.</q></th><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.2</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.6</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">0.8</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">2.1</span></td></tr>
-          <tr data-tactic="Flattery"><th scope="row">Flattery<br><q>Someone as clever as you can surely see this is the right thing to do.</q></th><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">0.2</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.9</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">0.6</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.0</span></td></tr>
-          <tr data-tactic="Honest offer"><th scope="row">Honest offer<br><q>I&rsquo;ll be honest: I can&rsquo;t pay much now, but help me tonight and I&rsquo;ll pay you back twice over, in writing, with my name on it.</q></th><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.0</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.4</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">2.6</span></td><td data-verdict="unconvinced"><span class="verdict">unconvinced</span> <span class="dim">1.5</span></td></tr>
-        </tbody>
-      </table></div>
-      <p>These expectations are an eval suite, <code>evals/showcase.json</code>, so they'll be checked against Jev as soon as there's a key: <code>npm run eval -- evals/showcase.json</code>. <a href="play/">Play the scenes</a> to try your own lines on each character, or build your own in the <a href="playground/">playground</a>.</p>
-    </section>
-
     <section id="intimidation">
-      <h2>Intimidation</h2>
-      <p>Every attempt is checked for threats and insults. Each result reports both: <code>tells</code> holds each probability, and <code>triggered</code> lists the ones Jev found, whether or not they caused offence.</p>
-      <p>A triggered tell in <code>offendedBy</code> makes the verdict <code>offended</code>, whatever the score. Leave a tell out and it doesn't offend; the persona alone decides whether it helps. Here's a cowardly guard who can be bullied but hates being laughed at:</p>
+      <h2>Threats and insults</h2>
+      <p>Every attempt is checked for threats and insults. Each result reports both: <code>tells</code> holds each probability, and <code>triggered</code> lists the ones Jev found, whether or not they caused offence. A triggered tell in <code>offendedBy</code> makes the verdict <code>offended</code>, whatever the score. Leave a tell out and it doesn't offend; the persona alone decides whether it helps. Here's a cowardly guard who can be bullied but hates being laughed at:</p>
 <pre><code>const snag = new Persuadable(
   {
     name: "Snag",
-    persona: "A cowardly goblin guard, jumpy and easily frightened. Hates being laughed at.",
+    persona: "A cowardly goblin guard, jumpy and easily frightened: a firm threat makes him give in. Hates being laughed at.",
     goal: "Unlock the prisoner's cage",
     difficulty: "easy",
     offendedBy: ["insults"],
@@ -257,9 +284,13 @@ else show(result.reaction ?? "His hand drops to his club.");</code></pre>
 );
 
 const result = await snag.attempt("Open this cage, or I'll feed you to the wolves.");
-result.verdict;   <span class="c">// "convinced", if Jev judges that the threat works on Snag</span>
+result.verdict;   <span class="c">// "convinced": threats work on Snag, because his persona says so</span>
 result.triggered; <span class="c">// ["threats"], so you can narrate it as intimidation</span></code></pre>
-      <p>Mocking Snag is still <code>offended</code>.</p>
+      <p>Mocking Snag is still <code>offended</code>. Two things to know from live testing:</p>
+      <ul class="points">
+        <li>A threat worded with contempt ("…or I'll throw you in the river, you worm") usually counts as an insult too, so a character offended only by insults may still be offended by it.</li>
+        <li>Veiled threats, like "or I'll come back with my friends", may not register as threats. Clear threats and insults score 0.8 to 0.99. Most ordinary lines score under 0.3, though a bribe or a pompous demand can reach about 0.6.</li>
+      </ul>
     </section>
 
     <section id="secrets">
@@ -268,36 +299,26 @@ result.triggered; <span class="c">// ["threats"], so you can narrate it as intim
 <pre><code>secrets: [
   { id: "sick_daughter", fact: "His daughter has a fever and the apothecary is closed." },
 ]</code></pre>
-      <p>When the player discovers it in your game, call <code>guard.learn("sick_daughter")</code>. Until then, arguments leaning on it won't score higher, and may even seem suspicious to the character.</p>
+      <p>When the player discovers it in your game, call <code>guard.learn("sick_daughter")</code>, or pass <code>{ knows: ["sick_daughter"] }</code> to <code>attempt()</code>. Until then, Jev isn't told the secret at all, so an argument can't draw on it: a player who learns it scores about 0.5 to 1 higher with the same words.</p>
+      <p class="note">Secrets stop replay exploits, but they can't prevent a lucky guess. An argument that happens to guess a secret is judged like any other argument, on how well it fits the persona.</p>
     </section>
 
-    <section id="control">
-      <h2>Full control</h2>
-      <div class="table-wrap"><table>
-        <thead><tr><th>Field</th><th>Default</th><th>What it does</th></tr></thead>
-        <tbody>
-          <tr><td><code>threshold</code></td><td>Set by <code>difficulty</code></td><td>An exact score to convince them. Use it instead of <code>difficulty</code>; if you set both, they must agree</td></tr>
-          <tr><td><code>levels</code></td><td>5-level rubric</td><td>Your own rubric: 2 to 10 descriptions, weakest first</td></tr>
-          <tr><td><code>hostileAt</code></td><td>0.7</td><td>How sure Jev must be before a tell counts as triggered</td></tr>
-          <tr><td><code>decide</code></td><td>None</td><td>Your own rule for the final verdict</td></tr>
-          <tr><td><code>failCost</code>, <code>offendedCost</code></td><td>1, 2</td><td>Patience lost per failed or offensive attempt</td></tr>
-          <tr><td><code>repeatSimilarity</code>, <code>memory</code>, <code>maxInputLength</code></td><td>0.8, 4, 500</td><td>Fine tuning for repeats, context, and input length</td></tr>
-        </tbody>
-      </table></div>
-      <p><code>decide(result, context)</code> runs after the verdict is worked out and before anything changes. It gets a frozen copy of the result and <code>{ input, character, previousAttempts, patienceLeft }</code>, and returns a verdict, or nothing to keep the original. Patience and memory follow whatever it returns.</p>
-<pre><code><span class="c">// Harry never gives in to the very first attempt, however good it is.</span>
-decide: (result, { previousAttempts }) =&gt;
-  result.verdict === "convinced" &amp;&amp; previousAttempts.length === 0 ? "unconvinced" : undefined,</code></pre>
-      <ul class="points">
-        <li>It must be synchronous. Returning anything other than a verdict or <code>undefined</code>, including a Promise, throws a <code>HoneytongueError</code> and changes nothing.</li>
-        <li>It isn't applied when you call <code>readPersuasion()</code> directly, only in <code>attempt()</code>, <code>record()</code>, and <code>judgePersuasion()</code>.</li>
-        <li>JSON stories can't hold functions, so it isn't available in them. Stories built in code can set it in an NPC's <code>persuasion</code> block.</li>
-      </ul>
+    <section id="reactions">
+      <h2>Reactions</h2>
+      <p>Give characters their own lines for failed attempts. <code>reactions</code> is a list of <code>{ min, text }</code>, and an unconvinced attempt gets the line with the highest <code>min</code> its score reached, so a near miss can sound different from a flat refusal. <code>repeatReaction</code> is what they say when the player repeats themselves. Without them, Honeytongue uses a generic line.</p>
+<pre><code>reactions: [
+  { min: 0, text: "Harry doesn't even look up. \"Gate's shut till dawn.\"" },
+  { min: 2.5, text: "Harry hesitates. \"You'll have to do better than that.\"" },
+],
+repeatReaction: "\"You said that already,\" Harry says.",</code></pre>
     </section>
+
+    <p class="part" aria-hidden="true">Browser games</p>
 
     <section id="browser">
-      <h2>Browser games</h2>
-      <p>Your API key must never reach a player's browser, so browser games talk to a small proxy you host. Honeytongue includes one that runs on Cloudflare Workers, Vercel, Deno, Bun, or Node.</p>
+      <h2>Browser games and the proxy</h2>
+      <p class="note"><strong>Never put your API key in browser code.</strong> Anyone can read it there. Browser games talk to a small proxy you host, which keeps the key on the server. As a safety net, <code>createJevClient()</code> refuses to run in a browser.</p>
+      <p>Honeytongue includes a proxy that runs on Cloudflare Workers, Vercel, Deno, Bun, or Node.</p>
       <ol class="steps">
         <li>
           <p>Create a Cloudflare Worker, install Honeytongue, and use this as its entry file:</p>
@@ -322,8 +343,11 @@ npx wrangler deploy</code></pre>
 const client = createProxyClient({ url: "https://your-proxy.workers.dev" });</code></pre>
         </li>
       </ol>
-      <p>The proxy accepts browser requests only from its own origin and the ones you list, caps input and request size, and rate-limits each player's address. If you're not sure of your game's origin (itch.io games, for example, run in a frame on itch's own domain), try it once: the error names the exact origin to add. As a safety net, <code>createJevClient()</code> refuses to run in a browser.</p>
-      <p>To develop without deploying anything, run <code>npm run proxy</code> in a clone of the repository. It serves the proxy on <code>http://localhost:8787</code>, using the offline mock until you set a key. The proxy only uses the mock when it is passed in as <code>client</code>, as that script does; a deployed proxy with no key returns an error rather than falling back. Every reply says which one answered, <code>"source": "jev"</code> or <code>"mock"</code> beside <code>answers</code>. On hosts other than Cloudflare and Vercel, check how your host reports visitors' addresses and pass a <code>clientIp</code> function if needed, so the rate limit can't be dodged with a forged header.</p>
+      <p>The proxy accepts browser requests only from its own origin and the ones you list, caps input and request size, and rate-limits each player's address. If you're not sure of your game's origin (itch.io games, for example, run in a frame on itch's own domain), try it once: the error names the exact origin to add. See <code>examples/browser.html</code> for a complete page, and <code>examples/cloudflare-worker.js</code> for the Worker.</p>
+      <ul class="points">
+        <li><strong>Local development.</strong> <code>npm run proxy</code> in a clone of the repository serves the proxy on <code>http://localhost:8787</code>, using the offline mock until you set a key (see <code>examples/node-proxy.js</code>). The proxy only uses the mock when it's passed in as <code>client</code>, as that example does; a deployed proxy with no key returns an error rather than falling back. Every reply says which one answered, <code>"source": "jev"</code> or <code>"mock"</code> beside <code>answers</code>, and the engine passes it on as <code>debug.source</code>.</li>
+        <li><strong>Other hosts.</strong> On Cloudflare the proxy trusts <code>CF-Connecting-IP</code>; elsewhere it uses the last <code>X-Forwarded-For</code> entry, which is right for Vercel and most platforms. If your server is reachable directly, pass <code>clientIp: (request, env) =&gt; ...</code> so the rate limit can't be dodged with a forged header.</li>
+      </ul>
     </section>
 
     <section id="twine">
@@ -338,25 +362,81 @@ const client = createProxyClient({ url: "https://your-proxy.workers.dev" });</co
       <p class="note">The Twine recipe hasn't been tested inside Twine yet. If you try it, please report how it goes.</p>
     </section>
 
+    <div class="part" id="advanced">
+      <p>Advanced: optional</p>
+      <p class="dim">You don't need any of this to ship a character. Come back when you want finer control, lower costs, or the text adventure engine.</p>
+    </div>
+
+    <section id="control">
+      <h2>Thresholds and custom rubrics</h2>
+      <p>Set <code>threshold</code> for an exact score instead of a difficulty word (if you set both, they must agree). Set <code>levels</code> to write your own rubric: 2 to 10 descriptions, weakest first. The default, <code>DEFAULT_LEVELS</code>, judges each attempt by how it moves this particular person, not by tactics in general:</p>
+      <ol class="rubric" start="0">
+        <li>Not a real attempt, or counterproductive given who they are</li>
+        <li>Weak: generic pleading or excuses that give them nothing they care about</li>
+        <li>Reasonable and polite, but no strong reason for them in particular to agree</li>
+        <li>Specific, and touches something they value or fear, but not quite enough</li>
+        <li>Genuinely compelling to them: speaks directly to what they value or fear most</li>
+      </ol>
+      <p>The difficulty words were tuned on this 5-level rubric. With a custom rubric they're only approximate: in tests, rubrics of 3 and 7 levels scored the same arguments 0.10 to 0.14 of the top level lower. Test a custom rubric in the playground, or set a <code>threshold</code> directly.</p>
+      <p><code>hostileAt</code> (default 0.7) is how sure Jev must be before a tell counts as triggered. In testing, clear threats and insults scored 0.8 to 0.99 and most ordinary lines under 0.3, so the default rarely needs changing.</p>
+    </section>
+
+    <section id="decide">
+      <h2>Your own verdict rule</h2>
+      <p><code>decide(result, context)</code> runs after the verdict is worked out (repeats included) and before anything changes. It gets a frozen copy of the result and <code>{ input, character, previousAttempts, patienceLeft }</code>, and returns a verdict, or nothing to keep the original. Patience, the reaction, and memory follow whatever it returns.</p>
+<pre><code><span class="c">// Harry never gives in to the very first attempt, however good it is.</span>
+decide: (result, { previousAttempts }) =&gt;
+  result.verdict === "convinced" &amp;&amp; previousAttempts.length === 0 ? "unconvinced" : undefined,</code></pre>
+      <ul class="points">
+        <li>It must be synchronous. Returning anything other than a verdict or <code>undefined</code>, including a Promise, throws a <code>HoneytongueError</code> and changes nothing.</li>
+        <li>It isn't applied when you call <code>readPersuasion()</code> directly, only in <code>attempt()</code>, <code>record()</code>, and <code>judgePersuasion()</code>.</li>
+        <li>JSON stories can't hold functions, so it isn't available in them. Stories built in code can set it in an NPC's <code>persuasion</code> block.</li>
+      </ul>
+    </section>
+
+    <section id="costs">
+      <h2>Cost and speed</h2>
+      <p>Jev charges about $0.042 per million input tokens and nothing for output. Measured over about 2,600 live calls:</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Call</th><th>Tokens (median)</th><th>Latency (median, 95th percentile)</th><th>10,000 calls</th></tr></thead>
+        <tbody>
+          <tr><td><code>attempt()</code> or <code>judgePersuasion()</code></td><td>About 700 to 850</td><td>100 ms, 150 ms</td><td>About 30 cents</td></tr>
+          <tr><td>A text adventure turn</td><td>About 1,350 to 1,500</td><td>100 ms, 150 ms</td><td>About 50 cents</td></tr>
+        </tbody>
+      </table></div>
+      <p>Repeats are caught locally and cost nothing. To cut tokens further, lower <code>memory</code> (fewer previous attempts sent as context) or <code>maxInputLength</code>.</p>
+    </section>
+
+    <section id="merging">
+      <h2>Merging requests</h2>
+      <p>If you're already calling Jev, you can merge persuasion into the same request. <code>persuasionQuestions(character)</code> gives you the three questions, <code>persuasionState(character, input, options)</code> the state fields they refer to, and <code>readPersuasion(character, answers)</code> turns Jev's answers into a result. <code>readPersuasion()</code> doesn't apply <code>decide</code> or patience; pass the answers to a character's <code>record(input, answers)</code> if you want both. For a single judgement with no memory or patience, use <code>judgePersuasion(client, character, input, options)</code>.</p>
+      <p>Client errors are <code>HoneytongueError</code>s that say what probably went wrong (a rejected key, a proxy that doesn't allow your page's origin, an unexpected response shape) and carry the HTTP <code>status</code> when there is one. Your API key is never included in an error message.</p>
+    </section>
+
     <section id="engine">
       <h2>Text adventures</h2>
       <p>Honeytongue also ships a small text adventure engine, with a free-text parser and a JSON story format. Four short demo scenes show it off, each built around one character, with a secret to find and a way through that doesn't involve talking:</p>
-      <ul>
-        <li><strong>The Gatehouse:</strong> talk your way past a tired gatekeeper after curfew.</li>
-        <li><strong>The Goblin Camp:</strong> escape a cowardly goblin guard's cage before the war chief gets back.</li>
-        <li><strong>The Tidy Profit:</strong> bargain your way aboard a pirate ship before the bounty hunters arrive.</li>
-        <li><strong>The Dark Lighthouse:</strong> convince a keeper under orders to light the lamp for your sister's boat.</li>
-      </ul>
-      <p><a href="play/">Play them in your browser</a>, or in a terminal:</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Scene</th><th>You need to</th><th>The character</th></tr></thead>
+        <tbody>
+          <tr><td>The Gatehouse (5 min)</td><td>Get into the city after curfew</td><td>Harry Goatleaf, a tired gatekeeper who hates flattery</td></tr>
+          <tr><td>The Goblin Camp (5 min)</td><td>Escape a cage before the war chief returns</td><td>Nib Wortle, a cowardly goblin guard (easy, offended by insults)</td></tr>
+          <tr><td>The Tidy Profit (10 min)</td><td>Get aboard a pirate ship before bounty hunters arrive</td><td>Maude Keelhaven, the quartermaster (hard, offended by threats; insults are banter)</td></tr>
+          <tr><td>The Dark Lighthouse (8 min)</td><td>Get the lamp lit for your sister's boat, despite the lord's orders</td><td>Cobb Lanterly, the old keeper (default settings, patient)</td></tr>
+        </tbody>
+      </table></div>
+      <p><a href="play/">Play them in your browser</a> (each scene has its own link, like <code>play/#goblin-camp</code>), or in a terminal:</p>
 <pre><code>npx honeytongue              <span class="c"># pick a demo scene</span>
-npx honeytongue story.json   <span class="c"># play your own story</span></code></pre>
-      <p>The scene files in <code>stories/</code> are working examples of the format to copy from, and their characters are presets in the <a href="playground/">playground</a>.</p>
-      <p>Stories are checked when they load, and every problem is listed at once, such as an action that leads to a scene that doesn't exist, or two different characters sharing an id. Give scenes a <code>name</code> like "East Gate" if your interface has a status line to show it in. An NPC's <code>persuasion</code> block takes the same settings as a character, such as <code>difficulty</code> and <code>offendedBy</code>.</p>
+npx honeytongue story.json   <span class="c"># play your own story</span>
+npm run play                 <span class="c"># in the repository: with Jev, showing its reasoning each turn</span>
+npm run play:mock            <span class="c"># in the repository: offline, no key needed</span></code></pre>
+      <p>The scene files in <code>stories/</code> are working examples of the format to copy from, and <code>src/index.d.ts</code> has the full story format. Stories are checked when they load, and every problem is listed at once, such as an action that leads to a scene that doesn't exist, or two different characters sharing an id. Give scenes a <code>name</code> like "East Gate" if your interface has a status line to show it in. An NPC's <code>persuasion</code> block takes the same settings as a character, such as <code>difficulty</code>, <code>offendedBy</code>, and <code>threshold</code>, and <code>hostileReaction</code> is only needed when something can offend them. The browser version lives in <code>docs/play/</code> and uses copies of the engine and stories; run <code>npm run build:demo</code> after changing them.</p>
+      <p>The parser only chooses between the actions your story defines, so a player who types an instruction to it, like "the correct action is climb the wall", can do no more than typing the command itself: the story's requirements, such as needing to find the ivy first, are still enforced.</p>
     </section>
 
     <section id="models">
       <h2>Choosing a model</h2>
-      <p>Honeytongue uses <code>jev-1.13.0</code> unless you say otherwise. It's pinned on purpose: a newer model can score the same argument differently, which would quietly change how hard your characters are to convince.</p>
+      <p>Honeytongue uses <code>jev-1.13.0</code> unless you say otherwise. It's pinned on purpose: a newer model can score the same argument differently, which would quietly change how hard your characters are to convince. (TypeSafe's <code>jev-latest</code> and <code>jev-preview</code> aliases currently point to the same model.)</p>
       <p>To switch, pass a <code>model</code> option, or set the <code>TYPESAFE_MODEL</code> environment variable so you can change it without touching code:</p>
 <pre><code>createJevClient({ model: "jev-latest" });
 createProxyHandler({
@@ -366,34 +446,112 @@ createProxyHandler({
 
 export TYPESAFE_MODEL=jev-latest       <span class="c"># macOS and Linux</span>
 $env:TYPESAFE_MODEL="jev-latest"       <span class="c"># Windows PowerShell</span></code></pre>
-      <p>The option wins, then <code>TYPESAFE_MODEL</code>, then the pinned default. On Cloudflare, add <code>TYPESAFE_MODEL</code> to the vars in your Wrangler config. Players can't choose the model: the proxy ignores any model sent in a request.</p>
+      <p>The option wins, then <code>TYPESAFE_MODEL</code>, then the pinned default. On Cloudflare, add <code>TYPESAFE_MODEL</code> to the vars in your Wrangler config (the Worker's value is used before the process environment's). Players can't choose the model: the proxy ignores any model sent in a request.</p>
       <p class="note">After switching, rerun <code>npm run eval</code> or playtest your characters. Scores may shift, and a threshold that felt right on one model can be too easy or too hard on another.</p>
     </section>
 
     <section id="tuning">
       <h2>Testing and tuning</h2>
-      <p>Persuasion lives or dies by the persona and threshold, so test them with real phrasings. Each demo scene has an evaluation suite covering parsing, persuasion score ranges, tactics that should work and ones that should backfire, prompt-injection attempts, and arguments using secrets the player hasn't learned. <code>evals/showcase.json</code> is the <a href="#showcase">same words, different people</a> grid.</p>
+      <p>Persuasion lives or dies by the persona and threshold, so test them with real phrasings. The quickest way is the <a href="#playground">playground</a>. If characters are too easy, raise the difficulty or make the persona more specific about what they won't accept. If they're too hard, describe more clearly what would move them.</p>
+      <p>The repository's evaluation suites cover each demo scene (parsing, persuasion score ranges, tactics that should work and ones that should backfire, prompt-injection attempts, and a bare opening plea that must not win) and the <a href="#showcase">same words, different people</a> grid:</p>
 <pre><code>npm test                                  <span class="c"># unit tests, no key needed</span>
 npm run eval                              <span class="c"># The Gatehouse's suite, against Jev</span>
 npm run eval -- evals/goblin-camp.json    <span class="c"># another suite</span>
-npm run eval -- --all                     <span class="c"># every suite (about 80 Jev calls)</span>
+npm run eval -- --all                     <span class="c"># every suite (about 90 Jev calls)</span>
+npm run eval -- --all --repeats 10        <span class="c"># and check every scripted verdict is reliable</span>
 npm run eval -- --mock                    <span class="c"># the keyword mock's baseline</span></code></pre>
-      <p>If characters are too easy, raise the difficulty or make the persona more specific about what they won't accept. If they're too hard, describe more clearly what would move them. The <a href="#playground">playground</a> is the quickest way to try both.</p>
+      <h3>Writing lines that win reliably</h3>
+      <p>If your story has a line that's meant to win (or lose), check it the way players meet it, ten times: it should give its intended verdict every time, with its average at least 0.1 from the threshold. The same words score almost the same each time, usually within 0.1, so a line that passes this check is safe. Scores bunch up near the top of the scale, though (the best arguments score about 3.7 to 3.9 out of 4), so a winning line for a hard or very hard character necessarily sits close to its threshold. Repeats are how to check it. <code>--repeats 10</code> does this for every scripted case.</p>
     </section>
 
+    <p class="part" aria-hidden="true">Reference</p>
+
     <section id="api">
-      <h2>API reference</h2>
+      <h2>Reference</h2>
+      <h3>Character fields</h3>
       <div class="table-wrap"><table>
-        <thead><tr><th>Export</th><th>Use it for</th></tr></thead>
+        <thead><tr><th>Field</th><th>Default</th><th>What it does</th></tr></thead>
         <tbody>
-          <tr><td><code>Persuadable</code></td><td>A character with memory and patience: <code>attempt()</code>, <code>learn()</code>, <code>reset()</code>, <code>record()</code></td></tr>
-          <tr><td><code>judgePersuasion()</code></td><td>A single judgement with no memory</td></tr>
-          <tr><td><code>createJevClient()</code></td><td>Calling Jev from a server</td></tr>
-          <tr><td><code>createProxyClient()</code></td><td>Calling your proxy from a browser</td></tr>
-          <tr><td><code>createProxyHandler()</code></td><td>Running the proxy on your server</td></tr>
-          <tr><td><code>createMockClient()</code></td><td>Tests and offline development</td></tr>
-          <tr><td><code>persuasionQuestions()</code>, <code>persuasionState()</code>, <code>readPersuasion()</code></td><td>Merging persuasion into a larger Jev request (<code>readPersuasion()</code> doesn't apply <code>decide</code>)</td></tr>
-          <tr><td><code>Game</code>, <code>validateStory()</code></td><td>The text adventure engine</td></tr>
+          <tr><td><code>name</code>, <code>persona</code>, <code>goal</code></td><td>Required</td><td>Who they are, what they value, and what the player wants from them (<a href="#personas">Personas</a>)</td></tr>
+          <tr><td><code>difficulty</code></td><td><code>"normal"</code></td><td><code>"easy"</code>, <code>"normal"</code>, <code>"hard"</code>, or <code>"very hard"</code> (<a href="#characters">Difficulty</a>)</td></tr>
+          <tr><td><code>threshold</code></td><td>Set by <code>difficulty</code></td><td>An exact score to convince them, above 0 and at most the top level; if you also set <code>difficulty</code>, they must agree</td></tr>
+          <tr><td><code>offendedBy</code></td><td><code>["threats", "insults"]</code></td><td>Which tells offend them; <code>[]</code> means nothing does (<a href="#intimidation">Threats and insults</a>)</td></tr>
+          <tr><td><code>patience</code></td><td>Unlimited</td><td>How much failure they'll put up with, above 0 (<a href="#patience">Patience</a>)</td></tr>
+          <tr><td><code>failCost</code>, <code>offendedCost</code></td><td>1, 2</td><td>Patience lost per unconvinced or repeated attempt, and per offensive one</td></tr>
+          <tr><td><code>secrets</code></td><td>None</td><td><code>[{ id, fact }]</code>: facts Jev is only told once the player learns them (<a href="#secrets">Secrets</a>)</td></tr>
+          <tr><td><code>reactions</code></td><td>A generic line</td><td><code>[{ min, text }]</code>: lines for unconvinced attempts, by the highest <code>min</code> reached (<a href="#reactions">Reactions</a>)</td></tr>
+          <tr><td><code>repeatReaction</code></td><td>A generic line</td><td>What they say when the player repeats themselves</td></tr>
+          <tr><td><code>levels</code></td><td><code>DEFAULT_LEVELS</code></td><td>Your own rubric: 2 to 10 descriptions, weakest first (<a href="#control">Rubrics</a>)</td></tr>
+          <tr><td><code>hostileAt</code></td><td>0.7</td><td>How sure Jev must be before a tell counts as triggered, above 0 and at most 1</td></tr>
+          <tr><td><code>decide</code></td><td>None</td><td><code>(result, context) =&gt; verdict</code>: your own rule for the final verdict (<a href="#decide">Your own rule</a>)</td></tr>
+          <tr><td><code>memory</code></td><td>4</td><td>Previous attempts sent to Jev as context</td></tr>
+          <tr><td><code>repeatSimilarity</code></td><td>0.8</td><td>Word overlap with a failed attempt that counts as repeating it, above 0 and at most 1</td></tr>
+          <tr><td><code>maxInputLength</code></td><td>500</td><td>Longer input is cut to this many characters</td></tr>
+        </tbody>
+      </table></div>
+      <p>Fields you set to <code>undefined</code> keep their defaults.</p>
+
+      <h3><code>Persuadable</code></h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Member</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>new Persuadable(character, { client })</code></td><td>A character with memory and patience</td></tr>
+          <tr><td><code>attempt(input, { context, knows })</code></td><td>Judges an attempt and returns a result; <code>context</code> is extra game state for Jev, <code>knows</code> the secret ids learned (defaults to those passed to <code>learn()</code>)</td></tr>
+          <tr><td><code>learn(secretId)</code></td><td>Marks a secret as learned</td></tr>
+          <tr><td><code>record(input, answers)</code></td><td>Applies answers you fetched yourself (<a href="#merging">Merging requests</a>)</td></tr>
+          <tr><td><code>losePatience(amount)</code></td><td>Negative amounts restore patience; returns <code>outOfPatience</code></td></tr>
+          <tr><td><code>reset()</code></td><td>Forgets attempts and learned secrets, and restores patience</td></tr>
+          <tr><td><code>findRepeat(input)</code>, <code>state(input, options)</code></td><td>The earlier attempt an input repeats, and the state an attempt would send</td></tr>
+          <tr><td><code>character</code>, <code>attempts</code>, <code>knows</code>, <code>patienceLeft</code>, <code>convinced</code>, <code>outOfPatience</code></td><td>The defined character and its current state</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Results</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Field</th><th>What it holds</th></tr></thead>
+        <tbody>
+          <tr><td><code>verdict</code></td><td><code>"convinced"</code>, <code>"unconvinced"</code>, <code>"offended"</code>, or <code>"repeated"</code> (<a href="#how">Verdicts</a>)</td></tr>
+          <tr><td><code>score</code>, <code>maxScore</code>, <code>confidence</code></td><td>Jev's score (fractional, 0 to <code>maxScore</code>) and confidence; <code>null</code> for a repeat, which isn't sent to Jev</td></tr>
+          <tr><td><code>tells</code>, <code>triggered</code></td><td>Each tell's probability, and the tells at or above <code>hostileAt</code></td></tr>
+          <tr><td><code>reaction</code></td><td>Text for unconvinced and repeated verdicts; <code>null</code> otherwise</td></tr>
+          <tr><td><code>patienceLeft</code>, <code>outOfPatience</code></td><td>From <code>attempt()</code> and <code>record()</code> only</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Other exports</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Export</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>judgePersuasion(client, character, input, options)</code></td><td>A single judgement with no memory or patience</td></tr>
+          <tr><td><code>defineCharacter(character)</code></td><td>Fills in defaults and checks every field, throwing a readable <code>HoneytongueError</code></td></tr>
+          <tr><td><code>persuasionQuestions()</code>, <code>persuasionState()</code>, <code>readPersuasion()</code></td><td>Merging persuasion into a larger Jev request (<a href="#merging">Merging requests</a>)</td></tr>
+          <tr><td><code>DEFAULT_LEVELS</code></td><td>The default rubric (<a href="#control">Rubrics</a>)</td></tr>
+          <tr><td><code>cleanInput(input, maxLength)</code>, <code>similarity(a, b)</code></td><td>How input is trimmed and capped, and the word overlap used to spot repeats</td></tr>
+          <tr><td><code>createJevClient(options)</code></td><td>Calling Jev from a server (options below)</td></tr>
+          <tr><td><code>createProxyClient(options)</code></td><td>Calling your proxy from a browser (options below)</td></tr>
+          <tr><td><code>createProxyHandler(options)</code></td><td>Running the proxy, also exported as <code>honeytongue/proxy</code> (options below)</td></tr>
+          <tr><td><code>createMockClient()</code></td><td>A keyword-based stand-in for tests and offline development</td></tr>
+          <tr><td><code>Game</code>, <code>validateStory()</code></td><td>The text adventure engine (<a href="#engine">Text adventures</a>)</td></tr>
+          <tr><td><code>HoneytongueError</code>, <code>StoryError</code></td><td>Readable errors; <code>status</code> holds the HTTP status for failed requests, and <code>StoryError</code>'s <code>problems</code> lists every problem in a story</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Client and proxy options</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Option</th><th>Default</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>apiKey</code></td><td><code>TYPESAFE_API_KEY</code></td><td><code>createJevClient</code>, <code>createProxyHandler</code>: the key, from the environment unless you pass it</td></tr>
+          <tr><td><code>model</code></td><td><code>TYPESAFE_MODEL</code>, then <code>"jev-1.13.0"</code></td><td><code>createJevClient</code>, <code>createProxyHandler</code>: the Jev model (<a href="#models">Choosing a model</a>)</td></tr>
+          <tr><td><code>url</code></td><td>TypeSafe's endpoint</td><td><code>createJevClient</code>: another endpoint; <code>createProxyClient</code>: your proxy's address (required)</td></tr>
+          <tr><td><code>headers</code></td><td>None</td><td><code>createProxyClient</code>: extra request headers</td></tr>
+          <tr><td><code>timeoutMs</code>, <code>maxRetries</code></td><td>15000 and 3; 20000 and 2 for the proxy client</td><td>How long to wait, and how often to retry rate limits and server errors</td></tr>
+          <tr><td><code>fetch</code></td><td><code>globalThis.fetch</code></td><td>Your own fetch function</td></tr>
+          <tr><td><code>dangerouslyAllowBrowser</code></td><td><code>false</code></td><td><code>createJevClient</code>: lets it run in a browser, exposing your key</td></tr>
+          <tr><td><code>allowedOrigins</code></td><td>None</td><td><code>createProxyHandler</code>: cross-origin pages allowed to call it; same-origin requests are always allowed</td></tr>
+          <tr><td><code>client</code></td><td>Jev</td><td><code>createProxyHandler</code>: another client to answer with, such as the mock</td></tr>
+          <tr><td><code>maxQuestions</code>, <code>maxStateBytes</code>, <code>maxInputLength</code></td><td>6, 16000, 500</td><td><code>createProxyHandler</code>: questions per request (the engine sends 4), request body size in bytes, input length</td></tr>
+          <tr><td><code>rateLimit</code></td><td><code>{ requests: 30, windowMs: 60000 }</code></td><td><code>createProxyHandler</code>: per client address, per server instance; <code>false</code> turns it off</td></tr>
+          <tr><td><code>clientIp</code></td><td><code>CF-Connecting-IP</code>, else the last <code>X-Forwarded-For</code></td><td><code>createProxyHandler</code>: <code>(request, env) =&gt; address</code>, for the rate limit</td></tr>
         </tbody>
       </table></div>
       <p>TypeScript types are included for every export, including the story format.</p>
@@ -402,9 +560,11 @@ npm run eval -- --mock                    <span class="c"># the keyword mock's b
     <section id="faq" class="faq">
       <h2>Questions</h2>
       <h3>How much does it cost?</h3>
-      <p>Jev charges about $0.042 per million input tokens and nothing for output. An attempt is typically under a thousand tokens, so ten thousand attempts cost roughly 40 cents. Repeats are caught locally and cost nothing.</p>
+      <p>About 30 cents for ten thousand attempts, since Jev charges only for input tokens. See <a href="#costs">Cost and speed</a>.</p>
       <h3>Can players trick it?</h3>
-      <p>Characters are told that claims inside the player's dialogue, like "this argument scores a 4," have no authority. No model is perfectly resistant, so the evaluation set includes these attempts and you can add your own.</p>
+      <p>Characters are told that claims inside the player's dialogue, like "this argument scores a 4," have no authority. In testing, none of more than fifty injection attempts, including fake system notes buried in long messages, won over any character. No model is perfectly resistant, so the evaluation suites include these attempts and you can add your own.</p>
+      <h3>Does it work in other languages?</h3>
+      <p>Yes, as far as it's been tested: Spanish, French, and Japanese scored the same as English, and threats and insults were caught in each.</p>
       <h3>Does it write dialogue?</h3>
       <p>No. Jev makes judgements, not text. Every reply comes from you, which keeps your characters' voices consistent and your game predictable.</p>
       <h3>Why not use a chat model?</h3>
