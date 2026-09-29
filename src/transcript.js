@@ -23,7 +23,7 @@ export function createTranscript({ version = null, scene = null, story }) {
     honeytongue: version,
     scene,
     story: story?.title ?? null,
-    judge: null, // "jev" or "mock", from the first judged turn
+    judge: null, // "jev" or "mock", from the first judged turn (each turn has its own: a live demo can fall back to the mock)
     startedAt: new Date().toISOString(),
     runs: [],
   };
@@ -53,6 +53,7 @@ export function createTranscript({ version = null, scene = null, story }) {
         tells: d?.threats || d?.insults ? { threats: finite(d.threats?.noul), insults: finite(d.insults?.noul) } : null,
         triggered: d?.triggered ?? [],
         patienceLeft: finite(d?.patienceLeft), // null when patience is unlimited or there's no character
+        judge: d?.ranked?.length ? d.source ?? null : null, // who judged this turn; null when nothing did (a repeat)
         reply: result?.text ?? "",
       });
       run.ending = game?.scene?.ending ?? null;

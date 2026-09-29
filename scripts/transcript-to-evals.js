@@ -30,7 +30,7 @@ export function transcriptToEvals(transcript, scenes = []) {
       if (turn.items?.length) c.items = turn.items;
       if (["convinced", "unconvinced", "offended"].includes(turn.verdict)) c.verdict = turn.verdict;
       const scored = Number.isFinite(turn.score) && Number.isFinite(turn.threshold) ? `: scored ${turn.score.toFixed(2)} against ${turn.threshold}` : "";
-      c.note = `DRAFT from a playtest judged by ${transcript.judge ?? "an unknown judge"} (run ${r + 1}, turn ${turn.n})${scored}. Review before adding.`;
+      c.note = `DRAFT from a playtest judged by ${turn.judge ?? transcript.judge ?? "an unknown judge"} (run ${r + 1}, turn ${turn.n})${scored}. Review before adding.`;
       cases.push(c);
     }
   });

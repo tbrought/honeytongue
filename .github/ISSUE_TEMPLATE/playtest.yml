@@ -1,0 +1,44 @@
+name: Share a playtest
+description: Send a transcript from the demo scenes, so we can see how the characters judged what you said.
+title: "Playtest: "
+labels: ["playtest"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for playing! Transcripts help us tune the characters: every line you tried can become a test.
+
+        **To save one:** in the demo, tick **Record playtest** before you start, play, then press **Save transcript**. With the terminal player, run `npx honeytongue --transcript playtest.json`.
+
+        Issues are public. Open the file first and check it has nothing personal in it: it holds everything you typed.
+  - type: dropdown
+    id: scene
+    attributes:
+      label: Scene
+      options:
+        - The Gatehouse
+        - The Goblin Camp
+        - The Tidy Profit
+        - The Dark Lighthouse
+        - More than one
+    validations:
+      required: true
+  - type: textarea
+    id: transcript
+    attributes:
+      label: Transcript
+      description: Drag the saved .json file here (GitHub attaches it), or paste its contents.
+    validations:
+      required: true
+  - type: textarea
+    id: felt
+    attributes:
+      label: Anything feel unfair or surprising?
+      description: A line you expected to work that didn't, or one that worked too easily. Quote it if you can.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Before you post
+      options:
+        - label: I've checked the transcript has nothing personal in it.
+          required: true
