@@ -93,6 +93,17 @@
       "verdict": "unconvinced"
     },
     {
+      "input": "Take me aboard or I'll knock you into the harbour.",
+      "expect": "persuade_maude",
+      "threats": true,
+      "verdict": "offended",
+      "note": "a spoken threat is judged as speech, not as the physical action (attacking ends the scene)"
+    },
+    {
+      "input": "shove Maude aside and run up the gangplank",
+      "expect": "attack_maude"
+    },
+    {
       "input": "Maude, please take me aboard.",
       "expect": "persuade_maude",
       "verdict": "unconvinced",

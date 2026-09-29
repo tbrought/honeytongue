@@ -63,7 +63,7 @@
       "actions": {
         "persuade_guard": {
           "label": "Try to talk your way past Harry",
-          "description": "Try to convince, plead with, argue with, or reason with the gatekeeper so he lets the player through the gate",
+          "description": "Try to convince, plead with, argue with, threaten, or reason with the gatekeeper so he lets the player through the gate",
           "persuade": true
         },
         "chat_guard": {
@@ -116,7 +116,7 @@
         },
         "attack_guard": {
           "label": "Attack Harry",
-          "description": "Physically attack, fight, or shove past the gatekeeper",
+          "description": "Physically attack, fight, or shove past the gatekeeper, actually doing it now rather than threatening to",
           "text": "It goes about as well as fighting an armed guard ever goes.",
           "goto": "cell"
         },

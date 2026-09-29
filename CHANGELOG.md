@@ -4,6 +4,11 @@
 
 ### Changed
 
+- **A turn is charged once for hostility.** When a costly action comes with hostile words (a threat while grabbing Cobb's key), only the larger of the two patience costs applies, not both. A playtest lost 5 of Cobb's 10 patience in one turn this way.
+- **The attempt that uses up a character's last patience shows only their out-of-patience text**, instead of an ordinary reaction ("Go on...") followed by the end of the scene.
+- **Spoken threats are judged as speech in every scene.** "Open the gate or I'll punch you" used to be read as attacking Harry, which ends The Gatehouse; the same happened in The Tidy Profit, and in The Dark Lighthouse threats were read as grabbing the key. Each scene's physical actions now say they mean actually doing it, and each persuasion action lists threatening, so threats go to the character (who may take offence) while physical commands still do what they say. Each scene's suite checks it.
+- **Maude has 5 patience instead of 3**, and her near-miss reaction now says what's missing ("Close. Now tell me what's in it for me, and how you'd prove it."). In a playtest, a good argument (3.44 against her 3.6) came with only one attempt left; with the hint and the extra patience, an improved argument won 10 of 10 times.
+
 - **Characters remember their last 10 attempts instead of 4 (`memory`).** Live testing of whole conversations showed that once a point dropped out of a 4-attempt memory, a reworded version of it regained its full weight (2.41 against 2.45 fresh, where inside memory it scored 1.59). With 10, it's discounted as it should be (1.45 against 2.43). Each remembered attempt adds about 40 input tokens for a short line, so long conversations cost a little more. To keep the old behaviour, set `memory: 4`.
 
 ### Added

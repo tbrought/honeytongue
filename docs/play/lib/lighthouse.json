@@ -52,7 +52,7 @@
       "actions": {
         "persuade_cobb": {
           "label": "Try to talk Cobb into lighting the lamp",
-          "description": "Try to convince, plead with, argue with, or reason with the keeper so he lights the lamp tonight",
+          "description": "Try to convince, plead with, argue with, threaten, or reason with the keeper so he lights the lamp tonight",
           "persuade": true
         },
         "chat_cobb": {
@@ -97,7 +97,7 @@
         },
         "grab_key": {
           "label": "Grab the lamp key",
-          "description": "Snatch the lamp key, attack, or push the keeper to light the lamp yourself",
+          "description": "Snatch or wrestle the lamp key from the keeper to light the lamp yourself, actually doing it now rather than threatening to",
           "text": "Cobb's grip is stronger than it looks. \"No,\" he says quietly, and puts the key away inside his coat.",
           "patience": -3
         },

@@ -161,6 +161,8 @@ Work through the phases in order. At the start of each phase, send a short plan 
 
 **Anytime:** the human tests the Twine recipe; you fix what they find.
 
+**After Phase G, once people who don't know the scenes have played:** revisit Nib's patience (3). The human's own playtest isn't good evidence for difficulty, since they wrote the scenes; use playtest transcripts from other players (the web demo's "Record playtest").
+
 **After launch:** persona hints in the playground, gently flagging personas that only describe dislikes and never say what would move the character. An engine-agnostic persuasion endpoint for Unity, Godot, Unreal, and Ren'Py games over plain HTTP. Then stages, extra tells, custom tells, closeness labels, and rapport, only if real results and users call for them.
 
 **Standing rules:**

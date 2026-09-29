@@ -20,7 +20,7 @@
             "fact": "She suspects the captain has been skimming the crew's shares of the plunder, but she can't prove it. Proof would be worth more to her than any passenger's fare."
           }
         ],
-        "patience": 3,
+        "patience": 5,
         "hostileReaction": "Maude's hand comes to rest on her cutlass. \"On this ship, that's mutiny talk. Say it again and you'll swim to wherever you're going.\"",
         "outOfPatience": {
           "text": "Maude closes her manifest and nods to two deckhands. They walk you to the edge of the quay, and then keep walking.",
@@ -41,7 +41,7 @@
             },
             {
               "min": 3,
-              "text": "Maude taps the manifest, thinking. \"Close. Not close enough to cross the captain.\""
+              "text": "Maude taps the manifest, thinking. \"Close. Now tell me what's in it for me, and how you'd prove it.\""
             }
           ],
           "success": {

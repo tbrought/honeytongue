@@ -105,6 +105,26 @@
       "note": "documented borderline case: a remark belittling his situation registers as an insult (insults 0.69 to 0.77 against hostileAt 0.7), offending him in about 4 of 5 scene runs; Jev is also split between reading it as persuasion or small talk, so no action is checked"
     },
     {
+      "input": "Open this cage or I'll punch you.",
+      "expect": "persuade_nib",
+      "threats": true,
+      "note": "a spoken threat is judged as speech, not as the physical action"
+    },
+    {
+      "input": "What do you have brewing in that pot there, friend?",
+      "expect": "chat_nib",
+      "note": "from a playtest"
+    },
+    {
+      "input": "It smells delicious. My mother used to cook stew. She had an amazing secret ingredient. If you let me out of this cage to stretch my legs, I will gladly tell you the secret ingredient.",
+      "expect": "persuade_nib",
+      "flags": [
+        "wants_to_be_a_cook"
+      ],
+      "verdict": "convinced",
+      "note": "from a playtest: the winning line"
+    },
+    {
       "input": "Nib, please let me out.",
       "expect": "persuade_nib",
       "verdict": "unconvinced",
