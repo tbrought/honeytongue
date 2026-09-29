@@ -5,6 +5,7 @@ export const DEMO_FILES = [
   "src/persuasion.js",
   "src/jev.js",
   "src/mock.js",
+  "src/transcript.js",
   "stories/index.json",
   "stories/gatehouse.json",
   "stories/goblin-camp.json",
@@ -12,3 +13,7 @@ export const DEMO_FILES = [
   "stories/lighthouse.json",
   "stories/characters.json",
 ].map((source) => [source, `docs/play/lib/${source.split("/").pop()}`]);
+
+// The package version, for the demo's playtest transcripts. Written by build-demo.js, checked by demo.test.js.
+export const VERSION_FILE = "docs/play/lib/version.json";
+export const versionJson = (pkg) => JSON.stringify({ version: pkg.version }) + "\n";

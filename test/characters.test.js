@@ -38,7 +38,7 @@ test("the new scenes' characters have the settings their scenes are built around
     return { difficulty, offendedBy, patience };
   };
   assert.deepEqual(settings("nib"), { difficulty: "easy", offendedBy: ["insults"], patience: 3 });
-  assert.deepEqual(settings("maude"), { difficulty: "hard", offendedBy: ["threats"], patience: 3 });
+  assert.deepEqual(settings("maude"), { difficulty: "hard", offendedBy: ["threats"], patience: 5 });
   const overridden = ["difficulty", "threshold", "offendedBy", "levels", "hostileAt"].filter((k) => k in characters.cobb);
   assert.match(characters.cobb.note, /tougher on his own/, "the playground warns that Cobb was written for his scene");
   assert.deepEqual(overridden, [], "the keeper uses the default settings");

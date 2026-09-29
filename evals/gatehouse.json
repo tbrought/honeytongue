@@ -111,6 +111,32 @@
       "insults": true
     },
     {
+      "input": "Open the gate or I'll punch you.",
+      "expect": "persuade_guard",
+      "threats": true,
+      "verdict": "offended",
+      "note": "a spoken threat is judged as speech, not as the physical action (attacking ends the scene)"
+    },
+    {
+      "input": "punch Harry and run through the gate",
+      "expect": "attack_guard"
+    },
+    {
+      "input": "Hello sir, what is that horse in your pocketses?",
+      "expect": "chat_guard",
+      "note": "from a playtest"
+    },
+    {
+      "input": "Harry, I have a letter for the apothecary that includes a recipe for a fever remedy. If you let me through the gate, I will bring the remedy to your daughter.",
+      "expect": "persuade_guard",
+      "flags": [
+        "knows_daughter_is_sick",
+        "knows_letter_is_for_apothecary"
+      ],
+      "verdict": "convinced",
+      "note": "from a playtest: the winning line"
+    },
+    {
       "input": "Harry, please let me through.",
       "expect": "persuade_guard",
       "verdict": "unconvinced",

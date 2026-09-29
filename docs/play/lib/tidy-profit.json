@@ -13,14 +13,14 @@
       "npc": {
         "id": "maude",
         "name": "Maude Keelhaven",
-        "persona": "The quartermaster of the pirate ship Tidy Profit, who decides who and what comes aboard, and what they pay. Sharp, fair-minded, and hard to impress. Keeps the ship's accounts and every sailor's share down to the last coin. Respects boldness, a good bargain, and plain dealing, and shrugs off rough language, since the crew curse at each other all day. Nobody threatens her on her own ship.",
+        "persona": "The quartermaster of the pirate ship Tidy Profit, who decides who and what comes aboard, and what they pay. Sharp, fair-minded, and hard to impress. Keeps the ship's accounts and every sailor's share down to the last coin. Respects boldness, a good bargain, and plain dealing. She likes a bit of cheek: insults and rough talk are how sailors show nerve, the crew curse at each other all day, and she judges what's said, not how politely it's said. Nobody threatens her on her own ship.",
         "secrets": [
           {
             "id": "suspects_the_captain",
             "fact": "She suspects the captain has been skimming the crew's shares of the plunder, but she can't prove it. Proof would be worth more to her than any passenger's fare."
           }
         ],
-        "patience": 3,
+        "patience": 5,
         "hostileReaction": "Maude's hand comes to rest on her cutlass. \"On this ship, that's mutiny talk. Say it again and you'll swim to wherever you're going.\"",
         "outOfPatience": {
           "text": "Maude closes her manifest and nods to two deckhands. They walk you to the edge of the quay, and then keep walking.",
@@ -41,7 +41,7 @@
             },
             {
               "min": 3,
-              "text": "Maude taps the manifest, thinking. \"Close. Not close enough to cross the captain.\""
+              "text": "Maude taps the manifest, thinking. \"Close. Now tell me what's in it for me, and how you'd prove it.\""
             }
           ],
           "success": {
@@ -54,7 +54,7 @@
       "actions": {
         "persuade_maude": {
           "label": "Try to talk Maude into taking you aboard",
-          "description": "Try to convince, bargain with, argue with, or reason with the quartermaster so she takes the player aboard",
+          "description": "Try to convince, bargain with, argue with, threaten, or reason with the quartermaster so she takes the player aboard: anything said to her, threats included",
           "persuade": true
         },
         "chat_maude": {
@@ -90,7 +90,7 @@
         },
         "attack_maude": {
           "label": "Attack Maude",
-          "description": "Physically attack, grab, or shove the quartermaster, or try to force your way aboard",
+          "description": "Physically attack, grab, or shove the quartermaster, or force your way aboard, actually doing it now; words alone, even threats, are never this",
           "text": "Maude sidesteps without getting up, and two deckhands take it from there.",
           "goto": "harbour"
         },

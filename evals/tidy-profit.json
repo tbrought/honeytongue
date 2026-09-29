@@ -54,7 +54,7 @@
       "input": "Listen, you salty old shark: I can read, write, and count, and your manifest could use a second pair of eyes. Take me across and I'll work my passage.",
       "expect": "persuade_maude",
       "verdict": "unconvinced",
-      "note": "rough talk is banter to her, so no offence, but the offer is not enough"
+      "note": "she isn't offended by insults and takes them as banter, but they don't help the case, and the offer is not enough"
     },
     {
       "input": "Take me aboard, or you'll regret it when I tell the harbour guard what this ship really is.",
@@ -91,6 +91,44 @@
         1.5
       ],
       "verdict": "unconvinced"
+    },
+    {
+      "input": "Take me aboard or I'll knock you into the harbour.",
+      "expect": "persuade_maude",
+      "threats": true,
+      "verdict": "offended",
+      "note": "a spoken threat is judged as speech, not as the physical action (attacking ends the scene)"
+    },
+    {
+      "input": "shove Maude aside and run up the gangplank",
+      "expect": "attack_maude"
+    },
+    {
+      "input": "Oi, you blimey idiot with the ink-stained fingers, how much for passage on your fine ship?",
+      "expect": "persuade_maude",
+      "insults": true,
+      "verdict": "unconvinced",
+      "note": "from a playtest: an insult she takes as banter, not offence"
+    },
+    {
+      "input": "examine crates",
+      "expect": "examine_cargo",
+      "note": "from a playtest"
+    },
+    {
+      "input": "How was your latest plunder? Are the crew rich now?",
+      "expect": "chat_maude",
+      "note": "from a playtest"
+    },
+    {
+      "input": "Well, I think the captain is full of it. A keen eye would notice a few crates here that are not accounted for, and those same crates also carry the mark of the guilty party.",
+      "expect": "persuade_maude",
+      "flags": [
+        "found_unlisted_crates",
+        "suspects_the_captain"
+      ],
+      "verdict": "unconvinced",
+      "note": "from a playtest: evidence without an offer falls short (2.98 fresh; 3.44 in the playtest, where the conversation helped)"
     },
     {
       "input": "Maude, please take me aboard.",

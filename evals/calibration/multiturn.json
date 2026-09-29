@@ -1,0 +1,207 @@
+{
+  "note": "Multi-turn conversations for each demo character, run as standalone attempts on the preset and as engine turns in its scene. Lines marked afterLearning are played after the player learns the character's secret (a discovery turn in the engine, learn() standalone). Run with scripts/multiturn.js.",
+  "characters": {
+    "harry": {
+      "scene": "gatehouse",
+      "secret": "knows_daughter_is_sick",
+      "discover": "Ask Harry about the toy horse",
+      "trivial": {
+        "engine": "read the letter",
+        "standalone": "knows_letter_is_for_apothecary"
+      },
+      "building": [
+        {
+          "line": "Please let me in."
+        },
+        {
+          "line": "I have a sealed letter that has to reach the city tonight."
+        },
+        {
+          "line": "The letter is for Ilse the apothecary on Lantern Street, and it's marked urgent."
+        },
+        {
+          "line": "It's a fever remedy. If you let me through, I'll ask Ilse to come and see your daughter tonight.",
+          "afterLearning": true
+        }
+      ],
+      "switching": [
+        "You're clearly the finest guard in the kingdom. Surely you can make an exception?",
+        "Open the gate, or you'll regret it.",
+        "I'll be honest: I'm carrying a fever remedy for the apothecary, and someone inside needs it tonight. Please let me through."
+      ],
+      "rephrasing": [
+        "Someone in the city needs the medicine I'm carrying, tonight.",
+        "There's a sick person inside the walls who's waiting on this remedy.",
+        "A patient in town can't wait until morning for what's in my bag."
+      ],
+      "returning": {
+        "line": "I'm carrying a fever remedy that could help a sick child in the city tonight.",
+        "reworded": "This fever remedy could help a sick child tonight, maybe even yours."
+      },
+      "patience": [
+        "Please let me in.",
+        "I really need to get inside tonight.",
+        "Come on, it's cold and wet out here.",
+        "Look, I'll be quick, I promise.",
+        "Just this once?",
+        "I'm not leaving until you open up."
+      ]
+    },
+    "nib": {
+      "scene": "goblin-camp",
+      "secret": "wants_to_be_a_cook",
+      "discover": "ask Nib about his stew",
+      "trivial": {
+        "engine": "examine the cage",
+        "standalone": "found_rotten_lashing"
+      },
+      "building": [
+        {
+          "line": "Let me out."
+        },
+        {
+          "line": "Nib, I'm just a traveller who took the wrong road through the forest."
+        },
+        {
+          "line": "I've got nothing worth stealing, and nobody's coming to pay a ransom for me."
+        },
+        {
+          "line": "Come with me to town, and I'll find you a job in a kitchen, where they'll call you a cook.",
+          "afterLearning": true
+        }
+      ],
+      "switching": [
+        "You're the finest goblin I've ever met.",
+        "Let me out right now, or you'll regret it.",
+        "Nib, if you let me go now, I'll leave the forest and never come back."
+      ],
+      "rephrasing": [
+        "I've got nothing worth stealing, so keeping me here gets you nothing.",
+        "My pack is empty, and there's no gold on me for the war chief to take.",
+        "Search me if you like: I'm as poor as a church mouse, so I'm worth nothing to your camp."
+      ],
+      "returning": {
+        "line": "Nib, there must be something you'd rather be doing than guarding a cage.",
+        "reworded": "There must be something you'd rather do than guard a cage, like cooking in a real kitchen."
+      },
+      "patience": [
+        "Let me out.",
+        "Please, I'm begging you.",
+        "Come on, just open it.",
+        "I won't cause any trouble.",
+        "Please?"
+      ]
+    },
+    "maude": {
+      "scene": "tidy-profit",
+      "secret": "suspects_the_captain",
+      "discover": "ask Maude about the voyage",
+      "trivial": {
+        "engine": null,
+        "standalone": "saw_the_gangplank"
+      },
+      "building": [
+        {
+          "line": "Please take me aboard."
+        },
+        {
+          "line": "I can pay a little now, and I'll work my passage for the rest."
+        },
+        {
+          "line": "I can read, write, and count, so I can help you with the manifest."
+        },
+        {
+          "line": "I think I know why the crew's shares keep coming up short. Take me across and I'll show you what the captain's hiding.",
+          "afterLearning": true
+        }
+      ],
+      "switching": [
+        "You must be the finest quartermaster on the seven seas.",
+        "Take me aboard, or you'll regret it.",
+        "Straight deal: I'll work every hour of the crossing, and pay you everything I have now."
+      ],
+      "rephrasing": [
+        "I'll work my passage, whatever job you give me.",
+        "Put me to work on the crossing: decks, ropes, cargo, anything.",
+        "I'm strong and I don't tire. Use me as a deckhand until we land."
+      ],
+      "returning": {
+        "line": "I can tell you something about your captain that you'll want to know.",
+        "reworded": "I can tell you exactly how the captain's been skimming the crew's shares."
+      },
+      "patience": [
+        "Please take me aboard.",
+        "I really need to leave tonight.",
+        "I'll pay you back later, I swear.",
+        "Come on, one more passenger won't sink you."
+      ]
+    },
+    "cobb": {
+      "scene": "lighthouse",
+      "secret": "lost_a_boat",
+      "discover": "ask Cobb about himself",
+      "trivial": {
+        "engine": "search the stores",
+        "standalone": "tidied_the_lamp_room"
+      },
+      "evidence": [
+        "look through the spyglass",
+        "examine the lamp"
+      ],
+      "building": [
+        {
+          "line": "Please light the lamp."
+        },
+        {
+          "line": "My sister's fishing boat is out there, and she can't see the rocks."
+        },
+        {
+          "line": "The raiders are anchored behind the island. They won't sail in this storm.",
+          "afterEvidence": true
+        },
+        {
+          "line": "You know what a dark night cost the Wren. Turn the shutter to the sea and light it for her.",
+          "afterLearning": true
+        }
+      ],
+      "switching": [
+        "You're the best lighthouse keeper on the coast.",
+        "Light the lamp, or you'll regret it.",
+        "I'll stand watch with the spyglass all night, and if a raider sail moves, you can douse it."
+      ],
+      "rephrasing": [
+        "The raiders won't sail in a storm like this.",
+        "No ship is leaving that island tonight, not in this weather.",
+        "Those raiders are sheltering, and they'll stay put until the storm passes."
+      ],
+      "returning": {
+        "line": "You know better than anyone what happens when the light goes out.",
+        "reworded": "You know what happened to the Wren when the light went out."
+      },
+      "long": {
+        "point": "My sister's boat is out there near the rocks.",
+        "between": [
+          "I brought you bread from the village.",
+          "The storm's getting worse by the minute.",
+          "I'll take the blame with the lord, I promise.",
+          "My sister has three children waiting at home.",
+          "I'll sit with you all night if you like."
+        ],
+        "again": "My sister's boat is close to the rocks out there."
+      },
+      "patience": [
+        "Please light the lamp.",
+        "I'm begging you, light it.",
+        "My sister is out there somewhere.",
+        "Can't you light it just for a minute?",
+        "I'll owe you forever.",
+        "Please, it's so dark out there.",
+        "Just a little light, that's all I ask.",
+        "Have a heart.",
+        "I'll wait here until you do.",
+        "Why won't you help?",
+        "I can't lose her."
+      ]
+    }
+  }
+}

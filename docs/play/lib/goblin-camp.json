@@ -50,7 +50,7 @@
       "actions": {
         "persuade_nib": {
           "label": "Try to talk Nib into letting you go",
-          "description": "Try to convince, plead with, bargain with, or reason with the goblin guard so he unlocks the cage and lets the player go",
+          "description": "Try to convince, plead with, bargain with, threaten, or reason with the goblin guard so he unlocks the cage and lets the player go: anything said to him, threats included",
           "persuade": true
         },
         "chat_nib": {
@@ -89,7 +89,7 @@
         },
         "grab_keys": {
           "label": "Grab Nib's keys",
-          "description": "Reach through the bars to grab, hit, or attack the goblin, or snatch the key from his belt",
+          "description": "Reach through the bars to grab, hit, or attack the goblin, or snatch the key from his belt, actually doing it now; words alone, even threats, are never this",
           "text": "You lunge for the key on his belt. Nib squeals and skitters back out of reach.",
           "patience": -1
         },

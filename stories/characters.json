@@ -46,11 +46,11 @@
   },
   "maude": {
     "name": "Maude Keelhaven",
-    "persona": "The quartermaster of the pirate ship Tidy Profit, who decides who and what comes aboard, and what they pay. Sharp, fair-minded, and hard to impress. Keeps the ship's accounts and every sailor's share down to the last coin. Respects boldness, a good bargain, and plain dealing, and shrugs off rough language, since the crew curse at each other all day. Nobody threatens her on her own ship.",
+    "persona": "The quartermaster of the pirate ship Tidy Profit, who decides who and what comes aboard, and what they pay. Sharp, fair-minded, and hard to impress. Keeps the ship's accounts and every sailor's share down to the last coin. Respects boldness, a good bargain, and plain dealing. She likes a bit of cheek: insults and rough talk are how sailors show nerve, the crew curse at each other all day, and she judges what's said, not how politely it's said. Nobody threatens her on her own ship.",
     "goal": "Take the player aboard as a passenger when the ship sails at dawn",
     "difficulty": "hard",
     "offendedBy": ["threats"],
-    "patience": 3,
+    "patience": 5,
     "secrets": [
       {
         "id": "suspects_the_captain",
@@ -60,7 +60,7 @@
     "reactions": [
       { "min": 0, "text": "Maude doesn't look up from her manifest. \"Talk's cheap. Passage isn't.\"" },
       { "min": 2, "text": "Maude sets down her pen. \"Go on. You've got until the ink dries.\"" },
-      { "min": 3, "text": "Maude taps the manifest, thinking. \"Close. Not close enough to cross the captain.\"" }
+      { "min": 3, "text": "Maude taps the manifest, thinking. \"Close. Now tell me what's in it for me, and how you'd prove it.\"" }
     ],
     "repeatReaction": "\"Heard it the first time,\" Maude says. \"Saying it twice doesn't double its worth.\""
   },

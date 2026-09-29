@@ -105,6 +105,43 @@
       "note": "the player hasn't learned his secret"
     },
     {
+      "input": "Alright old man, if you don't turn on the light, I will resort to fisticuffs.",
+      "expect": "persuade_cobb",
+      "threats": true,
+      "verdict": "offended",
+      "note": "a spoken threat is judged as speech, not as the physical action (from a playtest, where it was once charged as grabbing the key too)"
+    },
+    {
+      "input": "Hello young man! I need your aid immediately: my sister's boat has not yet returned, and I am worried that she will be found by raiders. Can you please light the great lamp to provide her safe guidance home? I would be forever grateful.",
+      "expect": "persuade_cobb",
+      "verdict": "unconvinced",
+      "note": "from a playtest: an opening plea"
+    },
+    {
+      "input": "examine logbook",
+      "expect": "read_logbook",
+      "note": "from a playtest"
+    },
+    {
+      "input": "Please sir. I cannot lose my sister. I'm sure you know what it is like to lose something dear to you.. \"The Wren\" perhaps?",
+      "expect": "persuade_cobb",
+      "flags": [
+        "lost_a_boat"
+      ],
+      "verdict": "unconvinced",
+      "note": "from a playtest: the Wren without the raiders is a near miss"
+    },
+    {
+      "input": "What is this Wren who was lost?",
+      "expect": "chat_cobb",
+      "note": "from a playtest"
+    },
+    {
+      "input": "steal the key and turn on the light",
+      "expect": "grab_key",
+      "note": "from a playtest"
+    },
+    {
       "input": "Cobb, please light the lamp.",
       "expect": "persuade_cobb",
       "verdict": "unconvinced",

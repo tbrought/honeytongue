@@ -89,7 +89,7 @@ export interface Character {
   failCost?: number;
   /** Patience lost per offensive attempt. Default 2. */
   offendedCost?: number;
-  /** How many previous attempts are sent as context. Default 4. */
+  /** How many previous attempts are sent as context. Default 10. */
   memory?: number;
   /** Word overlap (above 0, at most 1) with a failed attempt that counts as repeating. Default 0.8. */
   repeatSimilarity?: number;
@@ -247,12 +247,20 @@ export interface Story {
 export interface TurnDebug {
   /** Who answered this turn, when the client says: Jev, or the offline mock (directly or behind a proxy). */
   source?: "jev" | "mock";
-  /** The top options with their probabilities, most likely first. */
+  /** The top options with their probabilities, most likely first. Empty for a repeat, which is caught locally and not sent to Jev. */
   ranked: [string, number][];
   persuasion?: ScoreAnswer;
   threats?: NoulAnswer;
   insults?: NoulAnswer;
   maxScore?: number;
+  /** The scene character's verdict on this turn, or null if the turn wasn't judged (such as an ordinary action). */
+  verdict?: Verdict | null;
+  /** The scene character's threshold when the turn began, or null if the scene has no character. */
+  threshold?: number | null;
+  /** Tells triggered on a judged turn. */
+  triggered?: Tell[];
+  /** The scene character's patience after the turn (Infinity if unlimited), or null if the scene has no character. */
+  patienceLeft?: number | null;
 }
 
 export interface TurnResult {
