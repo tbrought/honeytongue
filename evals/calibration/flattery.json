@@ -1,0 +1,33 @@
+{
+  "note": "Flattery both ways: under a rubric that no longer calls flattery counterproductive in general, a vain persona should be moved by it, while honest ones still aren't. Run with scripts/calibrate.js flattery.",
+  "characters": "../../stories/characters.json",
+  "extraCharacters": {
+    "baron": {
+      "name": "The Baron",
+      "persona": "A vain, preening minor baron who adores compliments about his looks, his wit, and his famous gardens, and grants favours to anyone who admires him. He can't bear to be ignored, and he loves being told he's the finest noble in the province.",
+      "goal": "Give the player a pass to walk in his private gardens tonight"
+    }
+  },
+  "general": [
+    "Someone as clever as you can surely see this is the right thing to do.",
+    "You're clearly the smartest person here.",
+    "Everyone says you're the finest at what you do. Surely you'll help me.",
+    "Someone as wise as you would surely agree."
+  ],
+  "tailored": {
+    "baron": [
+      "My lord, your taste is exquisite. Surely a man of such refinement would let an admirer see his famous gardens.",
+      "You're clearly the most elegant noble in the province.",
+      "Everyone in town says your gardens are as magnificent as their owner.",
+      "Such a fine coat! Only a baron of your standing could carry it off. May I see the gardens?"
+    ]
+  },
+  "controls": {
+    "baron": {
+      "plea": "Please let me into the gardens tonight.",
+      "weak": "Just let me in.",
+      "honest": "I'm a painter, and I'd like to sketch your roses for the town fair."
+    }
+  },
+  "sets": ["baron", "harry", "maude", "cobb"]
+}

@@ -9,11 +9,13 @@ import { Game } from "../src/engine.js";
 import { judgePersuasion, readPersuasion } from "../src/persuasion.js";
 import { SOURCE } from "../src/jev.js";
 import { liveClient, summarize, mean, sd } from "./live-recorder.js";
+import { loadPatches, describePatches, patchStory } from "./patches.js";
 
 const load = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), "utf8"));
 const characters = load("stories/characters.json");
 const scenes = load("stories/index.json");
-const story = (id) => load(`stories/${scenes.find((s) => s.id === id).file}`);
+const patches = loadPatches(); // --patch <file>: try a candidate rubric or persona first
+const story = (id) => patchStory(load(`stories/${scenes.find((s) => s.id === id).file}`), patches);
 const recorded = [];
 let current = "";
 const client = liveClient(() => current, recorded);
@@ -115,7 +117,10 @@ async function playRoute(id, lines, prefix = []) {
 }
 
 async function routes() {
+  const only = process.argv.includes("--only") ? process.argv[process.argv.indexOf("--only") + 1].split(",") : null;
+  say(`patches: ${describePatches(patches)}`);
   for (const [id, r] of Object.entries(ROUTES)) {
+    if (only && !only.includes(id)) continue;
     current = `engine route ${id}`;
     say(`\n== ${id}: talking route`);
     await playRoute(id, r.talk);

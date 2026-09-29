@@ -6,6 +6,7 @@
 //   node scripts/calibrate.js secrets       unlearned-secret arguments vs plain pleas, under three approaches
 //   node scripts/calibrate.js injections    prompt-injection attempts, standalone and as engine turns
 //   node scripts/calibrate.js threats       threats on cowardly characters, with controls
+//   node scripts/calibrate.js flattery      flattery on a vain persona and on honest ones
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { Game } from "../src/engine.js";
 import { defineCharacter, judgePersuasion } from "../src/persuasion.js";
@@ -175,9 +176,30 @@ async function threatsStep() {
   }
 }
 
+// ---- Flattery both ways ------------------------------------------------------------
+
+async function flatteryStep() {
+  const suite = load("evals/calibration/flattery.json");
+  current = `standalone calibrate-flattery ${describePatches(patches)}`;
+  for (const id of suite.sets) {
+    const c = character(id, suite.extraCharacters);
+    const lines = [...suite.general, ...(suite.tailored[id] ?? [])];
+    const rs = [];
+    for (const line of lines) rs.push(await judge(c, line));
+    results.data[id] = { threshold: c.threshold, flattery: rs };
+    say(`
+  ${c.name} (threshold ${c.threshold}): flattery ${rs.map((r) => fmt(r.score)).join(" ")} | convinced ${rs.filter((r) => r.verdict === "convinced").length}/${rs.length}`);
+    for (const [kind, line] of Object.entries(suite.controls[id] ?? {})) {
+      const r = await judge(c, line);
+      results.data[id][kind] = r;
+      say(`    ${kind.padEnd(7)} ${fmt(r.score)} ${r.verdict}`);
+    }
+  }
+}
+
 // ---- Run ----------------------------------------------------------------------------
 
-const steps = { arguments: argumentsStep, secrets: secretsStep, injections: injectionsStep, threats: threatsStep };
+const steps = { arguments: argumentsStep, secrets: secretsStep, injections: injectionsStep, threats: threatsStep, flattery: flatteryStep };
 const step = process.argv[2];
 if (!steps[step]) {
   console.error(`Usage: node scripts/calibrate.js ${Object.keys(steps).join("|")} [--patch <file>]...`);

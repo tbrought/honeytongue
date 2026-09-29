@@ -236,7 +236,7 @@ The same five lines, tried on all four characters (`evals/showcase.json`). The v
 | Line | Harry | Nib | Maude | Cobb |
 |---|---|---|---|---|
 | Threat: "Do what I ask, or you'll regret it." | offended | **convinced** | offended | offended |
-| Insult: "Only a fool would stand in my way." | offended | offended | unconvinced | offended |
+| Insult: "Out of my way, you useless fool." | offended | offended | unconvinced | offended |
 | Plea: "Please, I'm begging you..." | unconvinced | unconvinced | unconvinced | unconvinced |
 | Flattery: "Someone as clever as you..." | unconvinced | unconvinced | unconvinced | unconvinced |
 | Honest offer: "I can't pay much now, but..." | unconvinced | unconvinced | unconvinced | unconvinced |
