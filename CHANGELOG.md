@@ -1,5 +1,39 @@
 # Changelog
 
+## 0.1.0-alpha.4 (2026-09-28)
+
+The first release tested against live Jev. About 2,600 live calls calibrated the defaults, the demo characters, and the docs; the findings are in `docs/live-results.md`.
+
+### Changed
+
+- **The default rubric (`DEFAULT_LEVELS`) judges each attempt by how it moves this particular character, not by tactics in general.** Flattery, threats, and bribes now land only when the persona says they would, so a coward can fold to a threat and a vain character can be won over by flattery. Honest characters still score flattery low. Characters that use the default rubric may score differently. To keep the old behaviour, pass the old five levels as `levels`:
+
+  ```js
+  levels: [
+    "Not a real attempt, or counterproductive given who they are: flattery they'd see through, obvious lies, demands",
+    "Weak: generic pleading or excuses that give them nothing they care about",
+    "Reasonable and polite, but no strong reason for them in particular to agree",
+    "Honest and specific, touching something they value, but not quite enough",
+    "Genuinely compelling to them: speaks directly to what they care about most",
+  ],
+  ```
+
+  The difficulty words keep their shares (easy 0.6, normal 0.8, hard 0.9, very hard 0.95): live calibration showed they match their meanings on the new rubric. If a character now plays too easy or too hard for you, set an explicit `threshold`.
+- **Secrets the player hasn't learned are no longer sent to Jev.** Telling Jev a fact was unknown to the player didn't stop arguments using it from scoring higher; now Jev can't draw on it at all. `persuasionState()` includes only learned secrets (each with `player_knows: true`), and the persuasion question no longer mentions unlearned ones. A lucky guess is judged like any other argument.
+- Nib's persona says a firm threat makes him give in, and Cobb's says he fears guiding the raiders to the town, so an opening plea no longer wins The Dark Lighthouse. Cobb's talking route now uses the evidence the player finds. Cobb's playground preset carries a note that he was written for his scene; presets can have an optional `note`, which the playground shows.
+- The showcase's insult is now "Out of my way, you useless fool.", since the old line also read as a threat.
+- The README is now a short quick start; everything else is on the docs site, reordered from simple to advanced, with a Reference that documents every option once.
+
+### Added
+
+- Real results everywhere scores were illustrative: the docs site's hero, and the "Same words, different people" grid (averages of ten live runs).
+- Docs on writing personas, what the difficulty words mean, secrets and lucky guesses, how tells behave, custom rubrics, languages and very short inputs, measured cost and speed, and a reliability rule for story authors: a scripted winning or losing line should give its intended verdict in 10 of 10 repeats.
+- Each scene's eval suite checks that a bare opening plea doesn't win. `npm run eval` gains `--repeats N` (the reliability check), `--record` (latency and tokens, saved in the git-ignored `live-runs/`), and `--patch <file>` (try a candidate rubric or persona first). `scripts/live.js` and `scripts/calibrate.js` run the live checks and calibration sets in `evals/calibration/`.
+
+### Fixed
+
+- Cost figures: an attempt is about 780 tokens and a text adventure turn about 1,400, so 10,000 attempts cost about 30 cents (the docs said 40).
+
 ## 0.1.0-alpha.3 (2026-09-26)
 
 Three new demo scenes, each built around a different kind of character. Like the earlier alphas, this was built and tested with the offline mock only.
