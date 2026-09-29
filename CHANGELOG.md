@@ -24,7 +24,7 @@ Hardening before 0.1.0, from a review of the whole project: a proxy that's secur
 - **`context` through a guarded proxy:** give a character a `maxContextLength` (the most characters of `context`, as JSON) and `attempt(input, { context })` works through a proxy with `allowedCharacters`. `attempt()` checks the limit too, so you find out before you deploy.
 - **`toNodeListener(handle, { maxBytes, env })`**, exported from `honeytongue/proxy`: runs the proxy on a plain Node server, refusing bodies over the limit as they arrive, and passing the socket's address as `env.remoteAddress` for `clientIp`. The docs have a short "Node servers" example.
 - **`deadlineMs` for `createJevClient()`:** the most time a whole call may take, retries and waits included. None by default; the proxy uses 12 seconds, so it stops before a page's usual 15-second timeout.
-- `npm run check:browser` (in CI too): every page in headless Chrome or Edge, for CSP violations, hostile text, contrast, and the demo and Phaser walk-throughs. `npm run check:screenshots` compares the demo pixel for pixel against a baseline, locally.
+- `npm run check:browser` (in CI too): every page in headless Chrome or Edge, for CSP violations, hostile text, contrast, and the demo and Phaser walk-throughs. `npm run check:screenshots` compares the demo pixel for pixel against a baseline, locally. The checks' browser runs with no API keys or tokens in its environment and with crash reporting off, so a crash can't write a key into a crash report.
 - Dependabot keeps the workflows' pinned actions current.
 
 ### Fixed

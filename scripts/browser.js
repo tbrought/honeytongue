@@ -48,15 +48,25 @@ export function findBrowser() {
   return found;
 }
 
+/**
+ * The environment the browser runs with: this one, minus anything that looks like a secret. A browser that crashes
+ * can write its environment into a crash dump, so API keys (TYPESAFE_API_KEY among them) never reach it.
+ */
+export function browserEnv(env = process.env) {
+  return Object.fromEntries(Object.entries(env).filter(([name]) => !/KEY|TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL|AUTH|TYPESAFE|NPM_|GITHUB_/i.test(name)));
+}
+
 /** Start a headless browser. Resolves to { newPage(), close() }. */
 export async function openBrowser({ timeoutMs = 30_000 } = {}) {
   if (typeof WebSocket !== "function") throw new Error("These checks need Node 22.4 or later (for its built-in WebSocket).");
   const profile = mkdtempSync(join(tmpdir(), "honeytongue-browser-"));
   const args = ["--headless=new", "--remote-debugging-port=0", `--user-data-dir=${profile}`, "--no-first-run", "--no-default-browser-check",
     "--disable-extensions", "--hide-scrollbars", "--force-device-scale-factor=1", "--mute-audio",
+    // No crash reports: they'd be written to disk and could be uploaded.
+    "--disable-breakpad", "--disable-crash-reporter",
     // CI containers often can't use the browser's sandbox; only there, turn it off.
     ...(process.env.CI ? ["--no-sandbox", "--disable-dev-shm-usage"] : []), "about:blank"];
-  const proc = spawn(findBrowser(), args, { stdio: "ignore" });
+  const proc = spawn(findBrowser(), args, { stdio: "ignore", env: browserEnv() });
   // The browser writes the port it chose to DevToolsActivePort in its profile folder.
   const portFile = join(profile, "DevToolsActivePort");
   const started = Date.now();
@@ -75,8 +85,18 @@ export async function openBrowser({ timeoutMs = 30_000 } = {}) {
     },
     async close() {
       for (const page of pages) page.detach();
-      proc.kill();
-      await new Promise((r) => { if (proc.exitCode !== null) r(); else proc.once("exit", r); setTimeout(r, 3000); });
+      // Ask the browser to close, so nothing is killed mid-write; kill it only if it doesn't.
+      const exited = new Promise((r) => { if (proc.exitCode !== null) r(true); else proc.once("exit", () => r(true)); });
+      try {
+        const { webSocketDebuggerUrl } = await (await fetch(`${base}/json/version`)).json();
+        const ws = new WebSocket(webSocketDebuggerUrl);
+        await new Promise((r, j) => { ws.addEventListener("open", r, { once: true }); ws.addEventListener("error", j, { once: true }); });
+        ws.send(JSON.stringify({ id: 1, method: "Browser.close" }));
+      } catch { /* already gone, or not answering: killed below */ }
+      if (!(await Promise.race([exited, sleep(5000).then(() => false)]))) {
+        proc.kill();
+        await Promise.race([exited, sleep(3000)]);
+      }
       try { rmSync(profile, { recursive: true, force: true }); } catch { /* the browser may still hold a file; it's in tmp */ }
     },
   };

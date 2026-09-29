@@ -223,3 +223,11 @@ test("context goes through a guarded proxy only for a character with maxContextL
   assert.throws(() => defineCharacter({ ...harry, maxContextLength: 0 }), /"maxContextLength" must be a whole number of characters above 0/);
   await assert.rejects(judgePersuasion(createMockClient(), withContext, "hi", { context: () => 1 }), /context must be JSON data/);
 });
+
+// ---- The browser checks' browser ----
+
+test("the browser used by the site's checks never gets API keys or tokens in its environment", async () => {
+  const { browserEnv } = await import("../scripts/browser.js");
+  const env = browserEnv({ PATH: "/bin", TYPESAFE_API_KEY: "k", TYPESAFE_MODEL: "m", NPM_TOKEN: "t", GITHUB_TOKEN: "g", AWS_SECRET_ACCESS_KEY: "s", HOME: "/home/x" });
+  assert.deepEqual(Object.keys(env).sort(), ["HOME", "PATH"]);
+});
