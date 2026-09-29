@@ -30,7 +30,7 @@ const run = (command, cwd, input) => spawnSync(command, { cwd, env, input, shell
 const quote = (path) => `"${path}"`;
 
 // Files that ship: the library, the scenes, the examples, the playground page and its styles, and the basics.
-const SHIPS = [/^src\//, /^stories\//, /^examples\//, /^docs\/playground\//, /^docs\/assets\/fonts\//, /^docs\/(style\.css|theme\.js)$/, /^(package\.json|README\.md|LICENSE)$/];
+const SHIPS = [/^src\//, /^stories\//, /^examples\//, /^docs\/playground\//, /^docs\/assets\/fonts\//, /^docs\/assets\/honeytongue-logo-(32|192)\.png$/, /^docs\/(style\.css|theme\.js)$/, /^(package\.json|README\.md|LICENSE)$/];
 const MUST = ["package.json", "README.md", "LICENSE", "src/index.js", "src/index.d.ts", "src/persuasion.d.ts", "src/proxy.d.ts",
   "src/cli.js", "src/version.js", "stories/index.json", "docs/playground/index.html"];
 

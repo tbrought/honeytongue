@@ -83,7 +83,7 @@ test("scripts never set a style attribute (CSP blocks it; element.style is allow
   }
 });
 
-test("the local playground server serves every stylesheet the page links to, under an equally strict policy", async () => {
+test("the local playground server serves every stylesheet and image the page uses, under an equally strict policy", async () => {
   const playground = await startPlayground({ port: 0, apiKey: "" });
   const get = (path) => new Promise((resolve, reject) => {
     request({ host: "127.0.0.1", port: playground.port, path, headers: { Host: `127.0.0.1:${playground.port}` } }, (res) => {
@@ -95,7 +95,11 @@ test("the local playground server serves every stylesheet the page links to, und
     const page = await get("/playground/");
     assert.doesNotMatch(page.headers["content-security-policy"], /unsafe-inline|unsafe-eval/);
     assert.match(page.headers["content-security-policy"], /frame-ancestors 'none'/);
-    const sheets = [...read("docs/playground/index.html").matchAll(/<link[^>]*rel="stylesheet"[^>]*\shref="([^"]+)"/g)].map((m) => m[1]).filter((u) => !/^https?:/.test(u));
+    assert.match(page.headers["content-security-policy"], /img-src 'self';/, "images only from the server itself");
+    const html = read("docs/playground/index.html");
+    const sheets = [...html.matchAll(/<link[^>]*rel="(?:stylesheet|icon|apple-touch-icon)"[^>]*\shref="([^"]+)"|<img[^>]*\ssrc="([^"]+)"/g)]
+      .map((m) => m[1] ?? m[2]).filter((u) => !/^https?:/.test(u));
+    assert.ok(sheets.some((s) => s.endsWith(".png")), "the page's logo images are among them");
     for (const sheet of sheets) {
       const path = new URL(sheet, "http://x/playground/").pathname;
       assert.equal((await get(path)).statusCode, 200, `${path} is served`);

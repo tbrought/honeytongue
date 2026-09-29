@@ -32,11 +32,14 @@ const FILES = {
   "/play/lib/mock.js": "src/mock.js",
   "/play/lib/version.js": "src/version.js",
   "/play/lib/characters.json": "stories/characters.json",
+  // The logo, as the page's favicon, touch icon, and header image.
+  "/assets/honeytongue-logo-32.png": "docs/assets/honeytongue-logo-32.png",
+  "/assets/honeytongue-logo-192.png": "docs/assets/honeytongue-logo-192.png",
   // The web fonts docs/style.css loads: every file in docs/assets/fonts, as shipped in the package.
   ...Object.fromEntries(readdirSync(new URL("../docs/assets/fonts/", import.meta.url))
     .filter((f) => f.endsWith(".woff2")).map((f) => [`/assets/fonts/${f}`, `docs/assets/fonts/${f}`])),
 };
-const TYPES = { html: "text/html; charset=utf-8", js: "text/javascript; charset=utf-8", css: "text/css; charset=utf-8", json: "application/json; charset=utf-8", woff2: "font/woff2" };
+const TYPES = { html: "text/html; charset=utf-8", js: "text/javascript; charset=utf-8", css: "text/css; charset=utf-8", json: "application/json; charset=utf-8", woff2: "font/woff2", png: "image/png" };
 const HEADERS = {
   "Cache-Control": "no-store",
   "X-Content-Type-Options": "nosniff",
@@ -44,7 +47,7 @@ const HEADERS = {
   // As strict as the page's own policy (no inline scripts or styles), and only this server to talk to. A header can
   // also forbid framing, which a page's meta tag can't.
   "Content-Security-Policy": "default-src 'none'; script-src 'self'; style-src 'self'; " +
-    "font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'; object-src 'none'",
+    "font-src 'self'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'; object-src 'none'",
 };
 // The page's placeholder for how to reach this server. Empty on GitHub Pages, which means "preview only".
 const LOCAL_META = '<meta name="honeytongue-local" content="">';

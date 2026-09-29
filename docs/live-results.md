@@ -100,15 +100,19 @@ The phase used 590 calls and about 757,000 tokens.
 
 ## The Phaser example's troll (0.1.0-alpha.9)
 
-Tolly Underarch, the bridge troll in `examples/phaser/`, is meant to show secrets mattering: reading the sign by his bridge teaches that he's lonely, and only then should a promise of company win him over. The first version said so in his persona, so Jev let the caring argument win without the sign (3.98 either way). Moving "what he really wants" into the secret fixed it. Five repeats each, on `jev-1.13.0` in September 2026:
+Tolly Underarch, the bridge troll in `examples/phaser/`, is meant to show secrets mattering: reading the sign by his bridge teaches that he's lonely, and only then should a promise of company win him over. The first version said so in his persona, so Jev let the caring argument win without the sign (3.98 either way). Moving "what he really wants" into the secret fixed it.
 
-| Line | Without the sign | After reading it |
-|---|---|---|
-| "Please let me cross, and I'll come back and visit you." | unconvinced, 1.14 to 1.20 | convinced, 3.97 to 3.98 |
-| "Please, I have no money and my family is waiting on the other side. Let me cross." | unconvinced, 1.00 | |
-| "Out of my way, you stupid lump." | offended | |
+His scripted lines against the reliability rule (10 of 10, average at least 0.1 from the threshold of 3.2), ten repeats each on `jev-1.13.0` in September 2026:
 
-The threshold is 3.2 (normal). The offline stand-in follows the same route (`test/phaser.test.js`). About 43,000 tokens.
+| Line | Sign read | Verdict | Average (range) | Gap |
+|---|---|---|---|---|
+| "Please let me cross, and I'll come back and visit you." | yes | convinced 10/10 | 3.98 (3.97 to 3.98) | +0.78 |
+| "Please let me cross, and I'll come back and visit you." | no | unconvinced 10/10 | 1.16 (1.12 to 1.21) | -2.04 |
+| "Please let me cross the bridge." | yes | unconvinced 10/10 | 1.06 (1.04 to 1.08) | -2.14 |
+| "Please, I have no money and my family is waiting on the other side. Let me cross." | no | unconvinced 10/10 | 1.00 | -2.20 |
+| "Out of my way, you stupid lump." | no | offended 10/10 (insults 0.97 to 0.98) | 0.01 | |
+
+All reliable. The offline stand-in follows the same route (`test/phaser.test.js`). The troll's calibration and these checks used about 83,000 tokens.
 
 ## Reproducing
 

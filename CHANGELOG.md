@@ -7,8 +7,8 @@ Positioning, a Phaser example, and the logo, plus the website security changes (
 ### Added
 
 - **A Phaser example** (`examples/phaser/`, about 200 lines): walk up to a troll, read the sign by his bridge, and talk your way across. A `Persuadable` character judges what you type in an HTML dialogue box over the game; reading the sign teaches the troll's secret with `learn()`. It uses the offline stand-in until you set `PROXY_URL`, and loads Phaser 4.2.1 (MIT) from a CDN, pinned, with an integrity hash. Play it at honeytongue.dev/phaser/, judged live by the demo proxy with the same fallback, turn cap, and privacy note as the demo scenes. The docs gain a "Visual games" section.
-- **The logo:** favicons, Open Graph and Twitter card images on every page, beside the wordmark on the site, and at the top of the README.
-- `package.json` has an `author` and 19 keywords, each spelling checked against npm's usage.
+- **The logo:** favicons, Open Graph and Twitter card images on every page, beside the wordmark on the site (the local playground, `npx honeytongue playground`, included), and at the top of the README.
+- `package.json` has an `author` and 20 keywords, using the most common spelling where there's a choice, plus distinctive terms few packages use (such as `charisma-check`), so searches for them find Honeytongue first.
 
 ### Changed
 
