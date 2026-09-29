@@ -33,7 +33,7 @@ Hardening before 0.1.0, from a review of the whole project: a proxy that's secur
 - JSON nested thousands of levels deep crashed the request guard; it's now refused with a 400.
 - `createJevClient()`'s browser check also covers browsers' Web Workers.
 - The docs' screenshot loads lazily.
-- **The Phaser example's dialogue box could reopen by itself.** Phaser hands a frame's key events to its keydown listeners again whenever another key event arrives in the same frame, so a letter typed in the box, followed by Escape within a frame, could open the box again. The example now reads single presses (E, Space, Enter, R) once a frame with Phaser's `JustDown`, every frame, even while the box is open. The browser checks test it.
+- **The Phaser example's dialogue box could reopen by itself.** Phaser hands a frame's key events to its keydown listeners again whenever another key event arrives in the same frame, so a letter typed in the box, followed by Escape within a frame, could open the box again. The example now remembers which key events it has handled, so each press acts once. It keeps using keydown events rather than Phaser's `JustDown`, which misses a press and release within one frame, as on-screen keyboards, voice control, and other assistive tools send. The browser checks test both, and that E, R, spaces, and Enter type into the box normally.
 
 ### Docs
 

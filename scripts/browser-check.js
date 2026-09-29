@@ -224,24 +224,67 @@ try {
     must(bad.length === 0, `CSP violations or console errors: ${bad.join("; ")}`);
   });
 
-  // ---- The Phaser game: the box stays closed after a letter typed in it and Escape, in the same frame ----
-  // Phaser hands a frame's key events to its keydown listeners again whenever another key event arrives, so a game
-  // reacting to keydown events would read that "e" again after Escape closed the box, and open it again.
-  await open("/phaser/");
-  await page.waitFor("window.__game?.scene?.getScene?.('bridge')?.player", { what: "the Phaser scene to start" });
-  await page.eval(`__game.scene.getScene("bridge").player.setPosition(115, 92); true`); // next to the sign
-  await page.settle(1280);
-  await page.key("e", true); await sleep(100); await page.key("e", false);
-  const opened = await page.waitFor(`__game.scene.getScene("bridge").talking`, { what: "the sign's box" }).catch(() => false);
-  await page.eval(`(() => {
+  // ---- The Phaser game's keys: each press acts once, even when several arrive in one frame ----
+  // Phaser hands a frame's key events to its keydown listeners again whenever another key event arrives, so without
+  // the game's guard a key already handled can act again. And a press and release within one frame, as on-screen
+  // keyboards and assistive tools send, must still count.
+  const phaserAt = async (x, y) => {
+    await open("/phaser/");
+    await page.waitFor("window.__game?.scene?.getScene?.('bridge')?.player", { what: "the Phaser scene to start" });
+    await page.eval(`__game.scene.getScene("bridge").player.setPosition(${x}, ${y}); true`);
+    await page.settle(1280);
+  };
+  const oneFrame = (steps) => page.eval(`(() => {
     const key = (type, key, code, keyCode) => dispatchEvent(new KeyboardEvent(type, { key, code, keyCode, bubbles: true }));
-    key("keydown", "e", "KeyE", 69); key("keyup", "e", "KeyE", 69);          // a letter typed while the box is open
-    key("keydown", "Escape", "Escape", 27); key("keyup", "Escape", "Escape", 27); // then Escape, in the same frame
+    const press = (k, code, keyCode) => { key("keydown", k, code, keyCode); key("keyup", k, code, keyCode); };
+    ${steps}
     return true;
   })()`);
-  await sleep(200); // a few frames
-  const reopened = await page.eval(`__game.scene.getScene("bridge").talking`);
-  check(opened && !reopened, "Phaser: the box stays closed after a letter typed in it and Escape, in the same frame", JSON.stringify({ opened, reopened }));
+  const talking = () => page.eval(`__game.scene.getScene("bridge").talking`);
+
+  await phaserAt(115, 92); // next to the sign
+  await oneFrame(`press("e", "KeyE", 69);`);
+  await sleep(200);
+  check(await talking(), "Phaser: a press and release within one frame (as on-screen keyboards send) opens the sign");
+
+  await phaserAt(115, 92);
+  await oneFrame(`press("e", "KeyE", 69); document.getElementById("dialogue-close").click(); press("ArrowDown", "ArrowDown", 40);`);
+  await sleep(200);
+  check(!(await talking()), "Phaser: E, Leave, and an arrow key in one frame leave the box closed");
+
+  await phaserAt(115, 92);
+  await page.key("e", true); await sleep(100); await page.key("e", false);
+  const opened = await page.waitFor(`__game.scene.getScene("bridge").talking`, { what: "the sign's box" }).catch(() => false);
+  await oneFrame(`press("e", "KeyE", 69); press("Escape", "Escape", 27);`); // a letter typed in the box, then Escape
+  await sleep(200);
+  check(opened && !(await talking()), "Phaser: a letter typed in the box and Escape, in one frame, leave the box closed");
+
+  // Typing to the troll with real keystrokes: E, R, spaces, and capitals appear in the box, and Enter says the line,
+  // without reading the sign again, restarting, or moving the player.
+  await phaserAt(182, 135); // next to the troll
+  await page.key("e", true); await sleep(100); await page.key("e", false);
+  await page.waitFor(`__game.scene.getScene("bridge").talking && document.activeElement?.id === "dialogue-input"`, { what: "the troll's box, ready to type in" });
+  await page.eval(`window.__player = __game.scene.getScene("bridge").player; true`);
+  const typed = "Rest here, Tolly. Everyone needs a friend, eh? Enter";
+  const KEYS = { " ": ["Space", 32], ",": ["Comma", 188], ".": ["Period", 190], "?": ["Slash", 191] };
+  for (const ch of typed) {
+    const [code, keyCode] = KEYS[ch] ?? [`Key${ch.toUpperCase()}`, ch.toUpperCase().charCodeAt(0)];
+    const modifiers = ch !== ch.toLowerCase() || ch === "?" ? 8 : 0; // Shift
+    await page.send("Input.dispatchKeyEvent", { type: "keyDown", key: ch, code, text: ch, unmodifiedText: ch.toLowerCase(), windowsVirtualKeyCode: keyCode, modifiers });
+    await page.send("Input.dispatchKeyEvent", { type: "keyUp", key: ch, code, windowsVirtualKeyCode: keyCode, modifiers });
+  }
+  const inBox = await page.eval(`document.getElementById("dialogue-input").value`);
+  await page.send("Input.dispatchKeyEvent", { type: "keyDown", key: "Enter", code: "Enter", text: "\r", windowsVirtualKeyCode: 13 });
+  await page.send("Input.dispatchKeyEvent", { type: "keyUp", key: "Enter", code: "Enter", windowsVirtualKeyCode: 13 });
+  await page.waitFor(`[...document.querySelectorAll("#dialogue-log p")].length >= 3`, { what: "the troll's answer" }).catch(() => {});
+  const after = JSON.parse(await page.eval(`(() => { const s = __game.scene.getScene("bridge"); return JSON.stringify({
+    said: [...document.querySelectorAll("#dialogue-log p")].map((p) => p.textContent).find((t) => t.startsWith("You: ")) ?? null,
+    speaker: document.querySelector("#dialogue-log p b")?.textContent, talking: s.talking, samePlayer: s.player === window.__player,
+    x: Math.round(s.player.x), y: Math.round(s.player.y), cleared: document.getElementById("dialogue-input").value === "" }); })()`));
+  check(inBox === typed, "Phaser: E, R, spaces, and capitals type into the box normally", JSON.stringify(inBox));
+  check(after.said === `You: ${typed}` && after.cleared, "Phaser: Enter says the typed line to the troll", JSON.stringify(after));
+  check(after.talking && after.speaker === "Tolly Underarch: " && after.samePlayer && after.x === 182 && after.y === 135,
+    "Phaser: typing never reads the sign, restarts the game, or moves the player", JSON.stringify(after));
 
   // ---- The local playground server ----
   const local = await startPlayground({ port: 0, apiKey: "", mock: true });
