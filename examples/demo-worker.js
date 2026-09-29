@@ -25,6 +25,11 @@ export const DEMO_CHARACTERS = [troll];
 // covers every request that can spend credit.
 export const PATH = "/judge";
 
+// The largest request body it reads, in bytes: the biggest request the library can send for these scenes, with every
+// field a player controls at its limit in a script like Japanese (3 bytes a character), plus a margin
+// (test/demo-worker.test.js checks it). What limits cost is the guard's per-field character caps; this stops huge uploads.
+export const MAX_BYTES = 15_000;
+
 /** "https://a.example, https://b.example" -> ["https://a.example", "https://b.example"] */
 export const parseOrigins = (value) => String(value ?? "").split(",").map((s) => s.trim().replace(/\/+$/, "")).filter(Boolean);
 
@@ -39,6 +44,7 @@ export default {
       allowedOrigins: parseOrigins(env.ALLOWED_ORIGINS),
       allowedStories: DEMO_STORIES,
       allowedCharacters: DEMO_CHARACTERS,
+      maxStateBytes: MAX_BYTES,
       // Per address, per Worker instance: a first line of defence. The rate limiting rule on honeytongue.dev,
       // the demo's 50-turn cap per tab, and the spending limit on the key are the others.
       rateLimit: { requests: 20, windowMs: 60_000 },

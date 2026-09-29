@@ -4,7 +4,8 @@ The web demo on honeytongue.dev plays with Jev through a Cloudflare Worker named
 
 - **Code:** `examples/demo-worker.js`, configured in `examples/demo-wrangler.toml`.
 - **Address:** `https://api.honeytongue.dev/judge`. Every other path answers 404, and there's no workers.dev address.
-- **Scope:** it only judges the four demo scenes and the Phaser example's troll (`examples/phaser/character.js`, played at honeytongue.dev/phaser/), and only for the pages listed in `ALLOWED_ORIGINS`: `https://honeytongue.dev` first, with `https://tbrought.github.io` as a fallback.
+- **Scope:** it only judges the four demo scenes and the Phaser example's troll (`examples/phaser/character.js`, played at honeytongue.dev/phaser/), and only for the pages listed in `ALLOWED_ORIGINS`: `https://honeytongue.dev`. (`https://tbrought.github.io` was removed in 0.1.0-alpha.11: GitHub redirects it to honeytongue.dev.)
+- **Limits:** request bodies up to 15,000 bytes (`MAX_BYTES` in the Worker), and nothing longer than the library itself sends: each character's `memoryLength` of remembered attempts, each story's `recentTurnLength` of recent turns, and so on. These cost nothing to refuse, since refused requests never reach Jev.
 
 Without it, or when it can't answer, the demo falls back to the offline stand-in.
 
@@ -49,7 +50,7 @@ In the Cloudflare dashboard, open the `honeytongue.dev` zone, then Security > WA
 - **Rule name:** `demo proxy`
 - **If incoming requests match:** URI Path equals `/judge`. The Free plan can only match on the path. That's why the Worker answers on `/judge` alone: every request that can spend credit goes through this rule. On a paid plan you can add Hostname equals `api.honeytongue.dev`.
 - **With the same characteristics:** IP.
-- **When rate exceeds:** 10 requests per 10 seconds. A player sends a turn every few seconds at most.
+- **When rate exceeds:** 10 requests per 10 seconds. A player sends a turn every few seconds at most. (Kept at this on 2026-09-29, when the Worker's own limits were tightened. If TypeSafe's usage graph shows the demo's credit going faster than players could spend it, tighten this first, for example to 5 requests per 10 seconds.)
 - **Then take action:** Block, for 10 seconds.
 
 The Free plan allows one rate limiting rule, with a 10-second period and a 10-second block.
@@ -62,11 +63,12 @@ Check it from outside, the way the demo uses it:
 node scripts/check-demo-proxy.js https://api.honeytongue.dev/judge
 ```
 
-The script acts as the demo's pages, `https://honeytongue.dev` and then `https://tbrought.github.io`, and checks that:
+The script acts as the demo's page, `https://honeytongue.dev`, and checks that:
 
-- both pages may call the proxy;
+- the page may call the proxy;
 - other paths answer 404;
-- other sites and other characters are refused;
+- other sites (the old `https://tbrought.github.io` included) and other characters are refused;
+- bodies over 15,000 bytes, and remembered attempts longer than the library sends, are refused;
 - the proxy runs this checkout's Honeytongue version.
 
 It then plays one Gatehouse turn and makes one attempt on the Phaser example's troll: two live Jev calls. It doesn't need your key. It should end with "All checks passed."
@@ -88,11 +90,13 @@ When the demo page runs on `localhost` or `127.0.0.1` (for example with `npx ser
 ## Later
 
 - **Every release that changes the persuasion questions, the stories, the personas, or the Phaser example's troll:** deploy the Worker again from the release's commit, then rerun the check script (Releasing, step 7). Until you do, the demo explains the version mismatch and uses the offline stand-in.
-- **Another page address:** add it to `ALLOWED_ORIGINS` in `examples/demo-wrangler.toml` (comma-separated, no trailing slash), then run `npx wrangler deploy --config examples/demo-wrangler.toml` again. No code changes are needed. Once GitHub stops redirecting from `tbrought.github.io`, you can remove that address the same way.
-- **Rate limits, all together:**
-  - Cloudflare's rule: 10 requests per 10 seconds per IP.
-  - The Worker's own limit: 20 requests a minute per address, per Worker instance.
-  - 50 live turns per tab.
-  - The spending cap behind all of them.
+- **Another page address:** add it to `ALLOWED_ORIGINS` in `examples/demo-wrangler.toml` (comma-separated, no trailing slash), then run `npx wrangler deploy --config examples/demo-wrangler.toml` again. No code changes are needed.
+- **Limits, all together:**
+  - Cloudflare's rule: 10 requests per 10 seconds per IP. Tighten it if the usage graph shows abuse.
+  - The Worker's own limit: 20 requests a minute per address, per Worker instance. Cloudflare runs many instances, so this is only a first line of defence.
+  - The request guard: only the demo's own requests, no bigger than the library sends them (a scripted request can carry at most about twice the text of a typical turn).
+  - 50 live turns per tab. This is a courtesy to players, kept in the browser: a script ignores it.
+  - The spending cap behind all of them: the only hard limit on cost. If a script uses it up, the demo switches to the offline stand-in until the next top-up.
+- **If abuse appears:** tighten Cloudflare's rule first. After that, a daily quota per address (Workers KV or a Durable Object) or Cloudflare Turnstile before the first live turn; both are on the roadmap, only if needed.
 - **Logs:** `npx wrangler tail --config examples/demo-wrangler.toml` shows the Worker's logs as they happen. The proxy logs only a status when Jev fails, never what players typed.
 - **Turning it off:** empty the `honeytongue-proxy` meta tag and push, so the demo goes back to the offline stand-in. Then run `npx wrangler delete --config examples/demo-wrangler.toml` and revoke the key.
