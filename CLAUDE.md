@@ -170,6 +170,12 @@ Work through the phases in order. At the start of each phase, send a short plan 
 - One branch per phase, started from `main` after the previous phase is merged.
 - Stop points before building: send a plan and wait for approval.
 - Follow "Releasing" for each release.
+- **TypeSafe's terms** (their Master Customer Agreement and Acceptable Use Policy):
+  - Never use Jev's outputs (eval results, `live-runs/` data, transcripts) to train or fine-tune any model. TypeSafe's terms prohibit it. They're for evaluation only.
+  - Never stress-test, probe, or security-test TypeSafe's service itself. Our tests target Honeytongue's own behaviour.
+  - Describe Honeytongue as built on Jev and not affiliated with TypeSafe. Never use TypeSafe's logo or imply endorsement.
+  - Only publish TypeSafe details that are already public, such as their documentation and publicly listed pricing.
+  - The demo proxy's exact-request guard (`src/guard.js`, `allowedStories` in `examples/demo-worker.js`) is a compliance requirement, not just a cost control: TypeSafe's terms forbid offering Jev as a standalone service. Never loosen it.
 
 ## Things only the human can do
 

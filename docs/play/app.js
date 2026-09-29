@@ -258,7 +258,10 @@ function showNote() {
   note = null;
 }
 
-const PRIVACY = "What you type is sent to TypeSafe's Jev model to be judged. Don't type anything personal.";
+/** The privacy note shown while Jev may judge, linking to TypeSafe's privacy policy. */
+const privacy = () => el("span", {}, "What you type is sent to ",
+  el("a", { href: "https://typesafe.ai/legal/privacy-policy", target: "_blank", rel: "noopener" }, "TypeSafe"),
+  "'s Jev model to be judged, and TypeSafe may store it. Don't type anything personal.");
 const STAND_IN = "Characters here are judged by simple keyword matching, a stand-in for Jev that understands far less. Plain, direct sentences work best.";
 
 /** The banner above the game: live Jev (with the privacy note), or the offline mock, and why if Jev stepped aside. */
@@ -278,9 +281,9 @@ function showMode(source) {
     cap: `You've used this tab's ${TURN_CAP} live turns. `,
   }[fallback.why];
   mode.replaceChildren(live
-    ? el("span", {}, el("strong", {}, "Live: "), "Jev judges everything you type, through the Honeytongue proxy. ", PRIVACY)
+    ? el("span", {}, el("strong", {}, "Live: "), "Jev judges everything you type, through the Honeytongue proxy. ", privacy())
     : el("span", {}, el("strong", {}, proxyUrl ? "Offline stand-in. " : "Offline preview. "), why || "", STAND_IN,
-        ...(fallback?.mode === "paused" ? [" ", PRIVACY] : [])));
+        ...(fallback?.mode === "paused" ? [" ", privacy()] : [])));
 }
 if (proxyUrl && client.turnsUsed >= TURN_CAP) fallback = { mode: "off", why: "cap" }; // used up before a reload
 showMode(proxyUrl && !fallback ? "jev" : "mock");
