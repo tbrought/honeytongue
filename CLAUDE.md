@@ -148,14 +148,22 @@ Work through the phases in order. At the start of each phase, send a short plan 
    - Publishing from GitHub Actions with npm trusted publishing (OIDC) and provenance, instead of from the human's laptop, so no long-lived npm token is stored anywhere. A release workflow triggered by pushing a version tag (`v*`) runs the full test suite, the typecheck, and the package check, then publishes prereleases with `--tag alpha` and stable versions as `latest`. It waits for the human's approval through a protected GitHub environment before publishing.
    - Tell the human exactly what to configure on npmjs.com (the trusted publisher) and in GitHub's settings (the protected environment and its reviewers), since only they can.
    - Update "Releasing" to match: the human's steps become pushing the tag and approving the run, instead of running `npm publish`.
-2. **Phase E, positioning.** Reposition from "text games" to any game where players type or speak to characters, and add a Phaser example showing an NPC in a visual web game.
+2. **Demo polish**, released as its own alpha. Make the web demo feel like a polished retro text game, in keeping with the site's Infocom style. **Stop for the human's OK on a plan with mockups or screenshots before building.**
+   - **Story markup:** simple inline markup in story files for character names, items and interactable things, and speech, so any author's stories get styling. Strip it before any text is sent to Jev, with a test proving the requests are unchanged, and keep plain text working. The CLI renders it with terminal colours (and respects `NO_COLOR`).
+   - **Colour with meaning:** distinct colours for speech, character names, items, system messages, and verdict feedback (convinced, unconvinced, offended), readable in both themes and meeting contrast guidelines.
+   - **Animated text:** narration and replies type out, skippable with a click or key, instant when the system's reduce-motion setting is on, with a setting to turn it off. Screen readers get the whole text at once.
+   - **Atmosphere:** a blinking cursor, scene title cards, and an optional CRT mode (scanlines and glow), off by default.
+   - **Endings:** an ending screen with the turns taken and the arguments that landed, plus "play again" and "try another scene".
+   - The persuasion meter and patience pips animate subtly when they change.
+   - No sound for now. Check at phone and desktop widths in both themes, with keyboard only, and with reduce-motion on. All golden-path tests and eval suites must pass unchanged.
+3. **Phase E, positioning.** Reposition from "text games" to any game where players type or speak to characters, and add a Phaser example showing an NPC in a visual web game.
    - **Discoverability.** npm search weighs the name, description, and keywords, so expand `package.json`'s `keywords` and update its `description` to match the new positioning at the same time.
      - Keep the list relevant and honest: only terms for things Honeytongue supports at that release. Around 20 keywords at most, all lowercase and hyphenated.
      - Starting list to refine: persuasion, npc, npc-dialogue, dialogue, dialogue-system, game-mechanic, gamedev, rpg, charisma, charisma-check, speech-check, social-mechanic, text-game, text-based-game, text-adventure, interactive-fiction, twine, sugarcube, browser-game, ai-npc, jev, typesafe.
      - Add `phaser` only once the Phaser example ships in that same release. Don't add unity, godot, unreal, renpy, or visual-novel until the engine-agnostic endpoint exists.
      - Check each term against what's already popular on npm (for example, `gamedev` or `game-dev`) and prefer the more common spelling.
      - Give the human a matching list of GitHub repository topics (up to 20) and an updated one-line repository description, since only they can set those in the repository's About settings.
-3. **Stable `0.1.0`** (not `1.0`; see "Versioning" under "Releasing"). Remove the alpha notice, switch CDN links from `@alpha` to a `0.1` range, point `latest` at `0.1.0`, and follow the launch checklist under "Releasing".
+4. **Stable `0.1.0`** (not `1.0`; see "Versioning" under "Releasing"). Remove the alpha notice, switch CDN links from `@alpha` to a `0.1` range, point `latest` at `0.1.0`, and follow the launch checklist under "Releasing".
 
 **In the next npm release, whichever phase it comes from:** add "Built on Jev by TypeSafe AI, and not affiliated with TypeSafe" to the README, as the docs site's footer already says (TypeSafe's terms; see the standing rules).
 
