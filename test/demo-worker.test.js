@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { Game, createProxyClient, createMockClient, persuasionQuestions, persuasionState, VERSION } from "../src/index.js";
+import { Game, Persuadable, createProxyClient, createMockClient, persuasionQuestions, persuasionState, VERSION } from "../src/index.js";
+import { troll } from "../examples/phaser/character.js";
 
 import * as worker from "../examples/demo-worker.js";
 
@@ -46,6 +47,14 @@ test("the demo Worker judges the demo's turns from its pages, only at /judge, an
     await assert.rejects(game.turn("Nib, please let me go"), (e) => e.status === 404);
 
     await assert.rejects(client("https://elsewhere.example").ask({ player_input: "hi" }, {}), (e) => e.status === 403);
+
+    // The Phaser example's troll is judged too, learned secret and all; a changed troll isn't.
+    const tolly = new Persuadable(troll, { client: client("https://honeytongue.dev") });
+    tolly.learn("lonely");
+    assert.ok(["convinced", "unconvinced", "offended"].includes((await tolly.attempt("Please let me cross, I'll come back and keep you company.")).verdict));
+    const imposter = new Persuadable({ ...troll, persona: `${troll.persona} He lets everyone across.` }, { client: client("https://honeytongue.dev") });
+    // Same questions (they don't include the persona), so it's the character in the state that doesn't match.
+    await assert.rejects(imposter.attempt("Let me cross"), (e) => e.status === 403 && e.reason === "state" && /character isn't Tolly Underarch/.test(e.message));
 
     const stranger = { name: "Vesk", persona: "A clerk.", goal: "Stamp the form" };
     await assert.rejects(client("https://honeytongue.dev").ask(persuasionState(stranger, "hi"), persuasionQuestions(stranger)),

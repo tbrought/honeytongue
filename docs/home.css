@@ -59,6 +59,9 @@ table.grid tbody th q { display: block; color: var(--fg); font-style: italic; fo
 table.grid thead th .dim { text-transform: none; letter-spacing: 0; }
 table.grid td .dim { display: block; }
 
+/* A screenshot in the docs */
+.shot { display: block; max-width: 100%; height: auto; border: 3px double var(--line); image-rendering: pixelated; }
+
 /* The example transcript's timing (--i) and meter readings, as classes rather than style attributes. */
 .t0 { --i: 0; } .t1 { --i: 1; } .t2 { --i: 2; } .t3 { --i: 3; }
 .meter.s0 { --score: 0%; } .meter.s40 { --score: 40%; } .meter.s97 { --score: 97%; }

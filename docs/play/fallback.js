@@ -76,3 +76,37 @@ export function createFallbackClient({ live, mock, cap = TURN_CAP, retryAfterMs 
     },
   };
 }
+
+// ---- What the page tells the player about who's judging (shared by the demo scenes and the Phaser page) ----
+
+export const STAND_IN = "Characters here are judged by simple keyword matching, a stand-in for Jev that understands far less. Plain, direct sentences work best.";
+
+/** The note shown with the next reply when the live judge steps aside, or comes back. `version` is this page's. */
+export function fallbackNote({ mode, why, err }, version) {
+  if (mode === "live") return "Jev is back: it judges your turns again.";
+  return {
+    busy: "Jev is busy, so the offline stand-in judged that turn. Jev will be tried again in about a minute.",
+    version: `This page (Honeytongue ${version}) and the live judge (${err?.proxyVersion ?? "another version"}) are on different versions, ` +
+      "so the offline stand-in judges from here on. Reload later: they're usually updated together within minutes.",
+    refused: "The live judge turned this page's request away, so the offline stand-in judges from here on.",
+    unavailable: "The live demo is resting (its Jev credit may have run out), so the offline stand-in judges from here on. Reload later to try Jev again.",
+    cap: `That's this tab's ${TURN_CAP} live turns, so the offline stand-in judges from here on. Thanks for playing so long!`,
+  }[why];
+}
+
+/**
+ * The banner above the game: { label, detail, privacy }. Live Jev comes with the privacy note; the offline stand-in
+ * says why Jev stepped aside, if it did, and keeps the privacy note while Jev may come back (a busy pause).
+ */
+export function banner({ source, fallback, judge, proxyUrl }) {
+  if (source === "jev") return { label: "Live: ", detail: "Jev judges everything you type, through the Honeytongue proxy. ", privacy: true };
+  const why = fallback && {
+    busy: "Jev is busy, so this turn was judged offline; Jev will be tried again shortly. ",
+    version: "The live judge is on a different Honeytongue version. ",
+    refused: "The live judge turned this page away. ",
+    unavailable: "The live demo is resting. ",
+    cap: `You've used this tab's ${TURN_CAP} live turns. `,
+  }[fallback.why];
+  const label = judge === "local" ? "Local preview: judged offline. " : proxyUrl ? "Offline stand-in. " : "Offline preview. ";
+  return { label, detail: (why || "") + STAND_IN, privacy: fallback?.mode === "paused" };
+}

@@ -5,10 +5,11 @@
 //
 // By default it acts as the demo's pages, https://honeytongue.dev and then the fallback https://tbrought.github.io.
 // It checks that each may call the proxy, that other paths, sites, and characters are refused, that the proxy
-// runs this checkout's Honeytongue version, and plays one Gatehouse turn as the first page, which is one live
-// Jev call (about 1,300 tokens).
+// runs this checkout's Honeytongue version, plays one Gatehouse turn as the first page, and makes one attempt on the
+// Phaser example's troll: two live Jev calls (about 2,100 tokens).
 import { readFileSync } from "node:fs";
-import { Game, createProxyClient, persuasionQuestions, persuasionState, VERSION } from "../src/index.js";
+import { Game, Persuadable, createProxyClient, persuasionQuestions, persuasionState, VERSION } from "../src/index.js";
+import { troll } from "../examples/phaser/character.js";
 
 const args = process.argv.slice(2);
 const url = args.find((a, i) => !a.startsWith("--") && args[i - 1] !== "--origin");
@@ -57,6 +58,16 @@ try {
   report(d?.source === "jev", "a Gatehouse turn is judged by Jev", `source ${d?.source}, action ${d?.ranked?.[0]?.[0]}, verdict ${d?.verdict}, score ${d?.persuasion?.score?.toFixed(2)}`);
 } catch (err) {
   report(false, "a Gatehouse turn is judged by Jev", `${err.status ?? ""} ${err.reason ?? ""} ${err.message}`.trim());
+}
+
+// The Phaser page's troll, judged on his own (one more live call).
+try {
+  const tolly = new Persuadable(troll, { client });
+  tolly.learn("lonely");
+  const r = await tolly.attempt("Please let me cross. I'll come back and keep you company, so you're never lonely again.");
+  report(r.verdict !== undefined, "the Phaser example's troll is judged", `verdict ${r.verdict}, score ${r.score?.toFixed(2)}`);
+} catch (err) {
+  report(false, "the Phaser example's troll is judged", `${err.status ?? ""} ${err.reason ?? ""} ${err.message}`.trim());
 }
 
 console.log(failed ? `\n${failed} check(s) failed.` : "\nAll checks passed.");

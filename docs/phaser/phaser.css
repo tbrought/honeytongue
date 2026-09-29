@@ -1,0 +1,31 @@
+/* The Phaser example's page: the game in the site's terminal frame, with the dialogue box over it. */
+
+.phaser { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem 2rem; }
+.phaser h1 { font-size: clamp(2.4rem, 9vw, 3.4rem); line-height: 0.9; margin: 0 0 0.5rem; }
+.phaser .mode { border: 1px dashed var(--dim); color: var(--dim); padding: 0.5rem 0.8rem; margin: 0 0 1rem; font-size: 0.9rem; }
+.phaser .mode strong { color: var(--bright); }
+
+.stage { position: relative; aspect-ratio: 16 / 9; border: 3px double var(--line); background: #000; }
+#game { position: absolute; inset: 0; }
+#game canvas { image-rendering: pixelated; }
+
+#dialogue { position: absolute; left: 3%; right: 3%; bottom: 4%; background: var(--screen); border: 3px double var(--dim); padding: 0.6rem 0.8rem; text-shadow: none; }
+#dialogue-log { max-height: 8.5rem; overflow-y: auto; font-size: 0.95rem; }
+#dialogue-log p { margin: 0 0 0.35rem; }
+#dialogue-log b { color: var(--name); }
+#dialogue-log [data-verdict="convinced"] { color: var(--good); }
+#dialogue-log [data-verdict="offended"] { color: var(--bad); }
+#dialogue-form { display: flex; gap: 0.5rem; margin-top: 0.4rem; }
+#dialogue-input { flex: 1; min-width: 0; font: 500 1rem var(--mono); color: var(--bright); background: transparent; border: 0; border-bottom: 1px dashed var(--dim); padding: 0.2rem 0; }
+#dialogue-input:focus { outline: none; border-bottom-color: var(--bright); }
+#dialogue-close { margin-top: 0.4rem; }
+.key { font: 500 0.85rem var(--mono); color: var(--fg); background: none; border: 1px solid var(--dim); padding: 0.3rem 0.7rem; cursor: pointer; }
+.key:hover { background: var(--fg); color: var(--bg); }
+
+/* On a phone the box needs more room than the game: it sits under the game instead of over it. */
+@media (max-width: 560px) {
+  .stage { aspect-ratio: auto; height: calc((100vw - 2rem) * 9 / 16); }
+  #dialogue { position: static; margin-top: 0.75rem; }
+  .stage:has(#dialogue:not([hidden])) { height: auto; }
+  .stage:has(#dialogue:not([hidden])) #game { position: relative; height: calc((100vw - 2rem) * 9 / 16 - 6px); }
+}

@@ -46,6 +46,7 @@
       <li><a href="#start">Get started</a></li>
       <li><a href="playground/">Design a character</a> <span class="dim nowrap">(playground)</span></li>
       <li><a href="play/">Play the demo scenes</a> <span class="dim nowrap">(live, judged by Jev)</span></li>
+      <li><a href="phaser/">Play the bridge troll</a> <span class="dim nowrap">(a Phaser game)</span></li>
       <li><a href="https://github.com/tbrought/honeytongue">Source on GitHub</a></li>
     </ul>
   </div>
@@ -92,6 +93,7 @@
       <li class="group">Browser games</li>
       <li><a href="#browser">The proxy</a></li>
       <li><a href="#twine">Twine</a></li>
+      <li><a href="#visual">Visual games</a></li>
       <li class="group">Advanced (optional)</li>
       <li><a href="#control">Rubrics</a></li>
       <li><a href="#decide">Your own rule</a></li>
@@ -328,6 +330,36 @@ const client = createProxyClient({ url: "https://your-proxy.workers.dev" });</co
   });</code></pre>
       <p>Then call <code>setup.harry.attempt(_plea)</code> from a button and send the player to a passage based on the verdict. The full recipe in <code>examples/twine-sugarcube.md</code> also handles errors, empty input, and double clicks.</p>
       <p class="note">The Twine recipe hasn't been tested inside Twine yet. If you try it, please report how it goes.</p>
+    </section>
+
+    <section id="visual">
+      <h2>Visual games</h2>
+      <p>Honeytongue isn't only for text adventures: it fits any game where players type (or say) something to a character. <a href="phaser/">The bridge troll</a> is a small <a href="https://phaser.io/">Phaser</a> game: walk up to a troll, read the sign by his bridge, and talk your way across. It's judged live by Jev, like the demo scenes.</p>
+      <p><a href="phaser/"><img class="shot" src="assets/phaser-example.png" width="928" height="522" alt="The bridge troll: a pixel-art river with a wooden bridge, a green troll, and a dialogue box where the player has told him they'll come back and keep him company."></a></p>
+      <p>The game draws the world and moves the player; Honeytongue only judges what the player says. The pattern, with Phaser and Honeytongue both from a CDN and no build step:</p>
+<pre><code>&lt;script src="https://cdn.jsdelivr.net/npm/phaser@4.2.1/dist/phaser.min.js"
+  integrity="sha384-kyUQ5+cxc6+X89xEG6DhcXLcDU9T3Z+o/45VdT6pgAwtG6gxtAzYTEn0Wwj/BKZd" crossorigin="anonymous"&gt;&lt;/script&gt;
+&lt;script type="module"&gt;
+  import { Persuadable, createProxyClient } from "https://cdn.jsdelivr.net/npm/honeytongue@alpha/src/index.js";
+
+  const client = createProxyClient({ url: "https://your-proxy.example/judge" });
+  const troll = new Persuadable({ name: "Tolly Underarch", persona: "...", goal: "Let the player cross the bridge" }, { client });
+
+  <span class="c">// When the player reads the sign by the bridge:</span>
+  troll.learn("lonely");
+
+  <span class="c">// When the player says something to the troll, in your dialogue box:</span>
+  const result = await troll.attempt(line);
+  if (result.verdict === "convinced") openTheBridge();
+  else showReply(result.reaction);
+&lt;/script&gt;</code></pre>
+      <ul class="points">
+        <li><strong>The dialogue box is plain HTML over the canvas,</strong> so typing, phone keyboards, and screen readers just work. The example shows its text as text, never as HTML.</li>
+        <li><strong>The world teaches secrets.</strong> Reading the sign calls <code>troll.learn("lonely")</code>, and from then on an argument that uses it can win.</li>
+        <li><strong>Spoken input</strong> works the same way, once your game turns speech into text.</li>
+        <li><strong>Engines outside JavaScript</strong> (Unity, Godot, Unreal, Ren'Py) aren't supported yet; a plain HTTP endpoint for them is on the roadmap.</li>
+      </ul>
+      <p>The full example is <a href="https://github.com/tbrought/honeytongue/tree/main/examples/phaser"><code>examples/phaser/</code></a>, about 200 lines. In the repository it imports Honeytongue from <code>../../src/</code>, so it runs from a clone; copy it into your own project with the CDN import above, or <code>from "honeytongue"</code> with a bundler. It uses the offline stand-in until you set <code>PROXY_URL</code> to your proxy, and your proxy's <code>allowedCharacters</code> needs your character. Phaser is MIT-licensed; the example pins version 4.2.1 with an integrity hash.</p>
     </section>
 
     <div class="part" id="advanced">

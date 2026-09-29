@@ -10,7 +10,7 @@ import { createMockClient } from "./lib/mock.js";
 import { createTranscript, snapshot } from "./lib/transcript.js";
 import { VERSION } from "./lib/version.js";
 import { parseMarkup, stripMarkup } from "./lib/markup.js";
-import { createFallbackClient, chooseJudge, TURN_CAP } from "./fallback.js";
+import { createFallbackClient, chooseJudge, fallbackNote, banner, TURN_CAP } from "./fallback.js";
 import { typingSpeed, endingSummary } from "./present.js";
 import { makeRenderer } from "./render.js";
 
@@ -36,7 +36,7 @@ const client = proxyUrl
       live: createProxyClient({ url: proxyUrl, maxRetries: 0, timeoutMs: 15_000 }),
       mock: createMockClient(),
       storage: tabStorage,
-      onChange: (change) => { fallback = change.mode === "live" ? null : change; note = fallbackNote(change); },
+      onChange: (change) => { fallback = change.mode === "live" ? null : change; note = fallbackNote(change, VERSION); },
     })
   : createMockClient();
 const finePointer = matchMedia("(pointer: fine)").matches;
@@ -65,7 +65,7 @@ let typedText = setting("honeytongue-typed-text", "on") === "on";
 let crt = setting("honeytongue-crt", "off") === "on";
 
 // Every element is built by render.js, which only ever sets text as text, never as HTML.
-const { el, paragraph, titleCard, commandLine, endingScreen } = makeRenderer(document);
+const { el, paragraph, titleCard, commandLine, endingScreen, bannerNode } = makeRenderer(document);
 const line = (text, className = "") => log.appendChild(el("p", { className }, text));
 
 function meter(score, max, threshold) {
@@ -366,49 +366,19 @@ showSettings();
 
 // ---- Boot ------------------------------------------------------------------------
 
-/** What to tell the player when the live judge steps aside, or comes back. */
-function fallbackNote({ mode, why, err }) {
-  if (mode === "live") return "Jev is back: it judges your turns again.";
-  return {
-    busy: "Jev is busy, so the offline stand-in judged that turn. Jev will be tried again in about a minute.",
-    version: `This page (Honeytongue ${VERSION}) and the live judge (${err?.proxyVersion ?? "another version"}) are on different versions, ` +
-      "so the offline stand-in judges from here on. Reload later: they're usually updated together within minutes.",
-    refused: "The live judge turned this page's request away, so the offline stand-in judges from here on.",
-    unavailable: "The live demo is resting (its Jev credit may have run out), so the offline stand-in judges from here on. Reload later to try Jev again.",
-    cap: `That's this tab's ${TURN_CAP} live turns, so the offline stand-in judges from here on. Thanks for playing so long!`,
-  }[why];
-}
 function showNote() {
   if (note) line(note, "dim");
   note = null;
 }
 
-/** The privacy note shown while Jev may judge, linking to TypeSafe's privacy policy. */
-const privacy = () => el("span", {}, "What you type is sent to ",
-  el("a", { href: "https://typesafe.ai/legal/privacy-policy", target: "_blank", rel: "noopener" }, "TypeSafe"),
-  "'s Jev model to be judged, and TypeSafe may store it. Don't type anything personal.");
-const STAND_IN = "Characters here are judged by simple keyword matching, a stand-in for Jev that understands far less. Plain, direct sentences work best.";
-
-/** The banner above the game: live Jev (with the privacy note), or the offline mock, and why if Jev stepped aside. */
+/** The banner above the game: who's judging, and the privacy note while it's Jev. */
 let shown;
 function showMode(source) {
   const key = `${source}:${fallback?.why ?? ""}`;
   if (!source || key === shown) return;
   shown = key;
-  const mode = $("mode");
-  mode.hidden = false;
-  const live = source === "jev";
-  const why = !live && fallback && {
-    busy: "Jev is busy, so this turn was judged offline; Jev will be tried again shortly. ",
-    version: "The live judge is on a different Honeytongue version. ",
-    refused: "The live judge turned this page away. ",
-    unavailable: "The live demo is resting. ",
-    cap: `You've used this tab's ${TURN_CAP} live turns. `,
-  }[fallback.why];
-  mode.replaceChildren(live
-    ? el("span", {}, el("strong", {}, "Live: "), "Jev judges everything you type, through the Honeytongue proxy. ", privacy())
-    : el("span", {}, el("strong", {}, judge === "local" ? "Local preview: judged offline. " : proxyUrl ? "Offline stand-in. " : "Offline preview. "), why || "", STAND_IN,
-        ...(fallback?.mode === "paused" ? [" ", privacy()] : [])));
+  $("mode").hidden = false;
+  $("mode").replaceChildren(bannerNode(banner({ source, fallback, judge, proxyUrl })));
 }
 if (proxyUrl && client.turnsUsed >= TURN_CAP) fallback = { mode: "off", why: "cap" }; // used up before a reload
 showMode(proxyUrl && !fallback ? "jev" : "mock");

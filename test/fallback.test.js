@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createFallbackClient, chooseJudge, whyFailed, TURN_CAP } from "../docs/play/fallback.js";
+import { createFallbackClient, chooseJudge, whyFailed, fallbackNote, banner, STAND_IN, TURN_CAP } from "../docs/play/fallback.js";
 
 const error = (status, reason) => Object.assign(new Error(`failed ${status}`), { status, reason });
 const answer = (source) => ({ [Symbol.for("honeytongue.source")]: source });
@@ -89,4 +89,13 @@ test("a local preview judges offline instead of calling the live proxy, unless ?
   assert.equal(chooseJudge({ proxyUrl, hostname: "127.0.0.1", search: "?live" }).judge, "live");
   assert.deepEqual(chooseJudge({ proxyUrl: "", hostname: "honeytongue.dev" }), { judge: "offline", url: "" });
   assert.deepEqual(chooseJudge({ proxyUrl: undefined, hostname: "localhost" }), { judge: "offline", url: "" });
+});
+
+test("the banner and notes say who's judging, with the privacy note whenever Jev may judge", () => {
+  assert.deepEqual(banner({ source: "jev" }), { label: "Live: ", detail: "Jev judges everything you type, through the Honeytongue proxy. ", privacy: true });
+  assert.deepEqual(banner({ source: "mock", judge: "local", proxyUrl: "" }), { label: "Local preview: judged offline. ", detail: STAND_IN, privacy: false });
+  assert.equal(banner({ source: "mock", proxyUrl: "https://p", fallback: { mode: "paused", why: "busy" } }).privacy, true, "Jev may come back");
+  assert.match(banner({ source: "mock", proxyUrl: "https://p", fallback: { mode: "off", why: "cap" } }).detail, new RegExp(`this tab's ${TURN_CAP} live turns`));
+  assert.match(fallbackNote({ mode: "off", why: "version", err: { proxyVersion: "0.1.0-alpha.8" } }, "0.1.0-alpha.9"), /Honeytongue 0\.1\.0-alpha\.9\) and the live judge \(0\.1\.0-alpha\.8\)/);
+  assert.equal(fallbackNote({ mode: "live" }, "x"), "Jev is back: it judges your turns again.");
 });

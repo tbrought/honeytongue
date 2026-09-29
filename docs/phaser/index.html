@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://api.honeytongue.dev; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The bridge troll: Honeytongue in a Phaser game</title>
+<meta name="description" content="A small Phaser game: walk up to a troll and talk your way across his bridge. A Honeytongue example.">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/honeytongue-logo-32.png">
+<link rel="apple-touch-icon" href="../assets/honeytongue-logo-192.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Honeytongue">
+<meta property="og:title" content="The bridge troll: Honeytongue in a Phaser game">
+<meta property="og:description" content="A small Phaser game: walk up to a troll and talk your way across his bridge. A Honeytongue example.">
+<meta property="og:url" content="https://honeytongue.dev/phaser/">
+<meta property="og:image" content="https://honeytongue.dev/assets/social-preview.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:image:alt" content="The Honeytongue logo: a pixel-art speech bubble dripping with honey">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The bridge troll: Honeytongue in a Phaser game">
+<meta name="twitter:description" content="A small Phaser game: walk up to a troll and talk your way across his bridge. A Honeytongue example.">
+<meta name="twitter:image" content="https://honeytongue.dev/assets/social-preview.png">
+<meta name="twitter:image:alt" content="The Honeytongue logo: a pixel-art speech bubble dripping with honey">
+<!-- The judge: the live demo proxy (a local preview judges offline instead). Empty = offline stand-in. -->
+<meta name="honeytongue-proxy" content="https://api.honeytongue.dev/judge">
+<!-- The policy allows data: images on this page only: Phaser builds its default textures from them. -->
+<link rel="stylesheet" href="../style.css">
+<script src="../theme.js"></script>
+<link rel="stylesheet" href="phaser.css">
+<!-- Phaser 4.2.1, served from this site (MIT licence: ../assets/vendor/phaser-LICENSE.md). -->
+<script src="../assets/vendor/phaser-4.2.1.min.js"></script>
+<script type="module" src="main.js"></script>
+</head>
+<body>
+<header class="status">
+  <span class="room"><a href="../"><img class="logo" src="../assets/honeytongue-logo-32.png" alt="" width="20" height="20">Honeytongue</a> / Phaser example</span>
+  <button type="button" data-theme-toggle>Paper</button>
+</header>
+
+<main class="phaser">
+  <h1>The bridge troll</h1>
+  <p class="dim">A small <a href="https://phaser.io/">Phaser</a> game with a Honeytongue character. Walk with the arrow keys or WASD, or tap where to go. Press E, Space, or Enter to read the sign or talk to the troll.</p>
+  <p class="mode" id="mode" hidden></p>
+  <div class="stage">
+    <div id="game"></div>
+    <section id="dialogue" aria-live="polite" hidden>
+      <div id="dialogue-log"></div>
+      <form id="dialogue-form">
+        <label for="dialogue-input" class="vh">What do you say?</label>
+        <input id="dialogue-input" maxlength="500" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Say something...">
+        <button type="submit" class="key">Say</button>
+      </form>
+      <button type="button" class="key" id="dialogue-close">Leave (Esc)</button>
+    </section>
+  </div>
+  <p class="dim" id="note" aria-live="polite"></p>
+  <p>The whole example is about 200 lines: <a href="https://github.com/tbrought/honeytongue/tree/main/examples/phaser">read the source</a>, or see <a href="../#visual">Visual games</a> in the docs.</p>
+</main>
+
+<footer class="wrap">
+  <p>Made with <a href="../">Honeytongue</a> and <a href="https://phaser.io/">Phaser</a>. Jev judges what you say, and the game decides what happens.</p>
+</footer>
+</body>
+</html>

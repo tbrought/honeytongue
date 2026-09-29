@@ -1,4 +1,5 @@
-// The files the browser demo (docs/play) and the playground (docs/playground) need, as [source, copy] pairs relative to the repository root.
+// The files the browser demo (docs/play), the playground (docs/playground), and the Phaser page (docs/phaser) need,
+// as [source, copy] pairs relative to the repository root.
 // Shared by scripts/build-demo.js, which copies them, and test/demo.test.js, which checks the copies are current.
 export const DEMO_FILES = [
   "src/engine.js",
@@ -14,5 +15,9 @@ export const DEMO_FILES = [
   "stories/tidy-profit.json",
   "stories/lighthouse.json",
   "stories/characters.json",
-].map((source) => [source, `docs/play/lib/${source.split("/").pop()}`]);
+].map((source) => [source, `docs/play/lib/${source.split("/").pop()}`]).concat([
+  // The Phaser example's game and character, so the site's playable copy is exactly the example.
+  ["examples/phaser/game.js", "docs/phaser/lib/game.js"],
+  ["examples/phaser/character.js", "docs/phaser/lib/character.js"],
+]);
 
