@@ -55,19 +55,9 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
       this.prompt = this.add.text(0, 0, "", { fontFamily: "VT323, monospace", fontSize: "16px", color: "#ffffff", backgroundColor: "#000000aa" })
         .setPadding(3, 1).setResolution(4).setVisible(false).setDepth(TOP);
 
-      // Arrow keys or WASD to walk, E, Space, or Enter to read or talk. No key capture, so typing in the box works.
+      // Arrow keys or WASD to walk, E, Space, or Enter to read or talk, R to restart: all read in update(). No key
+      // capture, so typing in the box works.
       this.keys = this.input.keyboard.addKeys("W,A,S,D,UP,DOWN,LEFT,RIGHT,E,SPACE,ENTER,R", false);
-      // Phaser hands this frame's key events to listeners again each time another key event arrives, so remember
-      // which ones were handled: each press acts once. (Otherwise an E just handled, or a letter typed in the box,
-      // could reopen the box when the next key arrives in the same frame, such as Escape or an arrow key.)
-      const handled = new WeakSet();
-      this.input.keyboard.on("keydown", (event) => {
-        if (handled.has(event)) return;
-        handled.add(event);
-        if (this.talking) return;
-        if (["e", " ", "Enter"].includes(event.key)) this.interact();
-        if (event.key === "r" && (this.ended || this.npc.outOfPatience)) this.scene.restart();
-      });
       // On a phone, tap where to walk, or tap the sign or the troll when you're next to them.
       this.input.on("pointerdown", (pointer) => {
         if (this.talking) return;
@@ -88,7 +78,17 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
     }
 
     update(time, delta) {
-      if (this.talking || this.ended) return;
+      // Single presses are read once a frame with JustDown, not with Phaser's keydown events: those can fire more than
+      // once for one press, because Phaser hands a frame's key events to listeners again whenever another key event
+      // arrives in the same frame. They're read every frame, even while the box is open, so a letter typed there
+      // is used up, and can't open the box again once it closes.
+      const { JustDown } = Phaser.Input.Keyboard;
+      const interact = ["E", "SPACE", "ENTER"].map((name) => JustDown(this.keys[name])).some(Boolean);
+      const restart = JustDown(this.keys.R);
+      if (this.talking) return;
+      if (restart && (this.ended || this.npc.outOfPatience)) return this.scene.restart();
+      if (this.ended) return;
+      if (interact) this.interact();
       // Walk: keys first, otherwise towards a tapped spot.
       let dx = (this.keys.RIGHT.isDown || this.keys.D.isDown) - (this.keys.LEFT.isDown || this.keys.A.isDown);
       let dy = (this.keys.DOWN.isDown || this.keys.S.isDown) - (this.keys.UP.isDown || this.keys.W.isDown);

@@ -191,7 +191,8 @@ try {
       } finally { await page.key(key, false); }
     };
     const mustGame = async (ok, message) => { if (!ok) throw new Error(`${message} (${await diagnose()})`); };
-    const talk = async () => { await page.key("e", true); await page.key("e", false); await page.waitFor(`${bridge}.talking`, { what: "the dialogue box" }); };
+    // A real key press lasts longer than a frame, and the game reads single presses once a frame (JustDown).
+    const talk = async () => { await page.key("e", true); await sleep(100); await page.key("e", false); await page.waitFor(`${bridge}.talking`, { what: "the dialogue box" }); };
     const say = async (line, verdicts) => {
       await page.eval(`(() => { const i = document.getElementById("dialogue-input"); i.value = ${JSON.stringify(line)}; document.getElementById("dialogue-form").requestSubmit(); return true; })()`);
       await page.waitFor(`document.querySelectorAll("#dialogue-log p[data-verdict]").length >= ${verdicts}`, { what: `Tolly's answer to "${line}"` });
@@ -223,23 +224,24 @@ try {
     must(bad.length === 0, `CSP violations or console errors: ${bad.join("; ")}`);
   });
 
-  // ---- The Phaser game: a key press acts once, even when several key events arrive in one frame ----
-  // Phaser replays a frame's queued key events whenever another arrives, so without the game's guard an E that
-  // was just handled would reopen the sign's box when the next key (here, an arrow) came in the same frame.
+  // ---- The Phaser game: the box stays closed after a letter typed in it and Escape, in the same frame ----
+  // Phaser hands a frame's key events to its keydown listeners again whenever another key event arrives, so a game
+  // reacting to keydown events would read that "e" again after Escape closed the box, and open it again.
   await open("/phaser/");
   await page.waitFor("window.__game?.scene?.getScene?.('bridge')?.player", { what: "the Phaser scene to start" });
   await page.eval(`__game.scene.getScene("bridge").player.setPosition(115, 92); true`); // next to the sign
   await page.settle(1280);
-  const once = JSON.parse(await page.eval(`(() => {
+  await page.key("e", true); await sleep(100); await page.key("e", false);
+  const opened = await page.waitFor(`__game.scene.getScene("bridge").talking`, { what: "the sign's box" }).catch(() => false);
+  await page.eval(`(() => {
     const key = (type, key, code, keyCode) => dispatchEvent(new KeyboardEvent(type, { key, code, keyCode, bubbles: true }));
-    const s = __game.scene.getScene("bridge");
-    key("keydown", "e", "KeyE", 69); key("keyup", "e", "KeyE", 69);
-    const opened = s.talking;
-    document.getElementById("dialogue-close").click();
-    key("keydown", "ArrowDown", "ArrowDown", 40); key("keyup", "ArrowDown", "ArrowDown", 40);
-    return JSON.stringify({ opened, reopened: s.talking });
-  })()`));
-  check(once.opened && !once.reopened, "Phaser: a key press acts once, even with several key events in one frame", JSON.stringify(once));
+    key("keydown", "e", "KeyE", 69); key("keyup", "e", "KeyE", 69);          // a letter typed while the box is open
+    key("keydown", "Escape", "Escape", 27); key("keyup", "Escape", "Escape", 27); // then Escape, in the same frame
+    return true;
+  })()`);
+  await sleep(200); // a few frames
+  const reopened = await page.eval(`__game.scene.getScene("bridge").talking`);
+  check(opened && !reopened, "Phaser: the box stays closed after a letter typed in it and Escape, in the same frame", JSON.stringify({ opened, reopened }));
 
   // ---- The local playground server ----
   const local = await startPlayground({ port: 0, apiKey: "", mock: true });
