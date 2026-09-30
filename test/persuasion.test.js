@@ -50,6 +50,38 @@ test("unconvinced always has a reaction, even with none authored", () => {
   assert.equal(readPersuasion(withReactions, { persuasion: { score: 2.5 } }).reaction, "Hmm.");
 });
 
+test("a reply may be a list of variants: a Persuadable uses each band's in turn, and judging once gives the first", async () => {
+  const c = {
+    ...harry,
+    reactions: [{ min: 0, text: ["Low one.", "Low two."] }, { min: 2, text: ["High one.", "High two.", "High three."] }],
+    repeatReaction: ["Again?", "Still again?"],
+  };
+  assert.equal(readPersuasion(c, { persuasion: { score: 2.5 } }).reaction, "High one.");
+  const client = fakeClient({ score: 2.5 });
+  assert.equal((await judgePersuasion(client, c, "the river is high")).reaction, "High one.");
+
+  const npc = new Persuadable(c, { client });
+  const said = [];
+  for (const [line, score] of [["the river is high", 2.5], ["my cart broke down", 0.5], ["a storm is coming in", 2.5],
+    ["I carry a letter for the mayor", 2.5], ["my aunt waits for me inside", 2.5], ["every inn out here is full", 0.5],
+    ["every inn out here is full", 0], ["every inn out here is full", 0], ["every inn out here is full", 0]]) {
+    client.next.score = score;
+    said.push((await npc.attempt(line)).reaction);
+  }
+  assert.deepEqual(said, ["High one.", "Low one.", "High two.", "High three.", "High one.", "Low two.", "Again?", "Still again?", "Again?"]);
+  npc.reset();
+  client.next.score = 2.5;
+  assert.equal((await npc.attempt("the river is high")).reaction, "High one.", "reset() starts the variants again");
+});
+
+test("reply variants must be a non-empty list of text", () => {
+  for (const bad of [[], [""], ["ok", 3]]) {
+    assert.throws(() => defineCharacter({ ...harry, reactions: [{ min: 0, text: bad }] }), /"reactions".*list of strings/);
+    assert.throws(() => defineCharacter({ ...harry, repeatReaction: bad }), /"repeatReaction".*list of them/);
+  }
+  assert.doesNotThrow(() => defineCharacter({ ...harry, reactions: [{ min: 0, text: ["One.", "Two."] }], repeatReaction: ["Again?"] }));
+});
+
 test("patience drains by verdict and offended costs double", async () => {
   const client = fakeClient({ score: 1 });
   const npc = new Persuadable({ ...harry, patience: 3 }, { client });

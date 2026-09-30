@@ -3,7 +3,9 @@
   "intro": "Bounty hunters have chased you down the coast over a debt that was never yours, and they'll reach the harbour by morning. Only one ship sails before then.",
   "start": "quay",
   "player": {
-    "inventory": ["three copper coins"],
+    "inventory": [
+      "three copper coins"
+    ],
     "flags": []
   },
   "scenes": {
@@ -21,7 +23,11 @@
           }
         ],
         "patience": 5,
-        "hostileReaction": "@[Maude]'s hand comes to rest on her cutlass. \"On this ship, that's mutiny talk. Say it again and you'll swim to wherever you're going.\"",
+        "hostileReaction": [
+          "@[Maude]'s hand comes to rest on her cutlass. \"On this ship, that's mutiny talk. Say it again and you'll swim to wherever you're going.\"",
+          "@[Maude] doesn't raise her voice. \"Threaten the quartermaster on her own quay? Brave. Stupid, but brave.\" A deckhand steps up behind you.",
+          "\"Mind your tongue,\" @[Maude] says, very quietly, \"or the harbour will mind it for you.\""
+        ],
         "outOfPatience": {
           "text": "@[Maude] closes her #[manifest] and nods to two deckhands. They walk you to the edge of the quay, and then keep walking.",
           "goto": "harbour"
@@ -29,19 +35,41 @@
         "persuasion": {
           "goal": "Take the player aboard as a passenger when the ship sails at dawn",
           "difficulty": "hard",
-          "offendedBy": ["threats"],
+          "offendedBy": [
+            "threats"
+          ],
           "reactions": [
             {
               "min": 0,
-              "text": "@[Maude] doesn't look up from her #[manifest]. \"Talk's cheap. Passage isn't.\""
+              "text": [
+                "@[Maude] doesn't look up from her #[manifest]. \"Talk's cheap. Passage isn't.\"",
+                "@[Maude] dips her pen. \"Next.\"",
+                "\"I've heard better from the gulls,\" @[Maude] says, still writing."
+              ]
+            },
+            {
+              "min": 1,
+              "text": [
+                "@[Maude] glances up, unimpressed. \"Everyone on this quay's desperate. Desperate doesn't pay.\"",
+                "\"Sob stories are free,\" @[Maude] says. \"Berths aren't.\"",
+                "@[Maude] taps the #[manifest]. \"Nothing on here says charity.\""
+              ]
             },
             {
               "min": 2,
-              "text": "@[Maude] sets down her pen. \"Go on. You've got until the ink dries.\""
+              "text": [
+                "@[Maude] sets down her pen. \"Go on. You've got until the ink dries.\"",
+                "@[Maude] leans back on her barrel. \"Now you're talking like a sailor. Keep going.\"",
+                "\"Hm. Not nothing,\" @[Maude] allows. \"Not enough, either.\""
+              ]
             },
             {
               "min": 3,
-              "text": "@[Maude] taps the #[manifest], thinking. \"Close. Now tell me what's in it for me, and how you'd prove it.\""
+              "text": [
+                "@[Maude] taps the #[manifest], thinking. \"Now we're haggling. Tell me what's in it for me, and how you'd prove it.\"",
+                "\"You've got my attention,\" @[Maude] says, and means it. \"Bring me something I can check against the books.\"",
+                "@[Maude] turns the #[manifest] toward the lamplight. \"Warmer. What's worth more to me than a fare?\""
+              ]
             }
           ],
           "success": {
@@ -49,7 +77,11 @@
             "goto": "aboard"
           }
         },
-        "repeatReaction": "\"Heard it the first time,\" @[Maude] says. \"Saying it twice doesn't double its worth.\""
+        "repeatReaction": [
+          "\"Heard it the first time,\" @[Maude] says. \"Saying it twice doesn't double its worth.\"",
+          "@[Maude] doesn't look up. \"Already on the books. Next.\"",
+          "\"Same offer, same answer,\" @[Maude] says."
+        ]
       },
       "actions": {
         "persuade_maude": {
@@ -61,19 +93,26 @@
           "label": "Chat with @[Maude]",
           "description": "Make small talk with the quartermaster, or ask about the ship, the crew, the voyage, or her manifest, without asking for passage",
           "text": "@[Maude] doesn't look up. \"Crew's shares came up short again this voyage. Third time running.\" She blots a line of figures harder than she needs to. \"The captain says the sea takes its cut.\"",
-          "setFlags": ["suspects_the_captain"]
+          "setFlags": [
+            "suspects_the_captain"
+          ]
         },
         "examine_cargo": {
           "label": "Look over the cargo",
           "description": "Look at, examine, or search the crates and barrels stacked on the quay",
           "text": "Most of the #[crates] carry @[Maude]'s neat chalk tally. Six at the back don't. They're stamped with a gull-and-crown brand, the captain's private mark, and none of them is on the #[manifest]. Whatever's inside, the crew won't be getting a share of it.",
-          "setFlags": ["found_unlisted_crates", "suspects_the_captain"]
+          "setFlags": [
+            "found_unlisted_crates",
+            "suspects_the_captain"
+          ]
         },
         "offer_coins": {
           "label": "Offer @[Maude] your coins",
           "description": "Offer the quartermaster money or coins as a fare",
           "requires": {
-            "items": ["three copper coins"]
+            "items": [
+              "three copper coins"
+            ]
           },
           "blockedText": "You pat your pockets. You've nothing left to offer.",
           "text": "@[Maude] weighs your coins in her palm and hands them back. \"That wouldn't buy you a berth in the bilge.\""
@@ -82,7 +121,9 @@
           "label": "Hide in one of the captain's #[crates]",
           "description": "Hide or stow away inside a crate or barrel so it's carried aboard",
           "requires": {
-            "flags": ["found_unlisted_crates"]
+            "flags": [
+              "found_unlisted_crates"
+            ]
           },
           "blockedText": "Every crate near you is chalked on @[Maude]'s tally. She'd find you before the anchor was up.",
           "text": "While @[Maude] argues with a porter, you prise open one of the branded #[crates]. It's full of silver plate wrapped in sacking, with just enough room on top for you. You pull the lid down and hold your breath.",

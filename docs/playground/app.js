@@ -6,13 +6,12 @@ import { createProxyClient } from "../play/lib/jev.js";
 import { defineCharacter, DEFAULT_LEVELS } from "../play/lib/persuasion.js";
 import {
   FIELDS, TELLS, fieldErrors, minimalCharacter, characterCode, storyJson, readDraft, encodeShare, decodeShare, readPresets,
-  tryLine, replay, conversation, VERDICT_LABELS, spokenLabel, replyParts,
+  tryLine, replay, conversation, VERDICT_LABELS, spokenLabel, replyParts, linesToText, textToLines, MAX_LINE,
 } from "./designer.js";
 
 const $ = (id) => document.getElementById(id);
 const STORE = "honeytongue-playground";
 const HOSTED = "https://honeytongue.dev/playground/";
-const MAX_LINE = 500;
 
 /** Build an element. Text is always set as text, never parsed as HTML. */
 function el(tag, props = {}, ...children) {
@@ -101,7 +100,7 @@ function secretRow({ id = "", fact = "" } = {}, known = false) {
 
 function reactionRow({ min = "", text = "" } = {}) {
   const n = ++rowIds;
-  const textInput = el("textarea", { id: `reaction-text-${n}`, rows: 2, value: text });
+  const textInput = el("textarea", { id: `reaction-text-${n}`, rows: 2, value: linesToText(text) });
   textInput.dataset.k = "text";
   const minInput = el("input", { type: "number", id: `reaction-min-${n}`, value: String(min), step: "0.1", inputMode: "decimal" });
   minInput.dataset.k = "min";
@@ -115,7 +114,7 @@ function reactionRow({ min = "", text = "" } = {}) {
 }
 
 function writeForm({ character: given, knows }) {
-  // A threshold that matches a difficulty word (Harry's 3.2 of 4 is "normal") is shown as that word.
+  // A threshold that matches a difficulty word (3.2 of 4 is "normal") is shown as that word.
   let c = given;
   try {
     const smallest = minimalCharacter(given);
@@ -123,7 +122,8 @@ function writeForm({ character: given, knows }) {
       c = { ...given, threshold: undefined, difficulty: smallest.difficulty ?? "normal" };
     }
   } catch { /* invalid: shown as it is, with its errors */ }
-  for (const field of ["name", "persona", "goal", "repeatReaction"]) fieldInput(field).value = c[field] ?? "";
+  for (const field of ["name", "persona", "goal"]) fieldInput(field).value = c[field] ?? "";
+  fieldInput("repeatReaction").value = linesToText(c.repeatReaction);
   fieldInput("difficulty").value = ["easy", "normal", "hard", "very hard"].includes(c.difficulty) ? c.difficulty : "normal";
   for (const field of ["patience", "threshold", "hostileAt"]) {
     fieldInput(field).value = Number.isFinite(c[field]) ? String(c[field]) : "";
@@ -156,10 +156,10 @@ function readForm() {
   if (secrets.length) c.secrets = secrets;
   const reactions = [...$("reactions").children].map((row) => {
     const min = row.querySelector('[data-k="min"]').value.trim();
-    return { min: min === "" ? 0 : Number(min), text: row.querySelector('[data-k="text"]').value.trim() };
+    return { min: min === "" ? 0 : Number(min), text: textToLines(row.querySelector('[data-k="text"]').value) };
   }).filter((r) => r.text || r.min);
   if (reactions.length) c.reactions = reactions;
-  const repeat = fieldInput("repeatReaction").value.trim();
+  const repeat = textToLines(fieldInput("repeatReaction").value);
   if (repeat) c.repeatReaction = repeat;
   const levels = fieldInput("levels").value.split("\n").map((l) => l.trim()).filter(Boolean);
   if (levels.length) c.levels = levels;
@@ -241,15 +241,17 @@ function patienceText(result, character) {
   return `patience ${result.patienceLeft} of ${character.patience} left`;
 }
 
-/** The character's reply as the demo shows one: its label, then what they said, with speech and their name styled. */
+/** The character's reply as the demo shows one: its label (if the verdict has one), then what they said, styled. */
 function reply(result, character, hint) {
   const said = el("span", { className: "reaction" });
   for (const part of result.reaction ? replyParts(result.reaction, character.name) : []) {
     said.append(part.kind === "text" ? part.text : el("span", { className: `part-${part.kind}`, textContent: part.text }));
   }
   return el("div", { className: `reply v-${result.verdict}` },
-    el("p", {}, el("span", { className: "vh", textContent: `${spokenLabel(result.verdict)} ` }),
-      el("span", { className: "chip", ariaHidden: "true", textContent: VERDICT_LABELS[result.verdict] }), said),
+    el("p", {}, ...(VERDICT_LABELS[result.verdict]
+      ? [el("span", { className: "vh", textContent: `${spokenLabel(result.verdict)} ` }),
+        el("span", { className: "chip", ariaHidden: "true", textContent: VERDICT_LABELS[result.verdict] })]
+      : []), said),
     hint ? el("p", { className: "hint", textContent: hint }) : null);
 }
 
@@ -498,21 +500,38 @@ for (const { id, character, note } of [...presets, { id: "blank", character: nul
 /** The character in a share link, if the address has one: { draft, message }. */
 function fromLink() {
   try {
-    const draft = decodeShare(location.hash);
+    let draft = decodeShare(location.hash);
     if (!draft) return { draft: null, message: "" };
     history.replaceState(null, "", location.pathname + location.search); // later edits aren't what the link holds
-    return { draft, message: `Loaded ${draft.character.name || "a shared character"} from the link.` };
+    if (draft.preset !== undefined) {
+      const found = presets.find((p) => p.id === draft.preset);
+      if (!found) return { draft: null, message: `This link opens a preset character the playground doesn't have ("${draft.preset}").` };
+      draft = { ...draft, character: structuredClone(found.character) };
+    }
+    const name = draft.character.name || "a shared character";
+    return { draft, message: draft.line ? `Loaded ${name}, with a line ready to send.` : `Loaded ${name} from the link.` };
   } catch (err) {
     return { draft: null, message: err.message };
   }
 }
 
+/** A link's line goes in the box, ready to send. */
+function prefill(draft) {
+  if (!draft?.line) return;
+  lineInput.value = draft.line;
+  updateCount();
+  lineInput.focus();
+  lineInput.setSelectionRange(0, 0); // from its start, so it reads in full; Enter still sends it
+  lineInput.scrollTop = 0;
+}
+
 const link = fromLink();
 load(link.draft ?? savedDraft() ?? (presets[0] ? { character: structuredClone(presets[0].character), knows: [] } : structuredClone(BLANK)), link.message);
 updateCount();
+prefill(link.draft);
 // A link pasted into a tab that already has the playground open only changes the hash, without reloading.
 addEventListener("hashchange", () => {
   const { draft: shared, message } = fromLink();
-  if (shared) load(shared, message);
+  if (shared) { load(shared, message); prefill(shared); }
   else if (message) notice(message);
 });

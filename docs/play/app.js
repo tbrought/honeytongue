@@ -5,13 +5,14 @@
 // because GitHub Pages only serves the docs folder. The address's hash picks the scene (#goblin-camp);
 // with none, the page lists them.
 import { Game } from "./lib/engine.js";
+import { defineCharacter } from "./lib/persuasion.js";
 import { createProxyClient } from "./lib/jev.js";
 import { createMockClient } from "./lib/mock.js";
 import { createTranscript, snapshot } from "./lib/transcript.js";
 import { VERSION } from "./lib/version.js";
 import { parseMarkup, stripMarkup } from "./lib/markup.js";
 import { createFallbackClient, chooseJudge, fallbackNote, banner, TURN_CAP } from "./fallback.js";
-import { typingSpeed, endingSummary } from "./present.js";
+import { typingSpeed, endingSummary, difficultyTag } from "./present.js";
 import { makeRenderer } from "./render.js";
 
 const $ = (id) => document.getElementById(id);
@@ -44,6 +45,7 @@ const finePointer = matchMedia("(pointer: fine)").matches;
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
 let scenes = [];       // stories/index.json: id, file, title, hook, minutes
+let presets = {};      // stories/characters.json: each scene's character, for its difficulty tag
 const stories = new Map(); // id -> story, fetched on first play
 let scene;
 let story;
@@ -423,11 +425,17 @@ async function route() {
   }
 }
 
-/** A link per scene: title, hook, and roughly how long it takes. */
+/** A link per scene: title, difficulty (from its character's own settings), hook, and roughly how long it takes. */
 function showScenes() {
-  $("scenes").replaceChildren(...scenes.map((s) => el("li", {},
-    el("a", { className: "scene", href: `#${s.id}` },
-      el("b", {}, s.title), el("span", {}, s.hook), el("span", { className: "dim" }, `About ${s.minutes} minutes`)))));
+  $("scenes").replaceChildren(...scenes.map((s) => {
+    let tag = null;
+    try { tag = difficultyTag(defineCharacter(presets[s.character]).difficulty); } catch { /* no tag without a character */ }
+    const title = tag
+      ? el("b", {}, s.title, " ", el("span", { className: tag.className }, el("span", { className: "vh" }, "Difficulty: "), tag.label))
+      : el("b", {}, s.title);
+    return el("li", {}, el("a", { className: "scene", href: `#${s.id}` },
+      title, el("span", {}, s.hook), el("span", { className: "dim" }, `About ${s.minutes} minutes`)));
+  }));
 }
 
 addEventListener("hashchange", async () => {
@@ -439,6 +447,7 @@ addEventListener("hashchange", async () => {
 
 try {
   scenes = await fetchJson("lib/index.json");
+  presets = await fetchJson("lib/characters.json").catch(() => ({})); // without them, the list just has no tags
   showScenes();
   await route();
 } catch (err) {

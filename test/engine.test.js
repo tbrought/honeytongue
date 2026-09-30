@@ -1,10 +1,16 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { Game, validateStory, StoryError, Persuadable } from "../src/index.js";
+import { Game, validateStory, StoryError, Persuadable, stripMarkup } from "../src/index.js";
 import { fakeClient, harry } from "./helpers.js";
 
-const story = () => JSON.parse(readFileSync(new URL("../stories/gatehouse.json", import.meta.url), "utf8"));
+// The engine's mechanics are tested on The Gatehouse with the patience these tests count on (4), not whatever the
+// scene is tuned to now; test/scenes.test.js plays the scenes as they are.
+const story = () => {
+  const s = JSON.parse(readFileSync(new URL("../stories/gatehouse.json", import.meta.url), "utf8"));
+  s.scenes.gate.npc.patience = 4;
+  return s;
+};
 
 test("the demo story is valid", () => {
   assert.doesNotThrow(() => validateStory(story()));
@@ -218,10 +224,10 @@ test("story NPCs take difficulty and offendedBy in their persuasion block", asyn
 
 test("validation reports difficulty and offendedBy mistakes", () => {
   const s = story();
-  s.scenes.gate.npc.persuasion.difficulty = "hard"; // threshold is set too
+  s.scenes.gate.npc.persuasion.threshold = 3.2; // difficulty is set too
   const twin = structuredClone(s.scenes.gate);
   twin.npc.id = "twin";
-  delete twin.npc.persuasion.difficulty;
+  delete twin.npc.persuasion.threshold;
   twin.npc.persuasion.offendedBy = ["rudeness"];
   s.scenes.twin = twin;
   const err = (() => { try { validateStory(s); } catch (e) { return e; } })();
@@ -240,6 +246,30 @@ test("hostileReaction is only required when something can offend the NPC", () =>
   assert.throws(() => validateStory(s), /needs a "hostileReaction"/);
 });
 
+test("hostile reactions may be a list of variants, used in turn", async () => {
+  const s = story();
+  s.scenes.gate.npc.patience = 100;
+  s.scenes.gate.npc.hostileReaction = ["@[Harry] glares.", "@[Harry] grips his club."];
+  const game = new Game(s, fakeClient({ score: 0, threats: 0.95 }));
+  const said = [];
+  for (const line of ["open up or else", "move or I'll hurt you", "last warning, guard"]) said.push((await game.turn(line)).text);
+  assert.match(said[0], /Harry glares\./);
+  assert.match(said[1], /Harry grips his club\./);
+  assert.match(said[2], /Harry glares\./);
+});
+
+test("validateStory checks each reply variant", () => {
+  const s = story();
+  s.scenes.gate.npc.hostileReaction = [];
+  s.scenes.gate.npc.persuasion.reactions[0].text = ["Fine.", "@[Harry shrugs."];
+  s.scenes.gate.npc.repeatReaction = ["Again?", ""];
+  const err = (() => { try { validateStory(s); } catch (e) { return e; } })();
+  assert.ok(err instanceof StoryError);
+  assert.ok(err.problems.some((p) => /needs a "hostileReaction"/.test(p)), err.message);
+  assert.ok(err.problems.some((p) => /reactions\.0\.text\.1/.test(p)), err.message);
+  assert.ok(err.problems.some((p) => /"repeatReaction"/.test(p)), err.message);
+});
+
 test("a decide hook works in stories built in code", async () => {
   const s = story();
   s.scenes.gate.npc.persuasion.decide = (result) => (result.triggered.includes("threats") ? "offended" : undefined);
@@ -256,7 +286,7 @@ test("each turn's debug says how it went for the scene's character", async () =>
   const game = new Game(story(), client);
   const judged = (await game.turn("an honest but weak plea")).debug;
   assert.equal(judged.verdict, "unconvinced");
-  assert.equal(judged.threshold, 3.2);
+  assert.equal(judged.threshold, 2.4);
   assert.deepEqual(judged.triggered, []);
   assert.equal(judged.patienceLeft, 3);
 
@@ -268,7 +298,7 @@ test("each turn's debug says how it went for the scene's character", async () =>
   client.next = { ...client.next, action: "read_letter" };
   const plain = (await game.turn("read the letter")).debug;
   assert.equal(plain.verdict, null, "an ordinary action isn't judged");
-  assert.equal(plain.threshold, 3.2);
+  assert.equal(plain.threshold, 2.4);
 
   client.next = { ...client.next, action: "chat_guard", insults: 0.95 };
   const rude = (await game.turn("how's your shift, idiot")).debug;
@@ -285,7 +315,7 @@ test("each turn's attempt is how the scene's character judged it: attempt()'s fi
   assert.deepEqual(Object.keys(judged.attempt).sort(), [...Object.keys(direct), "threshold"].sort(), "the same fields as attempt(), plus threshold");
   assert.equal(judged.attempt.verdict, "unconvinced");
   assert.equal(judged.attempt.score, 1);
-  assert.equal(judged.attempt.threshold, 3.2);
+  assert.equal(judged.attempt.threshold, 2.4);
   assert.equal(judged.attempt.patienceLeft, 3);
   assert.equal(judged.attempt.outOfPatience, false);
   assert.ok(judged.attempt.reaction, "with the character's reaction");
@@ -329,10 +359,11 @@ test("one penalty per turn: hostile words with a costly action are charged once,
 test("the attempt that uses up the last of a character's patience shows only the out-of-patience text", async () => {
   const game = new Game(story(), fakeClient({ score: 1 }));
   for (const line of ["let me in", "I have business inside", "it's important"]) {
-    assert.match((await game.turn(line)).text, /Gate's shut till dawn/, "ordinary failures get a reaction");
+    const r = await game.turn(line);
+    assert.ok(r.text.includes(stripMarkup(r.attempt.reaction)), "ordinary failures get a reaction");
   }
   const last = await game.turn("come on, open up");
-  assert.doesNotMatch(last.text, /Gate's shut till dawn/);
+  assert.ok(!last.text.includes(stripMarkup(last.attempt.reaction)), "not on the last one");
   assert.match(last.text, /Enough\./);
   assert.equal(game.sceneId, "cell");
 

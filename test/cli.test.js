@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const cli = fileURLToPath(new URL("../src/cli.js", import.meta.url));
 const scenes = JSON.parse(readFileSync(new URL("../stories/index.json", import.meta.url), "utf8"));
+const characters = JSON.parse(readFileSync(new URL("../stories/characters.json", import.meta.url), "utf8"));
 
 /** Run the terminal player with typed lines, without a key, and collect what it prints. */
 function play(args, lines, extraEnv = {}) {
@@ -25,7 +26,8 @@ test("with no story, the terminal player offers every bundled scene", async () =
   const { stdout, code } = await play(["--mock"], ["q"]);
   assert.equal(code, 0);
   scenes.forEach((s, i) => {
-    assert.ok(stdout.includes(`${i + 1}) ${s.title} (about ${s.minutes} minutes)`), s.title);
+    const word = characters[s.character].difficulty;
+    assert.ok(stdout.includes(`${i + 1}) ${s.title} (${word[0].toUpperCase()}${word.slice(1)}, about ${s.minutes} minutes)`), s.title);
     assert.ok(stdout.includes(s.hook), s.hook);
   });
 });
@@ -67,7 +69,7 @@ test("after a failed attempt, the terminal says how much patience is left", asyn
   const { stdout } = await play(["--mock"], ["2", "Nib, please let me go", "ask Nib about his stew", "quit"]);
   assert.match(stdout, /\(Nib's patience: 2 of 3 left\)/);
   assert.equal(stdout.match(/patience: /g).length, 1, "not after an ordinary action");
-  const cobb = await play(["--mock"], ["4", "Cobb, please light the lamp", "quit"]);
+  const cobb = await play(["--mock"], ["3", "Cobb, please light the lamp", "quit"]);
   assert.match(cobb.stdout, /\(Cobb's patience: 9 of 10 left\)/);
 });
 

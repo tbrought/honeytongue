@@ -16,19 +16,19 @@
     "character": "nib"
   },
   {
-    "id": "tidy-profit",
-    "file": "tidy-profit.json",
-    "title": "The Tidy Profit",
-    "hook": "Bargain your way aboard a pirate ship before the bounty hunters arrive.",
-    "minutes": 10,
-    "character": "maude"
-  },
-  {
     "id": "lighthouse",
     "file": "lighthouse.json",
     "title": "The Dark Lighthouse",
     "hook": "Convince a keeper under orders to light the lamp for your sister's boat.",
     "minutes": 8,
     "character": "cobb"
+  },
+  {
+    "id": "tidy-profit",
+    "file": "tidy-profit.json",
+    "title": "The Tidy Profit",
+    "hook": "Bargain your way aboard a pirate ship before the bounty hunters arrive.",
+    "minutes": 10,
+    "character": "maude"
   }
 ]

@@ -168,7 +168,7 @@ export const storyJson = (character, options) => safeJson(storyNpc(character, op
 
 // ---- Drafts and share links -----------------------------------------------------
 
-const TEXT_FIELDS = ["name", "persona", "goal", "difficulty", "repeatReaction"];
+const TEXT_FIELDS = ["name", "persona", "goal", "difficulty"];
 const NUMBER_FIELDS = ["patience", "threshold", "hostileAt", "failCost", "offendedCost", "memory", "repeatSimilarity", "maxInputLength"];
 const damaged = (what) => new HoneytongueError(`This character couldn't be loaded: ${what}.`);
 
@@ -178,6 +178,15 @@ const damaged = (what) => new HoneytongueError(`This character couldn't be loade
  */
 export function readDraft(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw damaged("it isn't an object");
+  // A line to try, prefilled and ready to send (the docs site's "Try it" links).
+  if (value.line !== undefined && typeof value.line !== "string") throw damaged('"line" should be text');
+  const line = value.line?.trim() ? { line: value.line.trim().slice(0, MAX_LINE) } : {};
+  // A link may name one of the preset characters instead of carrying a copy, so it stays short and opens the preset
+  // as it is now. The page swaps in the preset's character.
+  if (value.preset !== undefined && value.character === undefined) {
+    if (typeof value.preset !== "string" || !value.preset) throw damaged('"preset" should be the name of a preset');
+    return { preset: value.preset, knows: [], ...line };
+  }
   const given = value.character;
   if (!given || typeof given !== "object" || Array.isArray(given)) throw damaged('"character" is missing');
   const character = {};
@@ -185,6 +194,10 @@ export function readDraft(value) {
     if (given[f] === undefined) continue;
     if (typeof given[f] !== "string") throw damaged(`"${f}" should be text`);
     character[f] = given[f];
+  }
+  if (given.repeatReaction !== undefined) {
+    if (!isLines(given.repeatReaction)) throw damaged('"repeatReaction" should be text, or a list of it');
+    character.repeatReaction = copyLines(given.repeatReaction);
   }
   for (const f of NUMBER_FIELDS) {
     if (given[f] === undefined) continue;
@@ -199,13 +212,31 @@ export function readDraft(value) {
   list("offendedBy", (t) => typeof t === "string", "a list of tells");
   list("levels", (l) => typeof l === "string", "a list of level descriptions");
   list("secrets", (s) => typeof s?.id === "string" && typeof s?.fact === "string", "a list of { id, fact }");
-  list("reactions", (r) => typeof r?.min === "number" && typeof r?.text === "string", "a list of { min, text }");
+  list("reactions", (r) => typeof r?.min === "number" && isLines(r?.text), "a list of { min, text }");
   if (character.secrets) character.secrets = character.secrets.map(({ id, fact }) => ({ id, fact }));
-  if (character.reactions) character.reactions = character.reactions.map(({ min, text }) => ({ min, text }));
+  if (character.reactions) character.reactions = character.reactions.map(({ min, text }) => ({ min, text: copyLines(text) }));
   const knows = value.knows ?? [];
   if (!Array.isArray(knows) || !knows.every((k) => typeof k === "string")) throw damaged('"knows" should be a list of secret ids');
-  return { character, knows: [...knows] };
+  return { character, knows: [...knows], ...line };
 }
+
+// ---- Replies with variants ----------------------------------------------------------
+
+// A reply is one line or a list of variants; drafts may hold either (the form checks they aren't empty).
+const isLines = (v) => typeof v === "string" || (Array.isArray(v) && v.every((line) => typeof line === "string"));
+const copyLines = (v) => (Array.isArray(v) ? [...v] : v);
+
+/** A reply as the form shows it: one variant per line. */
+export const linesToText = (lines) => (Array.isArray(lines) ? lines.join("\n") : lines ?? "");
+
+/** The form's text back as a reply: one line stays a string, several become variants used in turn, none is "". */
+export function textToLines(text) {
+  const lines = String(text).split("\n").map((l) => l.trim()).filter(Boolean);
+  return lines.length > 1 ? lines : lines[0] ?? "";
+}
+
+/** The most characters of a line the playground sends (as in the demo). */
+export const MAX_LINE = 500;
 
 /** Links longer than this are refused: they get cut off when pasted into chats. */
 export const MAX_SHARE_LENGTH = 8000;
@@ -222,10 +253,14 @@ const fromBase64Url = (text) => {
   return new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(binary, (ch) => ch.charCodeAt(0)));
 };
 
-/** The URL hash that opens the playground with this draft, e.g. "#c=eyJ...". */
+/**
+ * The URL hash that opens the playground with this draft, e.g. "#c=eyJ...". The draft is a character (with the
+ * secrets the player knows), or { preset } naming a preset character; either may carry a line to prefill.
+ */
 export function encodeShare(draft) {
-  const { character, knows } = readDraft(draft);
-  const hash = `#${SHARE_KEY}${toBase64Url(JSON.stringify({ character, ...(knows.length && { knows }) }))}`;
+  const { character, knows, preset, line } = readDraft(draft);
+  const shared = preset ? { preset } : { character, ...(knows.length && { knows }) };
+  const hash = `#${SHARE_KEY}${toBase64Url(JSON.stringify({ ...shared, ...(line && { line }) }))}`;
   if (hash.length > MAX_SHARE_LENGTH) {
     throw new HoneytongueError(`This character is too long to share as a link (${hash.length} characters, the limit is ${MAX_SHARE_LENGTH}). Use "Copy as code" instead.`);
   }
@@ -311,10 +346,13 @@ export async function replay(npc, lines, client, onResult = () => {}) {
 // ---- Showing replies -------------------------------------------------------------
 
 /** The label on a reply, by verdict: the demo's words (docs/play/present.js; test/designer.test.js keeps them equal). */
-export const VERDICT_LABELS = { convinced: "CONVINCED", unconvinced: "NOT YET", offended: "OFFENDED", repeated: "REPEATED" };
+export const VERDICT_LABELS = { convinced: "CONVINCED", offended: "OFFENDED", repeated: "REPEATED" }; // none for ordinary unconvinced turns
 
-/** The spoken form of a label, for screen readers: "Not yet." */
-export const spokenLabel = (verdict) => `${VERDICT_LABELS[verdict][0]}${VERDICT_LABELS[verdict].slice(1).toLowerCase()}.`;
+/** The spoken form of a label, for screen readers ("Convinced."), or "" for a verdict without one. */
+export const spokenLabel = (verdict) => {
+  const label = VERDICT_LABELS[verdict];
+  return label ? `${label[0]}${label.slice(1).toLowerCase()}.` : "";
+};
 
 /**
  * A reaction as { kind, text } parts to style as the demo does: "speech" from double quotes, "character" where the

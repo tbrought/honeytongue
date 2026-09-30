@@ -139,7 +139,33 @@ We looked for a sincere line to add to the showcase grid: one that convinces a s
 - **Seven lines screened** (one run on the character each was aimed at), aimed at what the persona fears: an offer of surety for Harry scored 2.46 to 2.50, and reassurance about the town for Cobb 2.98 to 3.54. A surety line that mentioned a sick child reached 3.44, but it leans on Harry's secret, so it was set aside.
 - **The best, run in full:** "I'll tell you the truth: the town will be safe tonight. I checked the coast myself before I came, and I'll keep watch beside you until morning so you can see it for yourself." It convinced Cobb 10 of 10 times (average 3.55), and left Harry (2.74) and Maude (2.34) unconvinced, but it sat on Nib's threshold (6 of 10 unconvinced, average 2.38 against 2.4), so it isn't reliable.
 
-The grid keeps its five lines, with a note that sincere arguments win once they speak to what a character cares about, as each scene's winning line shows (they score 3.70 to 3.86 with the secret learned).
+The grid keeps its five lines, with a note that sincere arguments win once they speak to what a character cares about, as each scene's winning line shows (they score 3.70 to 3.86 with the secret learned). (Superseded the next day: with Harry made easy, the plain-truth line qualified. See below.)
+
+## The demo content pass (2026-09-30)
+
+Every demo character gained varied replies and a near-miss hint band. Neither reaches Jev, so no score could change. The Gatehouse became the easiest scene: Harry went from a threshold of 3.2 to `"easy"` (2.4), with patience 6. 671 calls on `jev-1.13.0`, 837,247 tokens (about $0.04): 31 while building, then the full rerun the release steps require.
+
+**What "easy" changed for Harry**, measured before the full rerun:
+- **Reading the letter alone now wins.** "This letter carries a fever remedy for Ilse the apothecary, and someone could die if it doesn't reach her tonight. Please let me through." won 10 of 10 engine turns, averaging 3.24 (+0.84). Against the old 3.2 it was a coin toss.
+- **The plain truth wins over Harry alone, but not inside the scene.**
+  - On his own it won 10 of 10, averaging 2.58, and 2.61 in the rerun, which makes it the showcase's sixth line.
+  - As an engine turn, where Jev also sees the scene, it averaged 2.30. That lands in the new near-miss band, whose hints point home and to the letter.
+- **The playtester's guess still loses.** "Did your son carve it? … an apprenticeship with the governor's carpenter" scored 0.14: the details are wrong, and to Harry it reads as a bribe. That's the case the clues proposal is for.
+
+**The full rerun** (`eval --all --repeats 10`, then `live.js routes --repeats 10`):
+
+| Check | Result |
+|---|---|
+| Verdicts | 58/58 |
+| Reliable scripted lines | 45/45 |
+| Scores in range | 18/18 |
+| Threats | 12/12 |
+| Insults | 8/8 |
+| Actions | 86/88, both misses long-standing parser cases (a sea shanty read as chat; flattery read as chat, verdict still right) |
+| Route winning lines | 8/8 reliable, from 3.57 (Cobb, needs 3.2) to 3.82 (Harry, needs 2.4) |
+| Routes | every scene's routes reached their intended endings |
+
+The showcase's other scores moved by 0.03 at most. Nib's documented borderline case (a remark belittling his situation, with insults 0.69 to 0.73) behaved as before.
 
 ## Reproducing
 

@@ -23,15 +23,19 @@
             "fact": "His young daughter has had a fever for three days, and the city apothecary won't see anyone after curfew. Help for his daughter matters more to him than the rules."
           }
         ],
-        "patience": 4,
-        "hostileReaction": "@[Harry]'s hand drops to the club at his belt. \"Say that again and you'll see the inside of a cell.\"",
+        "patience": 6,
+        "hostileReaction": [
+          "@[Harry]'s hand drops to the club at his belt. \"Say that again and you'll see the inside of a cell.\"",
+          "@[Harry] straightens up, suddenly not tired at all. \"Careful. I've put bigger mouths than yours in that cell.\"",
+          "\"Wrong way to talk to the man with the keys,\" @[Harry] says flatly, and his hand finds his club."
+        ],
         "outOfPatience": {
           "text": "\"Enough.\" @[Harry] puts a whistle to his lips. Two more guards jog out of the gatehouse.",
           "goto": "cell"
         },
         "persuasion": {
           "goal": "Open the gate and let the player into the city tonight, despite the curfew",
-          "threshold": 3.2,
+          "difficulty": "easy",
           "levels": [
             "Not really an attempt, or counterproductive to him: flattery, obvious lies, demands, or pulling rank",
             "Weak: generic pleading or excuses that give him nothing he cares about",
@@ -42,15 +46,35 @@
           "reactions": [
             {
               "min": 0,
-              "text": "@[Harry] doesn't even look up. \"Gate's shut till dawn.\""
+              "text": [
+                "@[Harry] doesn't even look up. \"Gate's shut till dawn.\"",
+                "@[Harry] snorts and turns his collar up against the rain. \"Try that on someone who hasn't heard it all.\"",
+                "\"No,\" @[Harry] says, and leaves it at that."
+              ]
             },
             {
-              "min": 1.5,
-              "text": "\"Everyone's got a reason,\" @[Harry] says. \"Mine's keeping this job.\""
+              "min": 1,
+              "text": [
+                "\"Everyone's got a reason,\" @[Harry] says. \"Mine's keeping this job.\"",
+                "@[Harry] shakes his head. \"Curfew's curfew. Find a doorway and wait for dawn.\"",
+                "\"That's what they all say at this hour,\" @[Harry] sighs. \"Give me something real.\""
+              ]
             },
             {
-              "min": 2.5,
-              "text": "@[Harry] hesitates, thumb brushing the #[toy horse] in his pocket. \"You'll have to do better than that.\""
+              "min": 1.6,
+              "text": [
+                "@[Harry] hesitates, thumb brushing the #[toy horse] in his pocket. \"You'll have to do better than that.\"",
+                "@[Harry] leans on his spear, weighing you up. \"Honest enough. But it's my post on the line, not yours.\"",
+                "\"I believe you,\" @[Harry] says slowly. \"That's not the same as opening the gate.\""
+              ]
+            },
+            {
+              "min": 2,
+              "text": [
+                "@[Harry] turns the #[toy horse] over in his fingers, quiet for a moment. \"I've worries of my own at home tonight. Tell me why yours can't wait.\"",
+                "@[Harry] eyes the #[sealed letter] in your hand. \"Now that's more like it. Who needs that so badly it can't wait till morning?\"",
+                "@[Harry] glances up the dark street toward home, then back at you. \"You're getting somewhere. Give me a reason I'd risk my post for.\""
+              ]
             }
           ],
           "success": {
@@ -58,7 +82,11 @@
             "goto": "city_welcome"
           }
         },
-        "repeatReaction": "\"You said that already,\" @[Harry] says, not unkindly. \"Saying it louder won't open the gate.\""
+        "repeatReaction": [
+          "\"You said that already,\" @[Harry] says, not unkindly. \"Saying it louder won't open the gate.\"",
+          "@[Harry] sighs. \"Same words, same answer.\"",
+          "\"I heard you,\" @[Harry] says. \"Tell me something I haven't heard.\""
+        ]
       },
       "actions": {
         "persuade_guard": {

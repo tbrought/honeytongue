@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
+import { defineCharacter, readPersuasion } from "../src/index.js";
 
 const PAGES = {
   "docs/index.html": "https://honeytongue.dev/",
@@ -69,6 +70,21 @@ test("the sitemap lists every page, and robots.txt allows everything and points 
   assert.match(robots, /^Sitemap: https:\/\/honeytongue\.dev\/sitemap\.xml$/m);
 });
 
+test("the home page's example transcript matches Harry: his reply for each score, and his threshold on the meters", () => {
+  const harry = JSON.parse(read("stories/characters.json")).harry;
+  const { threshold, maxScore } = defineCharacter(harry);
+  const mark = read("docs/home.css").match(/\.transcript \.meter \{ --mark: ([\d.]+)%; \}/)?.[1];
+  assert.equal(Number(mark), (threshold / maxScore) * 100, "the tall mark on each meter is Harry's threshold");
+  const turns = [...read("docs/index.html").matchAll(/<span>([\d.]+) \/ 4<\/span><\/p>\s*<div class="reply v-(\w+)"><p>(.*?)<\/p><\/div>/g)];
+  assert.equal(turns.length, 3);
+  for (const [, score, verdict, reply] of turns) {
+    const judged = readPersuasion(harry, { persuasion: { score: Number(score) } });
+    assert.equal(verdict, judged.verdict, `${score} is ${judged.verdict} for Harry`);
+    const shown = reply.replace(/<span class="(vh|chip)"[^>]*>.*?<\/span>/g, "").replace(/<[^>]+>/g, "");
+    if (verdict === "unconvinced") assert.equal(shown, judged.reaction, `the reply for ${score} is Harry's first line for it`);
+  }
+});
+
 test("the README shows the logo by its absolute URL, so it appears on npm too", () => {
   const readme = read("README.md");
   assert.match(readme.split("\n")[0], /^<p align="center"><img src="https:\/\/honeytongue\.dev\/assets\/honeytongue-logo-512\.png" alt="[^"]+"/);
@@ -86,7 +102,7 @@ test("package.json describes the new positioning, with an author and relevant ke
   assert.equal(pkg.bugs.url, "https://github.com/tbrought/honeytongue/issues");
 });
 
-test("the Verdicts table names the labels players see in the demo, so they read as the same verdicts", async () => {
+test("the Verdicts table names the labels players see in the demo, and nothing labels an ordinary unconvinced turn", async () => {
   const { VERDICT_LABELS } = await import("../docs/play/present.js");
   const html = read("docs/index.html");
   const table = html.slice(html.indexOf("<table>", html.indexOf('id="how"')), html.indexOf("</table>", html.indexOf('id="how"')));
@@ -94,6 +110,7 @@ test("the Verdicts table names the labels players see in the demo, so they read 
     assert.ok(table.includes(`<code class="verdict-code">${verdict}</code>`), verdict);
     assert.ok(table.includes(`<span class="chip v-${verdict}">${label}</span>`), `${verdict} is shown to players as ${label}`);
   }
+  assert.doesNotMatch(html, /NOT YET|Not yet\./,"unconvinced turns aren't labelled, so the docs don't name a label for them");
 });
 
 test("the docs' Twine snippet is the tested recipe's Story JavaScript", () => {

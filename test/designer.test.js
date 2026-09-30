@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import {
   fieldErrors, minimalCharacter, characterCode, characterLiteral, variableName, storyNpc, storyJson, TODO,
   readDraft, encodeShare, decodeShare, MAX_SHARE_LENGTH, readPresets, levelFor, distribution, tryLine, replay, conversation,
-  VERDICT_LABELS, spokenLabel, replyParts,
+  VERDICT_LABELS, spokenLabel, replyParts, linesToText, textToLines,
 } from "../docs/playground/designer.js";
 import * as present from "../docs/play/present.js";
 // The playground runs on the copies in docs/play/lib, so it's checked against those (demo.test.js keeps them current).
@@ -35,10 +35,16 @@ test("a preset's note is shown by the playground, and isn't part of the characte
   assert.throws(() => readPresets({ x: { note: "hi" } }), /Preset "x" is invalid/);
 });
 
+// The same character once defined. "normal" is the default difficulty, so saying it or not is the same.
+const settled = (character) => {
+  const { difficulty, ...rest } = defineCharacter(character);
+  return difficulty === undefined || difficulty === "normal" ? rest : { difficulty, ...rest };
+};
+
 test("generated code round-trips through defineCharacter()", () => {
   for (const { id, character } of presets) {
     const made = runSnippet(characterCode(character), character);
-    assert.deepEqual(made.character, defineCharacter(character), `preset "${id}"`);
+    assert.deepEqual(settled(made.character), settled(character), `preset "${id}"`);
     assert.equal(made.client, "client");
   }
   const literal = new Function(`return ${characterLiteral(simple)}`)();
@@ -60,7 +66,7 @@ test("generated code only includes settings that differ from the defaults", () =
 test("generated code keeps the difficulty word, not a threshold", () => {
   assert.deepEqual(minimalCharacter({ ...simple, difficulty: " Very-Hard " }).difficulty, "very hard");
   assert.equal(minimalCharacter({ ...simple, difficulty: "hard" }).threshold, undefined);
-  // A threshold that matches a word becomes the word; Harry's 3.2 of 4 is "normal", the default.
+  // A threshold that matches a word becomes the word; 3.2 of 4 is "normal", the default.
   assert.equal(minimalCharacter({ ...simple, threshold: 3.6 }).difficulty, "hard");
   assert.equal(minimalCharacter({ ...simple, threshold: 3.6 }).threshold, undefined);
   assert.deepEqual(Object.keys(minimalCharacter(preset("harry"))).includes("threshold"), false);
@@ -93,7 +99,7 @@ test("story JSON is a valid npc block, with unmistakable placeholders", () => {
     // Everything the playground knows carries over unchanged.
     const { success, ...persuasion } = npc.persuasion;
     const back = { name: npc.name, persona: npc.persona, patience: npc.patience, secrets: npc.secrets, repeatReaction: npc.repeatReaction, ...persuasion };
-    assert.deepEqual(defineCharacter(back), defineCharacter(character), `preset "${id}"`);
+    assert.deepEqual(settled(back), settled(character), `preset "${id}"`);
   }
 });
 
@@ -217,7 +223,7 @@ test("replay reruns every line, in order, against a fresh conversation", async (
 
 test("replies are labelled with the demo's words", () => {
   assert.deepEqual(VERDICT_LABELS, present.VERDICT_LABELS);
-  for (const verdict of Object.keys(VERDICT_LABELS)) assert.equal(spokenLabel(verdict), present.spokenLabel(verdict));
+  for (const verdict of [...Object.keys(VERDICT_LABELS), "unconvinced"]) assert.equal(spokenLabel(verdict), present.spokenLabel(verdict));
 });
 
 test("a reaction's speech and the character's name are styled, and nothing else changes", () => {
@@ -234,4 +240,39 @@ test("a reaction's speech and the character's name are styled, and nothing else 
   }
   assert.deepEqual(kinds(replyParts("@[Harry] says \"no\".", "")), ["text:@[Harry] says \"no\"."]);
   for (const text of [reaction, "Harry, Harry, Harry!", "", "\"\""]) assert.equal(replyParts(text, "Harry").map((p) => p.text).join(""), text);
+});
+
+test("replies with variants: one per line in the form, kept as lists in drafts and in the character", () => {
+  assert.equal(linesToText(["One.", "Two."]), "One.\nTwo.");
+  assert.equal(linesToText("One."), "One.");
+  assert.equal(linesToText(undefined), "");
+  assert.deepEqual(textToLines(" One. \n\n Two. \n"), ["One.", "Two."]);
+  assert.equal(textToLines("  One.  "), "One.");
+  assert.equal(textToLines(" \n "), "");
+
+  const character = {
+    name: "Nib", persona: "A jumpy goblin.", goal: "Open the cage",
+    reactions: [{ min: 0, text: ["Low one.", "Low two."] }], repeatReaction: ["Again?", "Still again?"],
+  };
+  const draft = readDraft({ character, knows: [] });
+  assert.deepEqual(draft.character.reactions, character.reactions);
+  assert.deepEqual(draft.character.repeatReaction, character.repeatReaction);
+  assert.notEqual(draft.character.reactions[0].text, character.reactions[0].text, "copied, not shared");
+  assert.throws(() => readDraft({ character: { ...character, repeatReaction: ["ok", 3] } }), /"repeatReaction"/);
+  assert.throws(() => readDraft({ character: { ...character, reactions: [{ min: 0, text: [1] }] } }), /"reactions"/);
+  const smallest = minimalCharacter(character);
+  assert.deepEqual(smallest.reactions, character.reactions);
+  assert.deepEqual(smallest.repeatReaction, character.repeatReaction);
+  assert.equal(fieldErrors({ ...character, repeatReaction: [] }).repeatReaction !== undefined, true);
+});
+
+test("a share link may name a preset instead of copying it, and carry a line to prefill", () => {
+  const hash = encodeShare({ preset: "harry", line: "  The plain truth.  " });
+  assert.deepEqual(decodeShare(hash), { preset: "harry", knows: [], line: "The plain truth." });
+  assert.ok(hash.length < 300, "short, since it names the preset");
+  assert.equal(decodeShare(encodeShare({ character: simple, knows: [], line: "Hello" })).line, "Hello");
+  assert.equal("line" in decodeShare(encodeShare({ character: simple, knows: [] })), false, "no line, no key");
+  assert.throws(() => readDraft({ preset: 3 }), /"preset"/);
+  assert.throws(() => readDraft({ preset: "harry", line: 5 }), /"line"/);
+  assert.equal(readDraft({ preset: "harry", line: "x".repeat(600) }).line.length, 500, "no longer than the playground sends");
 });

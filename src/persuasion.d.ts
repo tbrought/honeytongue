@@ -15,6 +15,7 @@ export type {
   DefinedCharacter,
   Tell,
   Difficulty,
+  Lines,
   DecideHook,
   DecideContext,
   Secret,

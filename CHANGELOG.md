@@ -1,6 +1,35 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-alpha.13 (2026-09-30)
+
+### Added
+
+- **Replies with variants:** a reaction's `text`, `repeatReaction`, and a story character's `hostileReaction` may each be a list of lines instead of one.
+  - A `Persuadable` (and so the engine) uses each list in turn, per reaction band, so a player who keeps landing in the same band hears something new each time.
+  - `judgePersuasion`, which remembers nothing, gives the first line.
+  - Plain strings work as before, and nothing sent to Jev changes.
+  - The playground edits variants one per line, and `validateStory` checks each one's markup.
+
+### Changed
+
+- **The demo scenes say more.** Every character has three replies per score band, and three each when offended and when repeated, so replies rarely repeat.
+  - Each character also has a near-miss band just below their threshold. It signals closeness in that character's own voice ("Now we're haggling," "Ooh"), and points towards what would move them without giving the answer.
+  - Nothing sent to Jev changed.
+- **The Gatehouse is now clearly the easiest scene**, since it's everyone's first:
+  - Harry is `"easy"` (a threshold of 2.4, was 3.2) with patience 6 (was 4).
+  - Reading the letter alone now makes a winning argument, without finding his secret.
+  - The preset in `stories/characters.json` changed with him. For the old Harry, set `threshold: 3.2` and `patience: 4`.
+- **The scenes are listed easiest first**, each with its difficulty: The Gatehouse and The Goblin Camp (easy), The Dark Lighthouse (normal), The Tidy Profit (hard).
+  - The web demo's scene list shows it as a coloured tag with the word on it, and the terminal's menu names it.
+  - Both read it from the scene's character, and every demo character now sets `difficulty` (Cobb's `"normal"` is written out).
+  - The demo's scene list also says what to expect: characters judge rather than chat, and every reply is hand-written.
+- **A sixth line in "Same words, different people":** the plain truth wins over Harry alone.
+  - The grid now says it's scored with each character on their own, as in the playground.
+  - Each cell has a **Try it** link that opens the playground with that character and the line ready to send.
+  - The links are the playground's share links, which can now name a preset (so they stay short and open the preset as it is now) and carry a line to prefill. `npm run build:demo` writes them from `evals/showcase.json`.
+- **No label on an ordinary unconvinced turn**, in the web demo, the playground, the terminal, and the docs' examples: the reply and the meter already say it.
+  - The labels CONVINCED, OFFENDED, and REPEATED stay.
+  - Screen readers no longer hear "Not yet." before an unconvinced reply.
 
 ### Repository
 

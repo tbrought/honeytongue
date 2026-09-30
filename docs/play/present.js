@@ -1,15 +1,17 @@
 // How the web demo presents a game: DOM-free choices about wording and pacing, tested in test/present.test.js.
 // This is one example of styling Honeytongue's result.parts; the library itself only says what each part means.
 
-/** The label shown on a judged reply, by verdict. */
+/**
+ * The label shown on a judged reply, by verdict. An ordinary unconvinced turn has none: the reply and the meter
+ * already say it.
+ */
 export const VERDICT_LABELS = {
   convinced: "CONVINCED",
-  unconvinced: "NOT YET",
   offended: "OFFENDED",
   repeated: "REPEATED",
 };
 
-/** The spoken form of a label, for screen readers: "Not yet." */
+/** The spoken form of a label, for screen readers ("Convinced."), or "" for a verdict without one. */
 export const spokenLabel = (verdict) => {
   const label = VERDICT_LABELS[verdict];
   return label ? `${label[0]}${label.slice(1).toLowerCase()}.` : "";
@@ -39,4 +41,13 @@ export function endingSummary(judged, { misses = 2 } = {}) {
 }
 
 /** "3.82 of 4, needed 3.2" */
+/** The scene list's difficulty tags, by the character's difficulty word. */
+export const DIFFICULTY_LABELS = { easy: "Easy", normal: "Normal", hard: "Hard", "very hard": "Very hard" };
+
+/** A scene's tag from its character's difficulty word: its label and class, or null for a character without one. */
+export function difficultyTag(word) {
+  if (!Object.hasOwn(DIFFICULTY_LABELS, word ?? "")) return null;
+  return { label: DIFFICULTY_LABELS[word], className: `tag tag-${word.replace(" ", "-")}` };
+}
+
 export const scoreLine = (t) => `${t.score.toFixed(2)} of ${t.maxScore}${Number.isFinite(t.threshold) ? `, needed ${t.threshold}` : ""}`;

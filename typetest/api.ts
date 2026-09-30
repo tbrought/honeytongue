@@ -36,7 +36,8 @@ const harry: Character = {
   offendedBy: ["threats"],
   patience: 5,
   secrets: [{ id: "sick_daughter", fact: "His daughter has a fever." }],
-  reactions: [{ min: 2.5, text: "Harry hesitates." }],
+  reactions: [{ min: 0, text: ["Harry shrugs.", "Harry yawns."] }, { min: 2.5, text: "Harry hesitates." }],
+  repeatReaction: ["You said that.", "Still no."] as const,
   decide: (result, context) => (result.verdict === "offended" && context.patienceLeft > 3 ? "unconvinced" : undefined),
 };
 
@@ -89,6 +90,8 @@ async function persuasionApi(client: JevClient) {
   defineCharacter({ ...harry, offendedBy: ["rudeness"] });
   // @ts-expect-error: patience is a number
   defineCharacter({ ...harry, patience: "5" });
+  // @ts-expect-error: a reaction's variants are text
+  defineCharacter({ ...harry, reactions: [{ min: 0, text: ["Hmm.", 2] }] });
 }
 
 async function engineApi(client: JevClient) {
