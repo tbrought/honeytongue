@@ -6,7 +6,7 @@ import { createProxyClient } from "../play/lib/jev.js";
 import { defineCharacter, DEFAULT_LEVELS } from "../play/lib/persuasion.js";
 import {
   FIELDS, TELLS, fieldErrors, minimalCharacter, characterCode, storyJson, readDraft, encodeShare, decodeShare, readPresets,
-  tryLine, replay, conversation, VERDICT_LABELS, spokenLabel, replyParts,
+  tryLine, replay, conversation, VERDICT_LABELS, spokenLabel, replyParts, linesToText, textToLines,
 } from "./designer.js";
 
 const $ = (id) => document.getElementById(id);
@@ -101,7 +101,7 @@ function secretRow({ id = "", fact = "" } = {}, known = false) {
 
 function reactionRow({ min = "", text = "" } = {}) {
   const n = ++rowIds;
-  const textInput = el("textarea", { id: `reaction-text-${n}`, rows: 2, value: text });
+  const textInput = el("textarea", { id: `reaction-text-${n}`, rows: 2, value: linesToText(text) });
   textInput.dataset.k = "text";
   const minInput = el("input", { type: "number", id: `reaction-min-${n}`, value: String(min), step: "0.1", inputMode: "decimal" });
   minInput.dataset.k = "min";
@@ -115,7 +115,7 @@ function reactionRow({ min = "", text = "" } = {}) {
 }
 
 function writeForm({ character: given, knows }) {
-  // A threshold that matches a difficulty word (Harry's 3.2 of 4 is "normal") is shown as that word.
+  // A threshold that matches a difficulty word (3.2 of 4 is "normal") is shown as that word.
   let c = given;
   try {
     const smallest = minimalCharacter(given);
@@ -123,7 +123,8 @@ function writeForm({ character: given, knows }) {
       c = { ...given, threshold: undefined, difficulty: smallest.difficulty ?? "normal" };
     }
   } catch { /* invalid: shown as it is, with its errors */ }
-  for (const field of ["name", "persona", "goal", "repeatReaction"]) fieldInput(field).value = c[field] ?? "";
+  for (const field of ["name", "persona", "goal"]) fieldInput(field).value = c[field] ?? "";
+  fieldInput("repeatReaction").value = linesToText(c.repeatReaction);
   fieldInput("difficulty").value = ["easy", "normal", "hard", "very hard"].includes(c.difficulty) ? c.difficulty : "normal";
   for (const field of ["patience", "threshold", "hostileAt"]) {
     fieldInput(field).value = Number.isFinite(c[field]) ? String(c[field]) : "";
@@ -156,10 +157,10 @@ function readForm() {
   if (secrets.length) c.secrets = secrets;
   const reactions = [...$("reactions").children].map((row) => {
     const min = row.querySelector('[data-k="min"]').value.trim();
-    return { min: min === "" ? 0 : Number(min), text: row.querySelector('[data-k="text"]').value.trim() };
+    return { min: min === "" ? 0 : Number(min), text: textToLines(row.querySelector('[data-k="text"]').value) };
   }).filter((r) => r.text || r.min);
   if (reactions.length) c.reactions = reactions;
-  const repeat = fieldInput("repeatReaction").value.trim();
+  const repeat = textToLines(fieldInput("repeatReaction").value);
   if (repeat) c.repeatReaction = repeat;
   const levels = fieldInput("levels").value.split("\n").map((l) => l.trim()).filter(Boolean);
   if (levels.length) c.levels = levels;

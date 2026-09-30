@@ -59,6 +59,9 @@ export type Tell = "threats" | "insults";
  */
 export type Difficulty = "easy" | "normal" | "hard" | "very hard";
 
+/** A reply: one line, or a non-empty list of variants used in turn so it rarely repeats. */
+export type Lines = string | readonly string[];
+
 export interface DecideContext {
   /** The attempt, cleaned and capped. */
   input: string;
@@ -108,10 +111,13 @@ export interface Character {
   repeatSimilarity?: number;
   /** Longer input is truncated. Default 500 characters. */
   maxInputLength?: number;
-  /** Reaction text for unconvinced attempts, picked by the highest `min` reached. */
-  reactions?: { min: number; text: string }[];
-  /** Reaction text for repeated attempts. */
-  repeatReaction?: string;
+  /**
+   * Reaction text for unconvinced attempts, picked by the highest `min` reached. `text` may be a list of variants:
+   * a Persuadable uses each band's variants in turn, so replies rarely repeat (judgePersuasion gives the first).
+   */
+  reactions?: { min: number; text: Lines }[];
+  /** Reaction text for repeated attempts: one line, or variants used in turn. */
+  repeatReaction?: Lines;
   /** Facts the player must discover before they help an argument. */
   secrets?: Secret[];
   /**
@@ -130,7 +136,7 @@ export type DefinedCharacter = Required<Omit<Character, "repeatReaction" | "deci
   threshold: number;
   difficulty?: Difficulty;
   maxContextLength?: number;
-  repeatReaction?: string;
+  repeatReaction?: Lines;
   decide?: DecideHook;
   maxScore: number;
 };
@@ -249,9 +255,9 @@ export interface StoryNpc {
   persona: string;
   patience?: number;
   secrets?: Secret[];
-  /** Required unless offendedBy is []. */
-  hostileReaction?: string;
-  repeatReaction?: string;
+  /** Required unless offendedBy is []. One line, or variants used in turn. */
+  hostileReaction?: Lines;
+  repeatReaction?: Lines;
   /** Required when patience is finite. Plays once, when patience first runs out. */
   outOfPatience?: Effect & { text: string };
   /** Settings such as difficulty, offendedBy, and threshold go here. decide is only available in stories built in code. */

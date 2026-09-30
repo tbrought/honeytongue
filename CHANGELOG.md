@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- **Replies with variants:** a reaction's `text`, `repeatReaction`, and a story character's `hostileReaction` may each be a list of lines instead of one.
+  - A `Persuadable` (and so the engine) uses each list in turn, per reaction band, so a player who keeps landing in the same band hears something new each time.
+  - `judgePersuasion`, which remembers nothing, gives the first line.
+  - Plain strings work as before, and nothing sent to Jev changes.
+  - The playground edits variants one per line, and `validateStory` checks each one's markup.
+
 ### Repository
 
 - **The site is easier for search engines to list:**

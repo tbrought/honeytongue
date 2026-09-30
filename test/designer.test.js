@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import {
   fieldErrors, minimalCharacter, characterCode, characterLiteral, variableName, storyNpc, storyJson, TODO,
   readDraft, encodeShare, decodeShare, MAX_SHARE_LENGTH, readPresets, levelFor, distribution, tryLine, replay, conversation,
-  VERDICT_LABELS, spokenLabel, replyParts,
+  VERDICT_LABELS, spokenLabel, replyParts, linesToText, textToLines,
 } from "../docs/playground/designer.js";
 import * as present from "../docs/play/present.js";
 // The playground runs on the copies in docs/play/lib, so it's checked against those (demo.test.js keeps them current).
@@ -234,4 +234,28 @@ test("a reaction's speech and the character's name are styled, and nothing else 
   }
   assert.deepEqual(kinds(replyParts("@[Harry] says \"no\".", "")), ["text:@[Harry] says \"no\"."]);
   for (const text of [reaction, "Harry, Harry, Harry!", "", "\"\""]) assert.equal(replyParts(text, "Harry").map((p) => p.text).join(""), text);
+});
+
+test("replies with variants: one per line in the form, kept as lists in drafts and in the character", () => {
+  assert.equal(linesToText(["One.", "Two."]), "One.\nTwo.");
+  assert.equal(linesToText("One."), "One.");
+  assert.equal(linesToText(undefined), "");
+  assert.deepEqual(textToLines(" One. \n\n Two. \n"), ["One.", "Two."]);
+  assert.equal(textToLines("  One.  "), "One.");
+  assert.equal(textToLines(" \n "), "");
+
+  const character = {
+    name: "Nib", persona: "A jumpy goblin.", goal: "Open the cage",
+    reactions: [{ min: 0, text: ["Low one.", "Low two."] }], repeatReaction: ["Again?", "Still again?"],
+  };
+  const draft = readDraft({ character, knows: [] });
+  assert.deepEqual(draft.character.reactions, character.reactions);
+  assert.deepEqual(draft.character.repeatReaction, character.repeatReaction);
+  assert.notEqual(draft.character.reactions[0].text, character.reactions[0].text, "copied, not shared");
+  assert.throws(() => readDraft({ character: { ...character, repeatReaction: ["ok", 3] } }), /"repeatReaction"/);
+  assert.throws(() => readDraft({ character: { ...character, reactions: [{ min: 0, text: [1] }] } }), /"reactions"/);
+  const smallest = minimalCharacter(character);
+  assert.deepEqual(smallest.reactions, character.reactions);
+  assert.deepEqual(smallest.repeatReaction, character.repeatReaction);
+  assert.equal(fieldErrors({ ...character, repeatReaction: [] }).repeatReaction !== undefined, true);
 });

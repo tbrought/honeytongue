@@ -168,7 +168,7 @@ export const storyJson = (character, options) => safeJson(storyNpc(character, op
 
 // ---- Drafts and share links -----------------------------------------------------
 
-const TEXT_FIELDS = ["name", "persona", "goal", "difficulty", "repeatReaction"];
+const TEXT_FIELDS = ["name", "persona", "goal", "difficulty"];
 const NUMBER_FIELDS = ["patience", "threshold", "hostileAt", "failCost", "offendedCost", "memory", "repeatSimilarity", "maxInputLength"];
 const damaged = (what) => new HoneytongueError(`This character couldn't be loaded: ${what}.`);
 
@@ -186,6 +186,10 @@ export function readDraft(value) {
     if (typeof given[f] !== "string") throw damaged(`"${f}" should be text`);
     character[f] = given[f];
   }
+  if (given.repeatReaction !== undefined) {
+    if (!isLines(given.repeatReaction)) throw damaged('"repeatReaction" should be text, or a list of it');
+    character.repeatReaction = copyLines(given.repeatReaction);
+  }
   for (const f of NUMBER_FIELDS) {
     if (given[f] === undefined) continue;
     if (typeof given[f] !== "number") throw damaged(`"${f}" should be a number`);
@@ -199,12 +203,27 @@ export function readDraft(value) {
   list("offendedBy", (t) => typeof t === "string", "a list of tells");
   list("levels", (l) => typeof l === "string", "a list of level descriptions");
   list("secrets", (s) => typeof s?.id === "string" && typeof s?.fact === "string", "a list of { id, fact }");
-  list("reactions", (r) => typeof r?.min === "number" && typeof r?.text === "string", "a list of { min, text }");
+  list("reactions", (r) => typeof r?.min === "number" && isLines(r?.text), "a list of { min, text }");
   if (character.secrets) character.secrets = character.secrets.map(({ id, fact }) => ({ id, fact }));
-  if (character.reactions) character.reactions = character.reactions.map(({ min, text }) => ({ min, text }));
+  if (character.reactions) character.reactions = character.reactions.map(({ min, text }) => ({ min, text: copyLines(text) }));
   const knows = value.knows ?? [];
   if (!Array.isArray(knows) || !knows.every((k) => typeof k === "string")) throw damaged('"knows" should be a list of secret ids');
   return { character, knows: [...knows] };
+}
+
+// ---- Replies with variants ----------------------------------------------------------
+
+// A reply is one line or a list of variants; drafts may hold either (the form checks they aren't empty).
+const isLines = (v) => typeof v === "string" || (Array.isArray(v) && v.every((line) => typeof line === "string"));
+const copyLines = (v) => (Array.isArray(v) ? [...v] : v);
+
+/** A reply as the form shows it: one variant per line. */
+export const linesToText = (lines) => (Array.isArray(lines) ? lines.join("\n") : lines ?? "");
+
+/** The form's text back as a reply: one line stays a string, several become variants used in turn, none is "". */
+export function textToLines(text) {
+  const lines = String(text).split("\n").map((l) => l.trim()).filter(Boolean);
+  return lines.length > 1 ? lines : lines[0] ?? "";
 }
 
 /** Links longer than this are refused: they get cut off when pasted into chats. */

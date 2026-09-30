@@ -240,6 +240,30 @@ test("hostileReaction is only required when something can offend the NPC", () =>
   assert.throws(() => validateStory(s), /needs a "hostileReaction"/);
 });
 
+test("hostile reactions may be a list of variants, used in turn", async () => {
+  const s = story();
+  s.scenes.gate.npc.patience = 100;
+  s.scenes.gate.npc.hostileReaction = ["@[Harry] glares.", "@[Harry] grips his club."];
+  const game = new Game(s, fakeClient({ score: 0, threats: 0.95 }));
+  const said = [];
+  for (const line of ["open up or else", "move or I'll hurt you", "last warning, guard"]) said.push((await game.turn(line)).text);
+  assert.match(said[0], /Harry glares\./);
+  assert.match(said[1], /Harry grips his club\./);
+  assert.match(said[2], /Harry glares\./);
+});
+
+test("validateStory checks each reply variant", () => {
+  const s = story();
+  s.scenes.gate.npc.hostileReaction = [];
+  s.scenes.gate.npc.persuasion.reactions[0].text = ["Fine.", "@[Harry shrugs."];
+  s.scenes.gate.npc.repeatReaction = ["Again?", ""];
+  const err = (() => { try { validateStory(s); } catch (e) { return e; } })();
+  assert.ok(err instanceof StoryError);
+  assert.ok(err.problems.some((p) => /needs a "hostileReaction"/.test(p)), err.message);
+  assert.ok(err.problems.some((p) => /reactions\.0\.text\.1/.test(p)), err.message);
+  assert.ok(err.problems.some((p) => /"repeatReaction"/.test(p)), err.message);
+});
+
 test("a decide hook works in stories built in code", async () => {
   const s = story();
   s.scenes.gate.npc.persuasion.decide = (result) => (result.triggered.includes("threats") ? "offended" : undefined);

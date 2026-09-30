@@ -53,6 +53,8 @@ const difficultyWord = (v) => {
 const derivedThresholds = new WeakMap();
 
 const isText = (v) => typeof v === "string" && v.trim().length > 0;
+// A reply: one line, or a list of variants used in turn so it rarely repeats.
+const isLines = (v) => isText(v) || (Array.isArray(v) && v.length > 0 && v.every(isText));
 const has = (obj, key) => typeof key === "string" && Object.hasOwn(obj, key);
 const capitalize = (s) => s[0].toUpperCase() + s.slice(1);
 const listWords = (words, joiner) => words.map((w) => `"${w}"`).join(", ").replace(/, ([^,]*)$/, `, ${joiner} $1`);
@@ -97,8 +99,8 @@ export function defineCharacter(character) {
   if (c.decide !== undefined && typeof c.decide !== "function") {
     throw new HoneytongueError(`${who}: "decide" must be a function (result, context) => verdict, got ${describe(c.decide)}`);
   }
-  if (c.repeatReaction !== undefined && !isText(c.repeatReaction)) {
-    throw new HoneytongueError(`${who}: "repeatReaction" must be a non-empty string`);
+  if (c.repeatReaction !== undefined && !isLines(c.repeatReaction)) {
+    throw new HoneytongueError(`${who}: "repeatReaction" must be a non-empty string, or a list of them to use in turn`);
   }
 
   const levels = c.levels ?? DEFAULT_LEVELS;
@@ -126,8 +128,9 @@ export function defineCharacter(character) {
   }
 
   const reactions = c.reactions ?? [];
-  if (!Array.isArray(reactions) || reactions.some((r) => !Number.isFinite(r?.min) || !isText(r?.text))) {
-    throw new HoneytongueError(`${who}: "reactions" must be an array of { min: number, text: string }`);
+  if (!Array.isArray(reactions) || reactions.some((r) => !Number.isFinite(r?.min) || !isLines(r?.text))) {
+    throw new HoneytongueError(`${who}: "reactions" must be an array of { min: number, text: string }, where text may be a list ` +
+      "of strings to use in turn");
   }
 
   const secrets = c.secrets ?? [];
@@ -268,11 +271,24 @@ export function readPersuasion(character, answers) {
   };
 }
 
-/** The line a verdict comes with: authored reactions for unconvinced, the repeat line for repeats, else null. */
-function reactionFor(c, verdict, score) {
-  if (verdict === "repeated") return c.repeatReaction ?? `${c.name} has heard that already.`;
+/**
+ * Where a verdict's reply comes from: the reaction band the score reached for unconvinced, the repeat line for
+ * repeats, else null. `slot` names it, so variants can be used in turn per band.
+ */
+function repliesFor(c, verdict, score) {
+  if (verdict === "repeated") return { slot: "repeated", lines: c.repeatReaction ?? `${c.name} has heard that already.` };
   if (verdict !== "unconvinced") return null;
-  return [...c.reactions].sort((a, b) => b.min - a.min).find((r) => (score ?? 0) >= r.min)?.text ?? `${c.name} isn't convinced.`;
+  const band = [...c.reactions].sort((a, b) => b.min - a.min).find((r) => (score ?? 0) >= r.min);
+  return band ? { slot: `from ${band.min}`, lines: band.text } : { slot: "unconvinced", lines: `${c.name} isn't convinced.` };
+}
+
+/** The nth use of a reply: its only line, or its variants in turn. */
+const nthLine = (lines, n = 0) => (Array.isArray(lines) ? lines[n % lines.length] : lines);
+
+/** The line a verdict comes with, the first time it's used (Persuadable uses variants in turn). */
+function reactionFor(c, verdict, score) {
+  const replies = repliesFor(c, verdict, score);
+  return replies ? nthLine(replies.lines) : null;
 }
 
 const VERDICTS = ["convinced", "unconvinced", "offended", "repeated"];
@@ -322,6 +338,7 @@ export class Persuadable {
   #patienceLeft;
   #convinced;
   #queue;
+  #replies;   // reply slot -> how many times it's been used, so variants come in turn
 
   constructor(character, { client } = {}) {
     this.character = defineCharacter(character);
@@ -336,6 +353,7 @@ export class Persuadable {
     this.#patienceLeft = this.character.patience;
     this.#convinced = false;
     this.#queue = Promise.resolve();
+    this.#replies = new Map();
   }
 
   /** The attempts so far, oldest first (at most the last 100), as a read-only copy. */
@@ -418,6 +436,14 @@ export class Persuadable {
       previousAttempts: this.attempts,
       patienceLeft: this.#patienceLeft,
     });
+
+    // Each reply band (and the repeat line) uses its variants in turn.
+    const replies = repliesFor(c, result.verdict, result.score);
+    if (replies) {
+      const used = this.#replies.get(replies.slot) ?? 0;
+      this.#replies.set(replies.slot, used + 1);
+      result = { ...result, reaction: nthLine(replies.lines, used) };
+    }
 
     if (result.verdict === "convinced") this.#convinced = true;
     const cost = { offended: c.offendedCost, unconvinced: c.failCost, repeated: c.failCost }[result.verdict] ?? 0;

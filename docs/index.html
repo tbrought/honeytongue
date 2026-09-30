@@ -276,8 +276,12 @@ result.triggered; <span class="c">// ["threats"], so you can narrate it as intim
     <section id="reactions">
       <h2>Reactions</h2>
       <p>Give characters their own lines for failed attempts. <code>reactions</code> is a list of <code>{ min, text }</code>, and an unconvinced attempt gets the line with the highest <code>min</code> its score reached, so a near miss can sound different from a flat refusal. <code>repeatReaction</code> is what they say when the player repeats themselves. Without them, Honeytongue uses a generic line.</p>
+      <p>Any of these lines can be a list of variants instead. A <code>Persuadable</code> uses each list in turn, so a player who keeps landing in the same band hears something new each time; <code>judgePersuasion</code>, which remembers nothing, gives the first. In stories, <code>hostileReaction</code> can be a list too.</p>
 <pre data-lang="JavaScript"><code>reactions: [
-  { min: <span class="n">0</span>, text: <span class="s">"Harry doesn't even look up. \"Gate's shut till dawn.\""</span> },
+  { min: <span class="n">0</span>, text: [
+    <span class="s">"Harry doesn't even look up. \"Gate's shut till dawn.\""</span>,
+    <span class="s">"\"Curfew's curfew,\" Harry says, and goes back to his lantern."</span>,
+  ] },
   { min: <span class="n">2.5</span>, text: <span class="s">"Harry hesitates. \"You'll have to do better than that.\""</span> },
 ],
 repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,</code></pre>
@@ -537,8 +541,8 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
           <tr><td><code>patience</code></td><td>Unlimited</td><td>How much failure they'll put up with, above 0 (<a href="#patience">Patience</a>)</td></tr>
           <tr><td><code>failCost</code>, <code>offendedCost</code></td><td>1, 2</td><td>Patience lost per unconvinced or repeated attempt, and per offensive one</td></tr>
           <tr><td><code>secrets</code></td><td>None</td><td><code>[{ id, fact }]</code>: facts Jev is only told once the player learns them (<a href="#secrets">Secrets</a>)</td></tr>
-          <tr><td><code>reactions</code></td><td>A generic line</td><td><code>[{ min, text }]</code>: lines for unconvinced attempts, by the highest <code>min</code> reached (<a href="#reactions">Reactions</a>)</td></tr>
-          <tr><td><code>repeatReaction</code></td><td>A generic line</td><td>What they say when the player repeats themselves</td></tr>
+          <tr><td><code>reactions</code></td><td>A generic line</td><td><code>[{ min, text }]</code>: lines for unconvinced attempts, by the highest <code>min</code> reached; each <code>text</code> may be a list of variants used in turn (<a href="#reactions">Reactions</a>)</td></tr>
+          <tr><td><code>repeatReaction</code></td><td>A generic line</td><td>What they say when the player repeats themselves: one line, or a list used in turn</td></tr>
           <tr><td><code>levels</code></td><td><code>DEFAULT_LEVELS</code></td><td>Your own rubric: 2 to 10 descriptions, weakest first (<a href="#control">Rubrics</a>)</td></tr>
           <tr><td><code>hostileAt</code></td><td>0.7</td><td>How sure Jev must be before a tell counts as triggered, above 0 and at most 1</td></tr>
           <tr><td><code>decide</code></td><td>None</td><td><code>(result, context) =&gt; verdict</code>: your own rule for the final verdict (<a href="#decide">Your own rule</a>)</td></tr>

@@ -64,10 +64,13 @@ const DISPLAY_TEXT = [
   ["scenes", "*", "actions", "*", "blockedText"],
   ["scenes", "*", "actions", "*", "label"],
   ["scenes", "*", "npc", "hostileReaction"],
+  ["scenes", "*", "npc", "hostileReaction", "#"],
   ["scenes", "*", "npc", "repeatReaction"],
+  ["scenes", "*", "npc", "repeatReaction", "#"],
   ["scenes", "*", "npc", "outOfPatience", "text"],
   ["scenes", "*", "npc", "persuasion", "success", "text"],
   ["scenes", "*", "npc", "persuasion", "reactions", "#", "text"],
+  ["scenes", "*", "npc", "persuasion", "reactions", "#", "text", "#"],
 ];
 const isDisplayText = (path) => DISPLAY_TEXT.some((pattern) => pattern.length === path.length &&
   pattern.every((p, i) => (p === "*" ? typeof path[i] === "string" : p === "#" ? typeof path[i] === "number" : p === path[i])));
@@ -94,6 +97,7 @@ export function validateStory(story) {
   const text = (v) => typeof v === "string" && v.trim().length > 0;
   const isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
   const names = (v) => Array.isArray(v) && v.every(text);
+  const lines = (v) => text(v) || (Array.isArray(v) && v.length > 0 && v.every(text)); // one reply, or variants in turn
   if (!isObject(story)) throw new StoryError(["Story must be an object"]);
   if (!text(story.title)) problems.push('Missing "title"');
   const scenes = isObject(story.scenes) ? story.scenes : {};
@@ -154,8 +158,9 @@ export function validateStory(story) {
         // Only needed when something can offend them: offendedBy: [] means nothing does.
         const offendedBy = npc.persuasion.offendedBy;
         const canOffend = !(Array.isArray(offendedBy) && offendedBy.length === 0);
-        if (npc.hostileReaction !== undefined ? !text(npc.hostileReaction) : canOffend) {
-          problems.push(`${at}: npc needs a "hostileReaction" (the line when threats or insults offend them)`);
+        if (npc.hostileReaction !== undefined ? !lines(npc.hostileReaction) : canOffend) {
+          problems.push(`${at}: npc needs a "hostileReaction" (the line when threats or insults offend them, or a list of ` +
+            "lines to use in turn)");
         }
         if (Number.isFinite(npc.patience)) {
           if (!text(npc.outOfPatience?.text)) problems.push(`${at}: npc has finite patience, so it needs "outOfPatience" with "text"`);
@@ -204,6 +209,7 @@ export class Game {
   #attempt = null; // this turn's judgement by the scene's character: result.attempt (an attempt result plus threshold)
   #turnNpc = null; // the scene's character when the turn began (a success may move the player on)
   #queue = Promise.resolve(); // turns, one at a time
+  #offences = new Map(); // npc id -> how many hostile reactions they've given, so variants come in turn
 
   constructor(story, jev) {
     if (typeof jev?.ask !== "function") {
@@ -441,7 +447,10 @@ export class Game {
   /** A decide() hook can make an NPC offended even when nothing in offendedBy can. */
   hostileReaction() {
     const npc = this.scene.npc;
-    return npc.hostileReaction ?? system(`${npc.name} takes offence.`);
+    if (npc.hostileReaction === undefined) return system(`${npc.name} takes offence.`);
+    const used = this.#offences.get(npc.id) ?? 0;
+    this.#offences.set(npc.id, used + 1);
+    return Array.isArray(npc.hostileReaction) ? npc.hostileReaction[used % npc.hostileReaction.length] : npc.hostileReaction;
   }
 
   // ---- Persuasion: the module judges, the story narrates --------------------
