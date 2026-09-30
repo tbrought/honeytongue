@@ -95,7 +95,7 @@ console.log("smoke ok");
   const smoke = run("node smoke.js", project);
   report(smoke.status === 0 && smoke.stdout.includes("smoke ok"), "the entry points import and work (mock attempt, guarded proxy)", (smoke.stderr || smoke.stdout).trim().slice(-800));
 
-  // CommonJS: require() loads the same ES modules (Node 22.12 and later, the oldest version package.json allows).
+  // CommonJS: require() loads the same ES modules (Node 22.13 and later, the oldest version package.json allows).
   writeFileSync(join(project, "smoke.cjs"), `
 const assert = require("node:assert/strict");
 const { Persuadable, createMockClient, VERSION } = require("honeytongue");

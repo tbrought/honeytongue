@@ -17,9 +17,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 22.12.0 exactly: the oldest version package.json promises, so the minimum is what's tested. 24 is the active
+        # 22.13.0 exactly: the oldest version package.json promises, so the minimum is what's tested. 24 is the active
         # LTS line and 26 the current release. Windows too, since that's where Honeytongue is developed.
-        node: ["22.12.0", 24, 26]
+        node: ["22.13.0", 24, 26]
         os: [ubuntu-latest, windows-latest]
     steps:
       # Third-party actions are pinned to a full commit SHA; the comment says which version it is.
@@ -38,8 +38,8 @@ jobs:
       - run: npm run example
       - run: npm run eval -- --mock
       # The package check (require() from CommonJS among it) on the oldest supported Node; the checks job runs it on 24.
-      - name: Pack, install, and smoke-test the package on Node 22.12.0
-        if: matrix.node == '22.12.0'
+      - name: Pack, install, and smoke-test the package on Node 22.13.0
+        if: matrix.node == '22.13.0'
         run: npm run check:package
 
   checks:

@@ -10,12 +10,12 @@
 
 - **`result.debug` is documented as diagnostics** (the ranked actions, Jev's raw answers, and who answered) that may change in any version. Use `result.attempt` for anything a game builds on.
 
-- **Honeytongue needs Node 22.12 or later** (`engines` was `>=22`). From 22.12, Node's `require()` loads ES modules without a flag, so CommonJS projects can `require("honeytongue")` as well as `import` it. The package check tests both, on Node 22.12.0 and 24. On 22.12 itself, Node prints an experimental-feature warning when `require()` loads the package; 22.13 and later don't.
+- **Honeytongue needs Node 22.13 or later** (`engines` was `>=22`). From 22.13, Node's `require()` loads ES modules without a flag or a warning, so CommonJS projects can `require("honeytongue")` as well as `import` it. The package check tests both, on Node 22.13.0 and 24.
 
 ### Repository
 
 - **The proxy is tested on Deno and Bun** as well as Node and Cloudflare Workers: CI serves it with each runtime's own server and sends requests through it (`scripts/runtime-smoke.js`, on the mock). The docs now name the platforms it's tested on, and say it should run on other hosts with the standard `Request` and `Response`, such as Vercel, which isn't tested yet.
-- CI tests the oldest supported Node, 22.12.0, exactly.
+- CI tests the oldest supported Node, 22.13.0, exactly.
 - **Spoken input, measured:** lines as speech recognition writes them got the same verdicts as typed ones (20 of 20, scores within 0.25), while long winning lines lost 0.03 to 0.59 when spoken or misheard, and two of eight fell just short. The docs say so, and suggest cleaning up transcripts first (`docs/live-results.md`, 52 live calls).
 
 - Issues and feedback are welcome, with a bug-report template; pull requests aren't being accepted for now (README).
