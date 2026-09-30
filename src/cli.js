@@ -34,9 +34,9 @@ const STYLE = {
   ending: "1",       // bold
   title: "1",
 };
+// Labels for judged replies. An ordinary unconvinced turn has none: the reply says it, and the patience line follows.
 const VERDICT = {
   convinced: ["convinced", "32"],
-  unconvinced: ["not yet", "33"],
   offended: ["offended", "31"],
   repeated: ["repeated", "35"],
 };

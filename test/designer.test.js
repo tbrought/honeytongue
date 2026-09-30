@@ -223,7 +223,7 @@ test("replay reruns every line, in order, against a fresh conversation", async (
 
 test("replies are labelled with the demo's words", () => {
   assert.deepEqual(VERDICT_LABELS, present.VERDICT_LABELS);
-  for (const verdict of Object.keys(VERDICT_LABELS)) assert.equal(spokenLabel(verdict), present.spokenLabel(verdict));
+  for (const verdict of [...Object.keys(VERDICT_LABELS), "unconvinced"]) assert.equal(spokenLabel(verdict), present.spokenLabel(verdict));
 });
 
 test("a reaction's speech and the character's name are styled, and nothing else changes", () => {
@@ -264,4 +264,15 @@ test("replies with variants: one per line in the form, kept as lists in drafts a
   assert.deepEqual(smallest.reactions, character.reactions);
   assert.deepEqual(smallest.repeatReaction, character.repeatReaction);
   assert.equal(fieldErrors({ ...character, repeatReaction: [] }).repeatReaction !== undefined, true);
+});
+
+test("a share link may name a preset instead of copying it, and carry a line to prefill", () => {
+  const hash = encodeShare({ preset: "harry", line: "  The plain truth.  " });
+  assert.deepEqual(decodeShare(hash), { preset: "harry", knows: [], line: "The plain truth." });
+  assert.ok(hash.length < 300, "short, since it names the preset");
+  assert.equal(decodeShare(encodeShare({ character: simple, knows: [], line: "Hello" })).line, "Hello");
+  assert.equal("line" in decodeShare(encodeShare({ character: simple, knows: [] })), false, "no line, no key");
+  assert.throws(() => readDraft({ preset: 3 }), /"preset"/);
+  assert.throws(() => readDraft({ preset: "harry", line: 5 }), /"line"/);
+  assert.equal(readDraft({ preset: "harry", line: "x".repeat(600) }).line.length, 500, "no longer than the playground sends");
 });

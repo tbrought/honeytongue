@@ -66,9 +66,9 @@
             {
               "min": 3,
               "text": [
-                "@[Maude] taps the #[manifest], thinking. \"Close. Now tell me what's in it for me, and how you'd prove it.\"",
-                "\"Close,\" @[Maude] says. \"Bring me something I can check against the books, and we'll talk.\"",
-                "@[Maude] turns the #[manifest] toward the lamplight. \"Nearly there. What's worth more to me than a fare?\""
+                "@[Maude] taps the #[manifest], thinking. \"Now we're haggling. Tell me what's in it for me, and how you'd prove it.\"",
+                "\"You've got my attention,\" @[Maude] says, and means it. \"Bring me something I can check against the books.\"",
+                "@[Maude] turns the #[manifest] toward the lamplight. \"Warmer. What's worth more to me than a fare?\""
               ]
             }
           ],

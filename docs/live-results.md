@@ -149,7 +149,7 @@ Every demo character gained varied replies and a near-miss hint band. Neither re
 - **Reading the letter alone now wins.** "This letter carries a fever remedy for Ilse the apothecary, and someone could die if it doesn't reach her tonight. Please let me through." won 10 of 10 engine turns, averaging 3.24 (+0.84). Against the old 3.2 it was a coin toss.
 - **The plain truth wins over Harry alone, but not inside the scene.**
   - On his own it won 10 of 10, averaging 2.58, and 2.61 in the rerun, which makes it the showcase's sixth line.
-  - As an engine turn, where Jev also sees the scene, it averaged 2.30. That lands in the new "Nearly" band, whose hints point home and to the letter.
+  - As an engine turn, where Jev also sees the scene, it averaged 2.30. That lands in the new near-miss band, whose hints point home and to the letter.
 - **The playtester's guess still loses.** "Did your son carve it? … an apprenticeship with the governor's carpenter" scored 0.14: the details are wrong, and to Harry it reads as a bribe. That's the case the clues proposal is for.
 
 **The full rerun** (`eval --all --repeats 10`, then `live.js routes --repeats 10`):

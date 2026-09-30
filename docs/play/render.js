@@ -25,7 +25,7 @@ export function makeRenderer(doc) {
 
   /**
    * One paragraph. When it will type out, screen readers get the whole text at once from a hidden copy, and the
-   * typing copy is hidden from them. A verdict label goes first, spoken as a word ("Not yet.").
+   * typing copy is hidden from them. A verdict label, if the verdict has one, goes first, spoken as a word ("Convinced.").
    */
   function paragraph(parts, { verdict, animate, className = "" } = {}) {
     const p = el("p", { className });
@@ -34,7 +34,7 @@ export function makeRenderer(doc) {
     const body = partsNode(parts);
     if (animate) { hidden(body); p.append(el("span", { className: "vh" }, spoken + plain)); }
     else if (spoken) p.append(el("span", { className: "vh" }, spoken));
-    if (verdict) p.append(hidden(el("span", { className: "chip" }, VERDICT_LABELS[verdict])));
+    if (VERDICT_LABELS[verdict]) p.append(hidden(el("span", { className: "chip" }, VERDICT_LABELS[verdict])));
     p.append(body);
     return { p, body };
   }

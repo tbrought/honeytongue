@@ -1,15 +1,17 @@
 // How the web demo presents a game: DOM-free choices about wording and pacing, tested in test/present.test.js.
 // This is one example of styling Honeytongue's result.parts; the library itself only says what each part means.
 
-/** The label shown on a judged reply, by verdict. */
+/**
+ * The label shown on a judged reply, by verdict. An ordinary unconvinced turn has none: the reply and the meter
+ * already say it.
+ */
 export const VERDICT_LABELS = {
   convinced: "CONVINCED",
-  unconvinced: "NOT YET",
   offended: "OFFENDED",
   repeated: "REPEATED",
 };
 
-/** The spoken form of a label, for screen readers: "Not yet." */
+/** The spoken form of a label, for screen readers ("Convinced."), or "" for a verdict without one. */
 export const spokenLabel = (verdict) => {
   const label = VERDICT_LABELS[verdict];
   return label ? `${label[0]}${label.slice(1).toLowerCase()}.` : "";

@@ -110,5 +110,8 @@ footer::before {
 /* The example transcript's timing (--i) and meter readings, as classes rather than style attributes. */
 .t0 { --i: 0; } .t1 { --i: 1; } .t2 { --i: 2; } .t3 { --i: 3; }
 .meter.s0 { --score: 0%; } .meter.s40 { --score: 40%; } .meter.s97 { --score: 97%; }
+/* The showcase grid's Try it links, one per cell, under the verdict. */
+/* position: relative keeps the hidden screen-reader text inside the link, and so inside the scrolling table. */
+.grid .try { display: block; position: relative; margin-top: 0.3rem; font-size: 0.85em; }
 /* Harry's threshold, 2.4 of 4 (test/pages.test.js keeps it equal to his preset). */
 .transcript .meter { --mark: 60%; }

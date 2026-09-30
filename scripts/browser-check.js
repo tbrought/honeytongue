@@ -110,10 +110,10 @@ try {
   await open(`/playground/${encodeShare({ character: hostile, knows: ["stew"] })}`);
   await page.waitFor("document.getElementById('f-name').value", { what: "the share link to load" });
   await page.eval(`(() => { const i = document.getElementById("line"); i.value = ${JSON.stringify(`Please ${IMG} ${CLOSE}`)}; document.getElementById("try").requestSubmit(); return true; })()`);
-  await page.waitFor("document.querySelector('#attempts .attempt .chip')", { what: "the hostile line to be judged" });
+  await page.waitFor("document.querySelector('#attempts .attempt .reply')", { what: "the hostile line to be judged" });
   // A second, plain line gets the character's (hostile) reaction: the first may convince, since the link teaches the secret.
   await page.eval(`(() => { const i = document.getElementById("line"); i.value = "Please, I just want to go home."; document.getElementById("try").requestSubmit(); return true; })()`);
-  await page.waitFor("document.querySelectorAll('#attempts .attempt .chip').length === 2", { what: "the second line to be judged" });
+  await page.waitFor("document.querySelectorAll('#attempts .attempt .reply').length === 2", { what: "the second line to be judged" });
   await page.eval(`document.getElementById("copy-code").click(); true`);
   await page.waitFor("document.getElementById('output').value", { what: "the copied code" });
   const pg = JSON.parse(await page.eval(`JSON.stringify({ name: document.getElementById("f-name").value, persona: document.getElementById("f-persona").value,
@@ -125,6 +125,19 @@ try {
   check(pg.code.includes("\\u003cimg") && !pg.code.includes("<"), "playground: the copied code keeps it as escaped data");
   check(pg.imgs === 0 && pg.scripts === 0 && pg.alerts === 0, "playground: nothing hostile was created or run", JSON.stringify(pg).slice(0, 120));
   check((await violations()).length === 0, "playground: no CSP violations with hostile input", (await violations()).join("; "));
+
+  // A Try it link in the home page's grid opens the playground with that preset and line, ready to send.
+  await open("/");
+  const tryHref = await page.eval(`document.querySelector('tr[data-tactic="Plain truth"] td a.try').getAttribute("href")`);
+  await open(`/${tryHref}`);
+  await page.waitFor("document.getElementById('f-name').value && document.getElementById('line').value", { what: "the Try it link to load" });
+  const tried = JSON.parse(await page.eval(`JSON.stringify({ name: document.getElementById("f-name").value, line: document.getElementById("line").value,
+    focused: document.activeElement?.id })`));
+  check(tried.name === "Harry Goatleaf" && tried.line.startsWith("I won't flatter you") && tried.focused === "line",
+    "home: a Try it link opens the playground with its preset and line, ready to send", JSON.stringify(tried));
+  await page.eval(`document.getElementById("try").requestSubmit(); true`);
+  await page.waitFor("document.querySelector('#attempts .attempt .reply')", { what: "the Try it line to be judged" });
+  check((await violations()).length === 0, "home: the Try it link's page has no CSP violations", (await violations()).join("; "));
 
   await open("/play/#goblin-camp");
   await page.waitFor("document.getElementById('cmd')", { what: "the demo's prompt" });
@@ -304,7 +317,7 @@ try {
     await page.go(local.url);
     await page.waitFor("document.querySelector('#presets button')", { what: "the local playground" });
     await page.eval(`(() => { const i = document.getElementById("line"); i.value = "Please let me go"; document.getElementById("try").requestSubmit(); return true; })()`);
-    await page.waitFor("document.querySelector('#attempts .attempt .chip')", { what: "a line judged through the local server" });
+    await page.waitFor("document.querySelector('#attempts .attempt .reply')", { what: "a line judged through the local server" });
     const bad = await violations();
     check(bad.length === 0, "local playground: judges through its server, with no CSP violations", bad.join("; "));
   } finally {

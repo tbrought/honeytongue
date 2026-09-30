@@ -2,6 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { defineCharacter } from "../src/index.js";
+import { decodeShare } from "../docs/playground/designer.js";
+import { linkShowcase } from "../scripts/showcase-links.js";
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const suite = JSON.parse(read("evals/showcase.json"));
@@ -38,10 +40,21 @@ test("the docs site's grid shows the showcase suite's expected verdicts", () => 
     assert.deepEqual(labels.map((m) => [m[2], m[3]]), verdicts.map((v) => [v, v]), `${line.tactic}: labels match`);
   }
   assert.match(table, /10 live runs/, "the scores are labelled as live results");
-  // The caption says each character's difficulty and the score it needs, so it's clear why a line wins over one.
-  const caption = table.match(/<caption>(.*?)<\/caption>/)?.[1] ?? "";
-  for (const id of columns) {
-    const { name, difficulty, threshold } = defineCharacter(characters[id]);
-    assert.ok(caption.includes(`${name.split(" ")[0]} ${difficulty} (${threshold})`), `the caption gives ${id}'s difficulty and threshold`);
+  assert.match(table, /scored with each character on their own, as in the playground/, "the grid says how it was scored");
+});
+
+test("each grid cell's Try it link opens the playground with that column's preset and that row's line", () => {
+  const html = read("docs/index.html");
+  const table = html.slice(html.indexOf('<table class="grid">'), html.indexOf("</table>", html.indexOf('<table class="grid">')));
+  const columns = [...table.matchAll(/data-character="([^"]+)"/g)].map((m) => m[1]);
+  for (const line of suite.lines) {
+    const row = table.match(new RegExp(`<tr data-tactic="${line.tactic}">(.*?)</tr>`))[1];
+    const links = [...row.matchAll(/<td data-verdict="[^"]+">.*?<a class="try" href="playground\/(#c=[^"]+)">Try it<span class="vh">(.*?)<\/span><\/a><\/td>/g)];
+    assert.equal(links.length, columns.length, `${line.tactic}: a link in every cell`);
+    for (const [i, [, hash, spoken]] of links.entries()) {
+      assert.deepEqual(decodeShare(hash), { preset: columns[i], knows: [], line: line.input }, `${line.tactic} on ${columns[i]}`);
+      assert.ok(spoken.includes(characters[columns[i]].name.split(" ")[0]), `${line.tactic}: the link's text names the character`);
+    }
   }
+  assert.equal(linkShowcase(html), html, "the links are current: run npm run build:demo");
 });

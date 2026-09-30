@@ -46,9 +46,9 @@
       {
         "min": 2,
         "text": [
-          "Harry turns the toy horse over in his fingers. \"Nearly. I've worries of my own at home tonight. Tell me why yours can't wait.\"",
-          "Harry eyes the sealed letter in your hand. \"Nearly. Who needs that so badly it can't wait till morning?\"",
-          "Harry glances up the dark street toward home, then back at you. \"Close. Give me a reason I'd risk my post for.\""
+          "Harry turns the toy horse over in his fingers, quiet for a moment. \"I've worries of my own at home tonight. Tell me why yours can't wait.\"",
+          "Harry eyes the sealed letter in your hand. \"Now that's more like it. Who needs that so badly it can't wait till morning?\"",
+          "Harry glances up the dark street toward home, then back at you. \"You're getting somewhere. Give me a reason I'd risk my post for.\""
         ]
       }
     ],
@@ -101,9 +101,9 @@
       {
         "min": 2,
         "text": [
-          "Nib's ears twitch. \"Nearly. Sounds nice for you. What happens to Nib, after?\"",
-          "Nib glances at his bedroll, then away again, quickly. \"Close. But what's in it for me?\"",
-          "\"Nearly,\" Nib whispers, stirring the stew pot. \"If I went, where would I even go?\""
+          "Nib's ears twitch up, just a little. \"Ooh. But what happens to Nib, after?\"",
+          "Nib glances at his bedroll, then away again, quickly. \"Maybe. Maybe maybe. But what's in it for me?\"",
+          "Nib stirs the stew pot slower and slower. \"If I went... where would I even go?\""
         ]
       }
     ],
@@ -156,9 +156,9 @@
       {
         "min": 3,
         "text": [
-          "Maude taps the manifest, thinking. \"Close. Now tell me what's in it for me, and how you'd prove it.\"",
-          "\"Close,\" Maude says. \"Bring me something I can check against the books, and we'll talk.\"",
-          "Maude turns the manifest toward the lamplight. \"Nearly there. What's worth more to me than a fare?\""
+          "Maude taps the manifest, thinking. \"Now we're haggling. Tell me what's in it for me, and how you'd prove it.\"",
+          "\"You've got my attention,\" Maude says, and means it. \"Bring me something I can check against the books.\"",
+          "Maude turns the manifest toward the lamplight. \"Warmer. What's worth more to me than a fare?\""
         ]
       }
     ],
@@ -209,9 +209,9 @@
       {
         "min": 2.6,
         "text": [
-          "Cobb looks out at the black water, turning the lamp key over in his fingers. \"Nearly. But if I'm wrong, the whole town pays for it.\"",
-          "Cobb glances at the spyglass, then at you. \"Close. Show me the raiders won't come for the town, and we'll talk.\"",
-          "\"Nearly,\" Cobb murmurs, resting a hand on the lamp's brass cage. \"Tell me who'd see this light, and who wouldn't.\""
+          "Cobb looks out at the black water, turning the lamp key over in his fingers. \"You've near enough talked me round. But if I'm wrong, the whole town pays for it.\"",
+          "Cobb glances at the spyglass, then at you. \"Aye, I'm listening now. Show me the raiders won't come for the town.\"",
+          "\"There's something in that,\" Cobb murmurs, resting a hand on the lamp's brass cage. \"Tell me who'd see this light, and who wouldn't.\""
         ]
       }
     ],

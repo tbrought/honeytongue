@@ -1,11 +1,14 @@
 // Copies the browser-safe engine, the demo stories, and the preset characters into docs/play/lib, and the Phaser
 // example's game into docs/phaser/lib and its sprites into docs/phaser/assets, because GitHub Pages only serves the
 // docs folder. Run it after changing src/, stories/, or examples/phaser/: npm run build:demo
-// It also highlights the docs' code blocks (scripts/highlight-docs.js).
-// (test/demo.test.js fails if the copies are out of date, and test/highlight.test.js if the highlighting is.)
+// It also highlights the docs' code blocks (scripts/highlight-docs.js), and writes the showcase grid's "Try it" links
+// (scripts/showcase-links.js).
+// (test/demo.test.js fails if the copies are out of date, test/highlight.test.js if the highlighting is, and
+// test/showcase.test.js if the links are.)
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { DEMO_FILES } from "./demo-files.js";
 import { HIGHLIGHTED, highlightPage } from "./highlight-docs.js";
+import { linkShowcase } from "./showcase-links.js";
 
 const root = new URL("../", import.meta.url);
 for (const [source, copy] of DEMO_FILES) {
@@ -18,3 +21,6 @@ for (const page of HIGHLIGHTED) {
   await writeFile(url, highlightPage(await readFile(url, "utf8")));
 }
 console.log(`Highlighted the code in ${HIGHLIGHTED.join(", ")}`);
+const home = new URL("docs/index.html", root);
+await writeFile(home, linkShowcase(await readFile(home, "utf8")));
+console.log("Wrote the showcase grid's Try it links in docs/index.html");

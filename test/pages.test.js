@@ -102,7 +102,7 @@ test("package.json describes the new positioning, with an author and relevant ke
   assert.equal(pkg.bugs.url, "https://github.com/tbrought/honeytongue/issues");
 });
 
-test("the Verdicts table names the labels players see in the demo, so they read as the same verdicts", async () => {
+test("the Verdicts table names the labels players see in the demo, and nothing labels an ordinary unconvinced turn", async () => {
   const { VERDICT_LABELS } = await import("../docs/play/present.js");
   const html = read("docs/index.html");
   const table = html.slice(html.indexOf("<table>", html.indexOf('id="how"')), html.indexOf("</table>", html.indexOf('id="how"')));
@@ -110,6 +110,7 @@ test("the Verdicts table names the labels players see in the demo, so they read 
     assert.ok(table.includes(`<code class="verdict-code">${verdict}</code>`), verdict);
     assert.ok(table.includes(`<span class="chip v-${verdict}">${label}</span>`), `${verdict} is shown to players as ${label}`);
   }
+  assert.doesNotMatch(html, /NOT YET|Not yet\./,"unconvinced turns aren't labelled, so the docs don't name a label for them");
 });
 
 test("the docs' Twine snippet is the tested recipe's Story JavaScript", () => {

@@ -3,8 +3,9 @@ import assert from "node:assert/strict";
 import { VERDICT_LABELS, spokenLabel, typingSpeed, endingSummary, scoreLine, difficultyTag } from "../docs/play/present.js";
 
 test("every verdict has a label, the repeated one included", () => {
-  assert.deepEqual(VERDICT_LABELS, { convinced: "CONVINCED", unconvinced: "NOT YET", offended: "OFFENDED", repeated: "REPEATED" });
-  assert.equal(spokenLabel("unconvinced"), "Not yet.");
+  assert.deepEqual(VERDICT_LABELS, { convinced: "CONVINCED", offended: "OFFENDED", repeated: "REPEATED" });
+  assert.equal(spokenLabel("convinced"), "Convinced.");
+  assert.equal(spokenLabel("unconvinced"), "", "an ordinary unconvinced turn has no label: the reply and meter say it");
   assert.equal(spokenLabel(null), "");
 });
 

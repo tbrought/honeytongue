@@ -71,9 +71,9 @@
             {
               "min": 2,
               "text": [
-                "@[Harry] turns the #[toy horse] over in his fingers. \"Nearly. I've worries of my own at home tonight. Tell me why yours can't wait.\"",
-                "@[Harry] eyes the #[sealed letter] in your hand. \"Nearly. Who needs that so badly it can't wait till morning?\"",
-                "@[Harry] glances up the dark street toward home, then back at you. \"Close. Give me a reason I'd risk my post for.\""
+                "@[Harry] turns the #[toy horse] over in his fingers, quiet for a moment. \"I've worries of my own at home tonight. Tell me why yours can't wait.\"",
+                "@[Harry] eyes the #[sealed letter] in your hand. \"Now that's more like it. Who needs that so badly it can't wait till morning?\"",
+                "@[Harry] glances up the dark street toward home, then back at you. \"You're getting somewhere. Give me a reason I'd risk my post for.\""
               ]
             }
           ],

@@ -61,9 +61,9 @@
             {
               "min": 2.6,
               "text": [
-                "@[Cobb] looks out at the black water, turning the #[lamp key] over in his fingers. \"Nearly. But if I'm wrong, the whole town pays for it.\"",
-                "@[Cobb] glances at the #[spyglass], then at you. \"Close. Show me the raiders won't come for the town, and we'll talk.\"",
-                "\"Nearly,\" @[Cobb] murmurs, resting a hand on the lamp's brass cage. \"Tell me who'd see this light, and who wouldn't.\""
+                "@[Cobb] looks out at the black water, turning the #[lamp key] over in his fingers. \"You've near enough talked me round. But if I'm wrong, the whole town pays for it.\"",
+                "@[Cobb] glances at the #[spyglass], then at you. \"Aye, I'm listening now. Show me the raiders won't come for the town.\"",
+                "\"There's something in that,\" @[Cobb] murmurs, resting a hand on the lamp's brass cage. \"Tell me who'd see this light, and who wouldn't.\""
               ]
             }
           ],

@@ -6,13 +6,12 @@ import { createProxyClient } from "../play/lib/jev.js";
 import { defineCharacter, DEFAULT_LEVELS } from "../play/lib/persuasion.js";
 import {
   FIELDS, TELLS, fieldErrors, minimalCharacter, characterCode, storyJson, readDraft, encodeShare, decodeShare, readPresets,
-  tryLine, replay, conversation, VERDICT_LABELS, spokenLabel, replyParts, linesToText, textToLines,
+  tryLine, replay, conversation, VERDICT_LABELS, spokenLabel, replyParts, linesToText, textToLines, MAX_LINE,
 } from "./designer.js";
 
 const $ = (id) => document.getElementById(id);
 const STORE = "honeytongue-playground";
 const HOSTED = "https://honeytongue.dev/playground/";
-const MAX_LINE = 500;
 
 /** Build an element. Text is always set as text, never parsed as HTML. */
 function el(tag, props = {}, ...children) {
@@ -242,15 +241,17 @@ function patienceText(result, character) {
   return `patience ${result.patienceLeft} of ${character.patience} left`;
 }
 
-/** The character's reply as the demo shows one: its label, then what they said, with speech and their name styled. */
+/** The character's reply as the demo shows one: its label (if the verdict has one), then what they said, styled. */
 function reply(result, character, hint) {
   const said = el("span", { className: "reaction" });
   for (const part of result.reaction ? replyParts(result.reaction, character.name) : []) {
     said.append(part.kind === "text" ? part.text : el("span", { className: `part-${part.kind}`, textContent: part.text }));
   }
   return el("div", { className: `reply v-${result.verdict}` },
-    el("p", {}, el("span", { className: "vh", textContent: `${spokenLabel(result.verdict)} ` }),
-      el("span", { className: "chip", ariaHidden: "true", textContent: VERDICT_LABELS[result.verdict] }), said),
+    el("p", {}, ...(VERDICT_LABELS[result.verdict]
+      ? [el("span", { className: "vh", textContent: `${spokenLabel(result.verdict)} ` }),
+        el("span", { className: "chip", ariaHidden: "true", textContent: VERDICT_LABELS[result.verdict] })]
+      : []), said),
     hint ? el("p", { className: "hint", textContent: hint }) : null);
 }
 
@@ -499,21 +500,38 @@ for (const { id, character, note } of [...presets, { id: "blank", character: nul
 /** The character in a share link, if the address has one: { draft, message }. */
 function fromLink() {
   try {
-    const draft = decodeShare(location.hash);
+    let draft = decodeShare(location.hash);
     if (!draft) return { draft: null, message: "" };
     history.replaceState(null, "", location.pathname + location.search); // later edits aren't what the link holds
-    return { draft, message: `Loaded ${draft.character.name || "a shared character"} from the link.` };
+    if (draft.preset !== undefined) {
+      const found = presets.find((p) => p.id === draft.preset);
+      if (!found) return { draft: null, message: `This link opens a preset character the playground doesn't have ("${draft.preset}").` };
+      draft = { ...draft, character: structuredClone(found.character) };
+    }
+    const name = draft.character.name || "a shared character";
+    return { draft, message: draft.line ? `Loaded ${name}, with a line ready to send.` : `Loaded ${name} from the link.` };
   } catch (err) {
     return { draft: null, message: err.message };
   }
 }
 
+/** A link's line goes in the box, ready to send. */
+function prefill(draft) {
+  if (!draft?.line) return;
+  lineInput.value = draft.line;
+  updateCount();
+  lineInput.focus();
+  lineInput.setSelectionRange(0, 0); // from its start, so it reads in full; Enter still sends it
+  lineInput.scrollTop = 0;
+}
+
 const link = fromLink();
 load(link.draft ?? savedDraft() ?? (presets[0] ? { character: structuredClone(presets[0].character), knows: [] } : structuredClone(BLANK)), link.message);
 updateCount();
+prefill(link.draft);
 // A link pasted into a tab that already has the playground open only changes the hash, without reloading.
 addEventListener("hashchange", () => {
   const { draft: shared, message } = fromLink();
-  if (shared) load(shared, message);
+  if (shared) { load(shared, message); prefill(shared); }
   else if (message) notice(message);
 });
