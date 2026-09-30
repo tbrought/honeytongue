@@ -131,6 +131,16 @@ Would lines from speech recognition (lowercase, no punctuation, sometimes mishea
 
 The misheard versions changed names ("Ilse" to "elsa", "Nib" to "nip", "Cobb" to "cob"), key words ("apothecary" to "a pottery", "kitchen" to "chicken", "aboard" to "a board", "shutter" to "shudder", "sea" to "see"), and dropped small words. Short lines hold up; long, carefully argued lines lose 0.03 to 0.59, enough for two of eight to fall just short. The docs suggest cleaning up transcripts first, and leaving winning lines some room above the threshold.
 
+## A sixth showcase line (2026-09-29)
+
+We looked for a sincere line to add to the showcase grid: one that convinces a single character, reliably, without knowing anything only its scene reveals. 127 calls on `jev-1.13.0`, 99,883 tokens.
+
+- **Two lines under the full reliability rule** (10 runs on each of the four presets): a plain-truth line for Harry averaged 2.61 against his 3.2, and a whole-story line for Cobb 2.43 against his 3.2.
+- **Seven lines screened** (one run on the character each was aimed at), aimed at what the persona fears: an offer of surety for Harry scored 2.46 to 2.50, and reassurance about the town for Cobb 2.98 to 3.54. A surety line that mentioned a sick child reached 3.44, but it leans on Harry's secret, so it was set aside.
+- **The best, run in full:** "I'll tell you the truth: the town will be safe tonight. I checked the coast myself before I came, and I'll keep watch beside you until morning so you can see it for yourself." It convinced Cobb 10 of 10 times (average 3.55), and left Harry (2.74) and Maude (2.34) unconvinced, but it sat on Nib's threshold (6 of 10 unconvinced, average 2.38 against 2.4), so it isn't reliable.
+
+The grid keeps its five lines, with a note that sincere arguments win once they speak to what a character cares about, as each scene's winning line shows (they score 3.70 to 3.86 with the secret learned).
+
 ## Reproducing
 
 With `TYPESAFE_API_KEY` set:
