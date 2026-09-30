@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Repository
+
+- **The site is easier for search engines to list:**
+  - `docs/sitemap.xml` lists its four pages, and `docs/robots.txt` allows everything and points to the sitemap.
+  - Every page gives its honeytongue.dev address as canonical.
+  - Every title starts with "Honeytongue", and every page has its own description (the home page's is shortened to fit search results).
+  - `test/pages.test.js` checks all of this.
+
 ## 0.1.0-alpha.12 (2026-09-30)
 
 ### Added
