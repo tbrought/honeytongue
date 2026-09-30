@@ -297,16 +297,17 @@ async function submit(raw) {
     transcript?.record(text, before, result, game);
     moves++;
     thinking.remove();
-    const d = result.debug;
-    if (d?.verdict) {
-      judged.push({ input: text, verdict: d.verdict, score: d.persuasion?.score ?? null, threshold: d.threshold, maxScore: d.maxScore ?? 4 });
+    const d = result.debug; // diagnostics, for the debug view only
+    const a = result.attempt; // how the scene's character judged the turn (stable), or null
+    if (a) {
+      judged.push({ input: text, verdict: a.verdict, score: a.score, threshold: a.threshold, maxScore: a.maxScore });
       lastNpc = npcBefore;
     }
     showNote();
     showMode(d?.source);
     showDebug(d, threshold);
     const entered = game.sceneId !== sceneBefore && !game.scene.ending ? game.scene : null;
-    showReply(result, { verdict: d?.verdict ?? null, entered });
+    showReply(result, { verdict: a?.verdict ?? null, entered });
     if (game.over) showEnding();
   } catch (err) {
     thinking.remove();

@@ -2,7 +2,13 @@
 
 ## Unreleased
 
+### Added
+
+- **`result.attempt` on every engine turn:** how the scene's character judged it, with the same fields as a `Persuadable`'s `attempt()` result (`verdict`, `score`, `maxScore`, `confidence`, `tells`, `triggered`, `reaction`, `patienceLeft`, `outOfPatience`) plus the character's `threshold`, or `null` when no character judged the turn. It's a stable part of the API, for labelling replies and showing patience. The web demo uses it.
+
 ### Changed
+
+- **`result.debug` is documented as diagnostics** (the ranked actions, Jev's raw answers, and who answered) that may change in any version. Use `result.attempt` for anything a game builds on.
 
 - **Honeytongue needs Node 22.12 or later** (`engines` was `>=22`). From 22.12, Node's `require()` loads ES modules without a flag, so CommonJS projects can `require("honeytongue")` as well as `import` it. The package check tests both, on Node 22 and 24.
 

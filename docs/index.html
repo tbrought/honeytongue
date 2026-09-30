@@ -575,13 +575,14 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
       </table></div>
 
       <h3>Turn results</h3>
-      <p>What <code>game.turn(input)</code> returns in a text adventure. <code>text</code> and <code>parts</code> are both stable parts of the API.</p>
+      <p>What <code>game.turn(input)</code> returns in a text adventure. <code>text</code>, <code>parts</code>, and <code>attempt</code> are stable parts of the API; <code>debug</code> is for diagnostics and may change in any version.</p>
       <div class="table-wrap"><table>
         <thead><tr><th>Field</th><th>What it holds</th></tr></thead>
         <tbody>
           <tr><td><code>text</code></td><td>The reply as plain text, paragraphs separated by a blank line. Never contains markup</td></tr>
           <tr><td><code>parts</code></td><td>The same reply as meaningful pieces, one array per paragraph: <code>{ kind, text }</code>, with kind <code>"text"</code>, <code>"speech"</code>, <code>"character"</code>, <code>"item"</code>, <code>"system"</code>, or <code>"ending"</code> (<a href="#markup">Story markup</a>)</td></tr>
-          <tr><td><code>debug</code></td><td>How the turn was judged: the ranked actions, the persuasion answers, the verdict, the threshold, and the patience left; missing for commands answered without Jev</td></tr>
+          <tr><td><code>attempt</code></td><td>How the scene's character judged the turn: the same fields as <code>attempt()</code>'s result (<code>verdict</code>, <code>score</code>, <code>maxScore</code>, <code>confidence</code>, <code>tells</code>, <code>triggered</code>, <code>reaction</code>, <code>patienceLeft</code>, <code>outOfPatience</code>), plus <code>threshold</code>. <code>null</code> when no character judged it, such as an ordinary action. Use it to label replies or show patience</td></tr>
+          <tr><td><code>debug</code></td><td>Diagnostics: the ranked actions, Jev's raw answers, and who answered. It may change in any version, so don't build on it; missing for commands answered without Jev</td></tr>
         </tbody>
       </table></div>
 

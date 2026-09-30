@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { Game, validateStory, StoryError } from "../src/index.js";
-import { fakeClient } from "./helpers.js";
+import { Game, validateStory, StoryError, Persuadable } from "../src/index.js";
+import { fakeClient, harry } from "./helpers.js";
 
 const story = () => JSON.parse(readFileSync(new URL("../stories/gatehouse.json", import.meta.url), "utf8"));
 
@@ -275,6 +275,37 @@ test("each turn's debug says how it went for the scene's character", async () =>
   assert.equal(rude.verdict, "offended");
   assert.deepEqual(rude.triggered, ["insults"]);
   assert.equal(rude.patienceLeft, 0, "Harry has run out, and the turn says so");
+});
+
+test("each turn's attempt is how the scene's character judged it: attempt()'s fields plus threshold, or null", async () => {
+  const client = fakeClient({ score: 1 });
+  const game = new Game(story(), client);
+  const judged = await game.turn("an honest but weak plea");
+  const direct = await new Persuadable(harry, { client: fakeClient({ score: 1 }) }).attempt("Please open the gate.");
+  assert.deepEqual(Object.keys(judged.attempt).sort(), [...Object.keys(direct), "threshold"].sort(), "the same fields as attempt(), plus threshold");
+  assert.equal(judged.attempt.verdict, "unconvinced");
+  assert.equal(judged.attempt.score, 1);
+  assert.equal(judged.attempt.threshold, 3.2);
+  assert.equal(judged.attempt.patienceLeft, 3);
+  assert.equal(judged.attempt.outOfPatience, false);
+  assert.ok(judged.attempt.reaction, "with the character's reaction");
+  assert.equal(judged.attempt.verdict, judged.debug.verdict, "debug agrees");
+
+  const repeat = await game.turn("an honest but weak plea");
+  assert.equal(repeat.attempt.verdict, "repeated");
+  assert.equal(repeat.attempt.score, null, "a repeat isn't sent to Jev");
+
+  client.next = { ...client.next, action: "read_letter" };
+  assert.equal((await game.turn("read the letter")).attempt, null, "an ordinary action isn't judged");
+  assert.equal((await game.turn("look")).attempt, null, "nor is a command answered without Jev");
+
+  client.next = { ...client.next, action: "chat_guard", insults: 0.95 };
+  const rude = await game.turn("how's your shift, idiot");
+  assert.equal(rude.attempt.verdict, "offended", "an insult during another action is judged too");
+  assert.deepEqual(rude.attempt.triggered, ["insults"]);
+  assert.equal(rude.attempt.patienceLeft, 0);
+  assert.equal(rude.attempt.outOfPatience, true);
+  assert.equal(rude.attempt.reaction, null);
 });
 
 test("one penalty per turn: hostile words with a costly action are charged once, at the larger cost", async () => {
