@@ -169,6 +169,7 @@ console.<span class="f">log</span>(result.verdict, result.score);</code></pre>
         <li><strong>Keep hidden motivations out of the persona.</strong> Put them in <a href="#secrets">secrets</a>, so a player on their second playthrough can't open with them.</li>
       </ul>
       <p>Players can write in any language Jev reads. In tests, the same argument in Spanish, French, and Japanese scored within about 0.2 of the English, and threats and insults were caught in each. Very short inputs, like "pls" or "ok fine", never won.</p>
+      <p id="spoken"><strong>Spoken input</strong> works once your game turns speech into text. In tests, the five lines in the grid below, written the way speech recognition writes them (lowercase, with no punctuation), got the same verdicts as the typed lines every time (20 of 20), with scores within 0.25. Long, carefully argued lines lose a little more: each scene's winning line scored 0.03 to 0.59 lower when spoken or misheard, and two of eight such versions fell just short of the threshold (one where "shutter" was heard as "shudder"). If voice matters to your game, clean up transcripts before judging them (restore punctuation, and correct the names and key words your scenes use), and leave winning lines a little room above the threshold.</p>
     </section>
 
     <section id="showcase">
@@ -376,7 +377,7 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
       <ul class="points">
         <li><strong>The dialogue box is plain HTML over the canvas,</strong> so it gets the browser's own text input, phone keyboards, and screen reader support, as any form does. The example shows its text as text, never as HTML.</li>
         <li><strong>The world teaches secrets.</strong> Reading the sign calls <code>troll.learn("lonely")</code>, and from then on an argument that uses it can win.</li>
-        <li><strong>Spoken input</strong> works the same way, once your game turns speech into text.</li>
+        <li><strong>Spoken input</strong> works the same way, once your game turns speech into text. See <a href="#spoken">how spoken lines score</a>.</li>
         <li><strong>Engines outside JavaScript</strong> (Unity, Godot, Unreal, Ren'Py) aren't supported yet; a plain HTTP endpoint for them is on the roadmap.</li>
       </ul>
       <p>The full example is <a href="https://github.com/tbrought/honeytongue/tree/main/examples/phaser"><code>examples/phaser/</code></a>, about 250 lines, with three sprites. In the repository it imports Honeytongue from <code>../../src/</code>, so it runs from a clone; copy it into your own project with the CDN import above, or <code>from "honeytongue"</code> with a bundler. It uses the offline stand-in until you set <code>PROXY_URL</code> to your proxy, and your proxy's <code>allowedCharacters</code> needs your character. Phaser is MIT-licensed; the example pins version 4.2.1 with an integrity hash.</p>

@@ -114,6 +114,23 @@ His scripted lines against the reliability rule (10 of 10, average at least 0.1 
 
 All reliable. The offline stand-in follows the same route (`test/phaser.test.js`). The troll's calibration and these checks used about 83,000 tokens.
 
+## Spoken input (2026-09-29)
+
+Would lines from speech recognition (lowercase, no punctuation, sometimes misheard) be judged like typed ones? 52 calls on `jev-1.13.0`, 40,895 tokens, as standalone attempts on the four preset characters.
+
+**The showcase lines, spoken style** (two runs each, against the grid's typed 10-run averages): the same verdict 20 of 20 times, including every threat and insult caught. Scores differed by -0.24 to +0.06, -0.04 on average.
+
+**Each scene's winning line**, with the character's secret learned (one run each):
+
+| Character (threshold) | As written | Speech style | Misheard |
+|---|---|---|---|
+| Harry (3.2) | 3.70 convinced | 3.18 unconvinced | 3.61 convinced |
+| Nib (2.4) | 3.85 convinced | 3.82 convinced | 3.74 convinced |
+| Maude (3.6) | 3.86 convinced | 3.79 convinced | 3.65 convinced |
+| Cobb (3.2) | 3.75 convinced | 3.37 convinced | 3.16 unconvinced |
+
+The misheard versions changed names ("Ilse" to "elsa", "Nib" to "nip", "Cobb" to "cob"), key words ("apothecary" to "a pottery", "kitchen" to "chicken", "aboard" to "a board", "shutter" to "shudder", "sea" to "see"), and dropped small words. Short lines hold up; long, carefully argued lines lose 0.03 to 0.59, enough for two of eight to fall just short. The docs suggest cleaning up transcripts first, and leaving winning lines some room above the threshold.
+
 ## Reproducing
 
 With `TYPESAFE_API_KEY` set:
