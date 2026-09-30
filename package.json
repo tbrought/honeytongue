@@ -46,7 +46,7 @@
     "check:screenshots": "node scripts/check-screenshots.js"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.13"
   },
   "keywords": [
     "persuasion",

@@ -17,9 +17,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 22 is the oldest version package.json promises; 24 is the active LTS line and 26 the current release.
-        # Windows too, since that's where Honeytongue is developed.
-        node: [22, 24, 26]
+        # 22.13.0 exactly: the oldest version package.json promises, so the minimum is what's tested. 24 is the active
+        # LTS line and 26 the current release. Windows too, since that's where Honeytongue is developed.
+        node: ["22.13.0", 24, 26]
         os: [ubuntu-latest, windows-latest]
     steps:
       # Third-party actions are pinned to a full commit SHA; the comment says which version it is.
@@ -37,6 +37,10 @@ jobs:
       # The scripts aren't covered by unit tests; make sure they still run end to end.
       - run: npm run example
       - run: npm run eval -- --mock
+      # The package check (require() from CommonJS among it) on the oldest supported Node; the checks job runs it on 24.
+      - name: Pack, install, and smoke-test the package on Node 22.13.0
+        if: matrix.node == '22.13.0'
+        run: npm run check:package
 
   checks:
     name: Oldest TypeScript, demo copies, and package on ${{ matrix.os }}
@@ -82,3 +86,22 @@ jobs:
         with:
           node-version: 24
       - run: npm run check:browser
+
+  runtimes:
+    name: The proxy on Deno and Bun
+    # The proxy served by each runtime's own HTTP server, with requests sent through it as a browser game would
+    # (scripts/runtime-smoke.js). The offline mock judges: no key, no Jev calls.
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
+        with:
+          deno-version: v2.x
+      - run: deno run --allow-net scripts/runtime-smoke.js
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: latest
+      - run: bun scripts/runtime-smoke.js

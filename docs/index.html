@@ -111,10 +111,10 @@
   <main>
     <section id="start">
       <h2>Get started</h2>
-      <p><strong>You only need three fields and one method. Everything else is optional.</strong> A character needs a <code>name</code>, a <code>persona</code>, and a <code>goal</code>, and <code>attempt()</code> judges whatever the player typed. Honeytongue runs on <a href="https://docs.typesafe.ai">Jev</a>, a model from TypeSafe that makes typed judgements instead of writing text. It has no dependencies and ships TypeScript types.</p>
+      <p><strong>You only need three fields and one method. Everything else is optional.</strong> A character needs a <code>name</code>, a <code>persona</code>, and a <code>goal</code>, and <code>attempt()</code> judges whatever the player typed. Honeytongue runs on <a href="https://docs.typesafe.ai">Jev</a>, a model from TypeSafe that makes typed judgements instead of writing text. It has no dependencies, ships TypeScript types, and works with <code>import</code> or <code>require()</code>.</p>
       <ol class="steps">
         <li>
-          <p>You need Node 22 or later. In an empty folder, install the package:</p>
+          <p>You need Node 22.13 or later. In an empty folder, install the package:</p>
 <pre><code><span class="f">npm</span> install honeytongue</code></pre>
         </li>
         <li>
@@ -169,6 +169,7 @@ console.<span class="f">log</span>(result.verdict, result.score);</code></pre>
         <li><strong>Keep hidden motivations out of the persona.</strong> Put them in <a href="#secrets">secrets</a>, so a player on their second playthrough can't open with them.</li>
       </ul>
       <p>Players can write in any language Jev reads. In tests, the same argument in Spanish, French, and Japanese scored within about 0.2 of the English, and threats and insults were caught in each. Very short inputs, like "pls" or "ok fine", never won.</p>
+      <p id="spoken"><strong>Spoken input</strong> works once your game turns speech into text. In tests, the five lines in the grid below, written the way speech recognition writes them (lowercase, with no punctuation), got the same verdicts as the typed lines every time (20 of 20), with scores within 0.25. Long, carefully argued lines lose a little more: each scene's winning line scored 0.03 to 0.59 lower when spoken or misheard, and two of eight such versions fell just short of the threshold (one where "shutter" was heard as "shudder"). If voice matters to your game, clean up transcripts before judging them (restore punctuation, and correct the names and key words your scenes use), and leave winning lines a little room above the threshold.</p>
     </section>
 
     <section id="showcase">
@@ -185,6 +186,7 @@ console.<span class="f">log</span>(result.verdict, result.score);</code></pre>
           <tr data-tactic="Honest offer"><th scope="row">Honest offer<br><q>I&rsquo;ll be honest: I can&rsquo;t pay much now, but help me tonight and I&rsquo;ll pay you back twice over, in writing, with my name on it.</q></th><td data-verdict="unconvinced"><span class="chip v-unconvinced">unconvinced</span> <span class="dim">1.66</span></td><td data-verdict="unconvinced"><span class="chip v-unconvinced">unconvinced</span> <span class="dim">1.55</span></td><td data-verdict="unconvinced"><span class="chip v-unconvinced">unconvinced</span> <span class="dim">1.84</span></td><td data-verdict="unconvinced"><span class="chip v-unconvinced">unconvinced</span> <span class="dim">1.27</span></td></tr>
         </tbody>
       </table></div>
+      <p>No sincere line in the grid wins anyone over, because they're generic: none of them speaks to what a particular character cares about. Sincere arguments win once they do, as each scene's winning line shows.</p>
       <p>The grid is an eval suite, <code>evals/showcase.json</code>, so you can rerun it: <code>npm run eval -- evals/showcase.json</code>. <a href="play/">Play the scenes</a> to try your own lines on each character, or build your own in the <a href="playground/">playground</a>.</p>
     </section>
 
@@ -285,7 +287,7 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
     <section id="browser">
       <h2>Browser games and the proxy</h2>
       <p class="note"><strong>Never put your API key in browser code.</strong> Anyone can read it there. Browser games talk to a small proxy you host, which keeps the key on the server. As a safety net, <code>createJevClient()</code> refuses to run in a browser.</p>
-      <p>Honeytongue includes a proxy that runs on Cloudflare Workers, Vercel, Deno, Bun, or Node.</p>
+      <p>Honeytongue includes a proxy built on the standard <code>Request</code> and <code>Response</code>. It's tested on Cloudflare Workers, Node, Deno, and Bun, and should run on other hosts with the same API, such as Vercel, though those aren't tested yet.</p>
       <ol class="steps">
         <li>
           <p>Create a Cloudflare Worker, install Honeytongue, and use this as its entry file:</p>
@@ -318,7 +320,7 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
         <li><strong>Nothing players type is logged.</strong> When Jev can't answer, the proxy logs only the status, and replies 502 with a <code>reason</code>: <code>"busy"</code> (try again soon), <code>"error"</code>, or <code>"unavailable"</code> (a bad key or no credit left, which won't fix itself). <code>createProxyClient()</code> keeps the <code>reason</code> on the error it throws, so your game can decide whether to wait or give up.</li>
         <li><strong>Local development.</strong> <code>npm run proxy</code> in a clone of the repository serves the proxy on <code>http://127.0.0.1:8787</code> (this machine only), using the offline mock until you set a key. It judges the demo scenes and the character in <code>examples/browser.html</code> (see <code>examples/node-proxy.js</code>). The proxy only uses the mock when it's passed in as <code>client</code>, as that example does; a deployed proxy with no key returns an error rather than falling back. Every reply says which one answered, <code>"source": "jev"</code> or <code>"mock"</code> beside <code>answers</code>, and the engine passes it on as <code>debug.source</code>.</li>
         <li><strong><code>allowedOrigins</code> only controls browsers.</strong> Scripts and servers send no <code>Origin</code>, so they aren't affected: <code>allowedStories</code> and <code>allowedCharacters</code> are what protect your key, and your TypeSafe spending limit is what caps the cost.</li>
-        <li><strong>Other hosts.</strong> On Cloudflare the proxy trusts <code>CF-Connecting-IP</code>; elsewhere it uses the last <code>X-Forwarded-For</code> entry, which is right for Vercel and most platforms. Clients whose address can't be found share one <code>"unknown"</code> address, so one busy client could rate-limit everyone. If your server is reachable directly, or your host reports the address another way, pass <code>clientIp: (request, env) =&gt; ...</code>, so the rate limit sees each player and can't be dodged with a forged header. The rate limit is kept in memory, per server instance: on platforms that run many instances, add your host's own rate limiting too.</li>
+        <li><strong>Other hosts.</strong> On Cloudflare the proxy trusts <code>CF-Connecting-IP</code>; elsewhere it uses the last <code>X-Forwarded-For</code> entry, which is the one most hosts' own proxies add (check your host's documentation). Clients whose address can't be found share one <code>"unknown"</code> address, so one busy client could rate-limit everyone. If your server is reachable directly, or your host reports the address another way, pass <code>clientIp: (request, env) =&gt; ...</code>, so the rate limit sees each player and can't be dodged with a forged header. The rate limit is kept in memory, per server instance: on platforms that run many instances, add your host's own rate limiting too.</li>
       </ul>
       <h3 id="node">Node servers</h3>
       <p>On a plain Node server, <code>toNodeListener()</code> turns Node's requests into standard ones, and refuses bodies over the limit as they arrive:</p>
@@ -374,9 +376,9 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
   <span class="k">else</span> <span class="f">showReply</span>(result.reaction);
 <span class="k">&lt;/script</span>&gt;</code></pre>
       <ul class="points">
-        <li><strong>The dialogue box is plain HTML over the canvas,</strong> so typing, phone keyboards, and screen readers just work. The example shows its text as text, never as HTML.</li>
+        <li><strong>The dialogue box is plain HTML over the canvas,</strong> so it gets the browser's own text input, phone keyboards, and screen reader support, as any form does. The example shows its text as text, never as HTML.</li>
         <li><strong>The world teaches secrets.</strong> Reading the sign calls <code>troll.learn("lonely")</code>, and from then on an argument that uses it can win.</li>
-        <li><strong>Spoken input</strong> works the same way, once your game turns speech into text.</li>
+        <li><strong>Spoken input</strong> works the same way, once your game turns speech into text. See <a href="#spoken">how spoken lines score</a>.</li>
         <li><strong>Engines outside JavaScript</strong> (Unity, Godot, Unreal, Ren'Py) aren't supported yet; a plain HTTP endpoint for them is on the roadmap.</li>
       </ul>
       <p>The full example is <a href="https://github.com/tbrought/honeytongue/tree/main/examples/phaser"><code>examples/phaser/</code></a>, about 250 lines, with three sprites. In the repository it imports Honeytongue from <code>../../src/</code>, so it runs from a clone; copy it into your own project with the CDN import above, or <code>from "honeytongue"</code> with a bundler. It uses the offline stand-in until you set <code>PROXY_URL</code> to your proxy, and your proxy's <code>allowedCharacters</code> needs your character. Phaser is MIT-licensed; the example pins version 4.2.1 with an integrity hash.</p>
@@ -575,13 +577,14 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
       </table></div>
 
       <h3>Turn results</h3>
-      <p>What <code>game.turn(input)</code> returns in a text adventure. <code>text</code> and <code>parts</code> are both stable parts of the API.</p>
+      <p>What <code>game.turn(input)</code> returns in a text adventure. <code>text</code>, <code>parts</code>, and <code>attempt</code> are stable parts of the API; <code>debug</code> is for diagnostics and may change in any version.</p>
       <div class="table-wrap"><table>
         <thead><tr><th>Field</th><th>What it holds</th></tr></thead>
         <tbody>
           <tr><td><code>text</code></td><td>The reply as plain text, paragraphs separated by a blank line. Never contains markup</td></tr>
           <tr><td><code>parts</code></td><td>The same reply as meaningful pieces, one array per paragraph: <code>{ kind, text }</code>, with kind <code>"text"</code>, <code>"speech"</code>, <code>"character"</code>, <code>"item"</code>, <code>"system"</code>, or <code>"ending"</code> (<a href="#markup">Story markup</a>)</td></tr>
-          <tr><td><code>debug</code></td><td>How the turn was judged: the ranked actions, the persuasion answers, the verdict, the threshold, and the patience left; missing for commands answered without Jev</td></tr>
+          <tr><td><code>attempt</code></td><td>How the scene's character judged the turn: the same fields as <code>attempt()</code>'s result (<code>verdict</code>, <code>score</code>, <code>maxScore</code>, <code>confidence</code>, <code>tells</code>, <code>triggered</code>, <code>reaction</code>, <code>patienceLeft</code>, <code>outOfPatience</code>), plus <code>threshold</code>. <code>null</code> when no character judged it, such as an ordinary action. Use it to label replies or show patience</td></tr>
+          <tr><td><code>debug</code></td><td>Diagnostics: the ranked actions, Jev's raw answers, and who answered. It may change in any version, so don't build on it; missing for commands answered without Jev</td></tr>
         </tbody>
       </table></div>
 

@@ -2,7 +2,24 @@
 
 ## Unreleased
 
+### Added
+
+- **`result.attempt` on every engine turn:** how the scene's character judged it, with the same fields as a `Persuadable`'s `attempt()` result (`verdict`, `score`, `maxScore`, `confidence`, `tells`, `triggered`, `reaction`, `patienceLeft`, `outOfPatience`) plus the character's `threshold`, or `null` when no character judged the turn. It's a stable part of the API, for labelling replies and showing patience. The web demo uses it.
+
+### Changed
+
+- **`result.debug` is documented as diagnostics** (the ranked actions, Jev's raw answers, and who answered) that may change in any version. Use `result.attempt` for anything a game builds on.
+
+- **Honeytongue needs Node 22.13 or later** (`engines` was `>=22`). From 22.13, Node's `require()` loads ES modules without a flag or a warning, so CommonJS projects can `require("honeytongue")` as well as `import` it. The package check tests both, on Node 22.13.0 and 24.
+
 ### Repository
+
+- **The proxy is tested on Deno and Bun** as well as Node and Cloudflare Workers: CI serves it with each runtime's own server and sends requests through it (`scripts/runtime-smoke.js`, on the mock). The docs now name the platforms it's tested on, and say it should run on other hosts with the standard `Request` and `Response`, such as Vercel, which isn't tested yet.
+- CI tests the oldest supported Node, 22.13.0, exactly.
+- **Spoken input, measured:** lines as speech recognition writes them got the same verdicts as typed ones (20 of 20, scores within 0.25), while long winning lines lost 0.03 to 0.59 when spoken or misheard, and two of eight fell just short. The docs say so, and suggest cleaning up transcripts first (`docs/live-results.md`, 52 live calls).
+- **The showcase keeps five lines:** no sincere line convinced one character reliably without knowing its scene's secrets (the best convinced Cobb 10 of 10 times, but sat on Nib's threshold). The grid now says why its sincere lines win no one over, and that arguments win once they speak to what a character cares about (`docs/live-results.md`, 127 live calls).
+
+- Issues and feedback are welcome, with a bug-report template; pull requests aren't being accepted for now (README).
 
 - **The key for live runs moves to `.env.live`**, a git-ignored file at the repository root that npm never packs. Only commands that call live Jev load it: the live scripts load it themselves, and `npm run play`, `example`, `proxy`, and `playground` use `node --env-file-if-exists=.env.live`. Everything else runs without the key. Package users are unaffected: the library still reads `TYPESAFE_API_KEY` from its environment.
 - `node scripts/headroom.js` measures how many tokens the largest request the demo Worker accepts can cost, against a normal turn. At worst, with Japanese text in every field, it's about 5 times a normal turn (`docs/demo-proxy.md`).

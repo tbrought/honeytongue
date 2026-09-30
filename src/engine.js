@@ -201,7 +201,7 @@ function reply(lines, debug) {
 }
 
 export class Game {
-  #judged = null;  // this turn's persuasion outcome, for debug: { verdict, triggered }
+  #attempt = null; // this turn's judgement by the scene's character: result.attempt (an attempt result plus threshold)
   #turnNpc = null; // the scene's character when the turn began (a success may move the player on)
   #queue = Promise.resolve(); // turns, one at a time
 
@@ -297,18 +297,26 @@ export class Game {
 
   // ---- Turn handling -------------------------------------------------------
 
-  /** Play one turn. Turns run one at a time, in order, even if you call this again before the last one finishes. */
+  /**
+   * Play one turn. Turns run one at a time, in order, even if you call this again before the last one finishes.
+   * The result's `attempt` is how the scene's character judged it (the same fields as a Persuadable's attempt(), plus
+   * `threshold`), or null when no character judged this turn. It's a stable part of the API; `debug` isn't.
+   */
   turn(raw) {
-    const run = this.#queue.then(() => this.#turn(raw));
+    const run = this.#queue.then(async () => {
+      const { text, parts, debug } = await this.#turn(raw);
+      const attempt = this.#attempt;
+      return debug === undefined ? { text, parts, attempt } : { text, parts, attempt, debug };
+    });
     this.#queue = run.catch(() => {});
     return run;
   }
 
   async #turn(raw) {
+    this.#attempt = null;
     if (this.over) return reply([system("The story has ended. Start a new game to play again.")]);
     const input = cleanInput(raw, MAX_INPUT);
     if (!input) return reply([]);
-    this.#judged = null;
     this.#turnNpc = this.npc;
 
     const fast = this.fastPath(input);
@@ -356,9 +364,9 @@ export class Game {
   #withOutcome(debug) {
     const npc = this.#turnNpc;
     return Object.assign(debug, {
-      verdict: this.#judged?.verdict ?? null,
+      verdict: this.#attempt?.verdict ?? null,
       threshold: npc?.character.threshold ?? null,
-      triggered: this.#judged?.triggered ?? [],
+      triggered: this.#attempt?.triggered ?? [],
       patienceLeft: npc ? npc.patienceLeft : null,
     });
   }
@@ -416,10 +424,13 @@ export class Game {
   /** NPCs react to threats and insults whatever the player was doing, not just when persuading. */
   react(lines, answers, cost = this.npc?.character.offendedCost ?? 0) {
     if (this.over || !this.isHostile(answers)) return;
-    this.#judged = { verdict: "offended", triggered: readPersuasion(this.npc.character, answers).triggered };
+    const npc = this.npc; // before the out-of-patience effect can move the player on
+    const judged = readPersuasion(npc.character, answers);
     // If this uses up the last of their patience, the out-of-patience text says it all.
     if (!this.#exhausts(cost)) lines.push(this.hostileReaction());
     this.drain(cost, lines);
+    // Judged by the tells alone, during some other action: the same fields as an attempt, after the penalty.
+    this.#attempt = { ...judged, patienceLeft: npc.patienceLeft, outOfPatience: npc.outOfPatience, threshold: npc.character.threshold };
   }
 
   /** Whether losing this much patience now would use up the last of it. */
@@ -444,7 +455,7 @@ export class Game {
     }
 
     const result = this.npc.record(input, answers);
-    this.#judged = { verdict: result.verdict, triggered: result.triggered };
+    this.#attempt = { ...result, threshold: this.npc.character.threshold };
     if (result.verdict === "convinced") {
       lines.push(npc.persuasion.success.text);
       this.apply(npc.persuasion.success, lines);

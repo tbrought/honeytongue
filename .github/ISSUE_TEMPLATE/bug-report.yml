@@ -1,0 +1,44 @@
+name: Report a bug
+description: Something in Honeytongue doesn't work as documented.
+title: "Bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting it. Issues are public: leave out API keys, and anything else private.
+        For a security problem, use private reporting instead (the Security tab's "Report a vulnerability").
+  - type: input
+    id: version
+    attributes:
+      label: Honeytongue version
+      description: "`npm ls honeytongue`, or the version in the CDN link you load."
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: node
+    attributes:
+      label: Node version, or browser and platform
+      description: "`node --version`, or the browser, if it happens in a page (such as Chrome 140 on Windows 11)."
+      placeholder: v22.13.0
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The smallest code or steps that show it. A character definition and the line you tried helps most.
+      placeholder: |
+        1. Define a character with ...
+        2. Call attempt("...")
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected, and what happened instead
+      description: Include any error message in full.
+    validations:
+      required: true

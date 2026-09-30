@@ -284,6 +284,7 @@ export interface Story {
   recentTurnLength?: number;
 }
 
+/** How a turn was judged, for debugging. Not a stable part of the API: its fields may change in any version. */
 export interface TurnDebug {
   /** Who answered this turn, when the client says: Jev, or the offline mock (directly or behind a proxy). */
   source?: "jev" | "mock";
@@ -335,6 +336,13 @@ export interface TurnResult {
    * text.split("\n\n"). A stable part of the API; see "Story markup" in the docs.
    */
   parts: Part[][];
+  /**
+   * How the scene's character judged this turn: the same fields as a Persuadable's attempt() result, plus the
+   * character's `threshold`. null when no character judged it (an ordinary action, a look around, a clarifying
+   * question). A stable part of the API: use it for verdict labels, scores, and patience.
+   */
+  attempt: (AttemptResult & { threshold: number }) | null;
+  /** Diagnostics: the ranked actions, Jev's raw answers, and who answered. May change in any version; use `attempt` instead. */
   debug?: TurnDebug | null;
 }
 

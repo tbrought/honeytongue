@@ -100,6 +100,13 @@ async function engineApi(client: JevClient) {
   const game = new Game(story, client);
   const turn = await game.turn("look");
   exact<typeof turn, TurnResult>(true);
+  // The stable judgement: attempt()'s result plus the threshold, or null.
+  expectType<(AttemptResult & { threshold: number }) | null>(turn.attempt);
+  if (turn.attempt) {
+    expectType<Verdict>(turn.attempt.verdict);
+    expectType<number>(turn.attempt.threshold);
+    expectType<number>(turn.attempt.patienceLeft);
+  }
   const debug: TurnDebug | null | undefined = turn.debug;
   if (debug) {
     expectType<[string, number][]>(debug.ranked);
