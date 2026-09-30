@@ -37,6 +37,10 @@ jobs:
       # The scripts aren't covered by unit tests; make sure they still run end to end.
       - run: npm run example
       - run: npm run eval -- --mock
+      # The package check (require() from CommonJS among it) on the oldest supported Node; the checks job runs it on 24.
+      - name: Pack, install, and smoke-test the package on Node 22
+        if: matrix.node == 22
+        run: npm run check:package
 
   checks:
     name: Oldest TypeScript, demo copies, and package on ${{ matrix.os }}

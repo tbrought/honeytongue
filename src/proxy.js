@@ -1,6 +1,6 @@
 // A tiny server-side handler that keeps your TypeSafe key off players' machines.
 // Standard Request -> Response, so it runs on Cloudflare Workers, Vercel,
-// Deno, Bun, and Node 22+ (see examples/node-proxy.js).
+// Deno, Bun, and Node 22.12+ (see examples/node-proxy.js).
 //
 //   export default { fetch: createProxyHandler({ allowedOrigins: ["https://mygame.com"], allowedCharacters: [harry] }) };
 //

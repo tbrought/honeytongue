@@ -2,7 +2,13 @@
 
 ## Unreleased
 
+### Changed
+
+- **Honeytongue needs Node 22.12 or later** (`engines` was `>=22`). From 22.12, Node's `require()` loads ES modules without a flag, so CommonJS projects can `require("honeytongue")` as well as `import` it. The package check tests both, on Node 22 and 24.
+
 ### Repository
+
+- Issues and feedback are welcome, with a bug-report template; pull requests aren't being accepted for now (README).
 
 - **The key for live runs moves to `.env.live`**, a git-ignored file at the repository root that npm never packs. Only commands that call live Jev load it: the live scripts load it themselves, and `npm run play`, `example`, `proxy`, and `playground` use `node --env-file-if-exists=.env.live`. Everything else runs without the key. Package users are unaffected: the library still reads `TYPESAFE_API_KEY` from its environment.
 - `node scripts/headroom.js` measures how many tokens the largest request the demo Worker accepts can cost, against a normal turn. At worst, with Japanese text in every field, it's about 5 times a normal turn (`docs/demo-proxy.md`).

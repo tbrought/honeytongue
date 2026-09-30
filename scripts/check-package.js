@@ -4,8 +4,9 @@
 //
 // 1. `npm pack`: the version matches src/version.js, and only the files meant to ship are in the tarball.
 // 2. Installs the tarball into a scratch project outside the repository, then imports all three entry points, makes
-//    one attempt on the mock and one request through a guarded proxy, typechecks a TypeScript file against the
-//    installed types, and plays the CLI with input piped in. No API key is passed to anything.
+//    one attempt on the mock and one request through a guarded proxy, require()s them from CommonJS too, typechecks
+//    a TypeScript file against the installed types, and plays the CLI with input piped in. No API key is passed to
+//    anything. CI runs it on Node 22 and 24, so require() is checked on the oldest supported version.
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -93,6 +94,27 @@ console.log("smoke ok");
 `);
   const smoke = run("node smoke.js", project);
   report(smoke.status === 0 && smoke.stdout.includes("smoke ok"), "the entry points import and work (mock attempt, guarded proxy)", (smoke.stderr || smoke.stdout).trim().slice(-800));
+
+  // CommonJS: require() loads the same ES modules (Node 22.12 and later, the oldest version package.json allows).
+  writeFileSync(join(project, "smoke.cjs"), `
+const assert = require("node:assert/strict");
+const { Persuadable, createMockClient, VERSION } = require("honeytongue");
+const { judgePersuasion } = require("honeytongue/persuasion");
+const { createProxyHandler, toNodeListener } = require("honeytongue/proxy");
+assert.equal(VERSION, ${JSON.stringify(pkg.version)});
+assert.equal(typeof createProxyHandler, "function");
+assert.equal(typeof toNodeListener, "function");
+const harry = { name: "Harry", persona: "An honest gatekeeper who hates flattery.", goal: "Open the gate" };
+(async () => {
+  const result = await new Persuadable(harry, { client: createMockClient() }).attempt("Please open the gate.");
+  assert.ok(["convinced", "unconvinced", "offended"].includes(result.verdict));
+  assert.ok((await judgePersuasion(createMockClient(), harry, "hello")).verdict);
+  console.log("require ok");
+})().catch((err) => { console.error(err); process.exit(1); });
+`);
+  const required = run("node smoke.cjs", project);
+  report(required.status === 0 && required.stdout.includes("require ok"), `require() loads the entry points from CommonJS (Node ${process.version})`,
+    (required.stderr || required.stdout).trim().slice(-800));
 
   writeFileSync(join(project, "smoke.ts"), `
 import { Persuadable, createMockClient, validateStory, Game, type AttemptResult } from "honeytongue";

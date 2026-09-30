@@ -6,7 +6,7 @@
 [![npm (alpha)](https://img.shields.io/npm/v/honeytongue/alpha?label=npm%20alpha)](https://www.npmjs.com/package/honeytongue)
 [![License: MIT](https://img.shields.io/npm/l/honeytongue)](LICENSE)
 
-**Characters your players can actually argue with.** Give a character a name, a persona, and a goal, pass in whatever the player typed, and Honeytongue tells you whether they were convinced, judged by *that character's* values. The same line can win over a greedy merchant and offend an honest guard. It's for any game where players type or speak to characters, and it's powered by [Jev](https://docs.typesafe.ai), TypeSafe's typed decision model. It works in any JavaScript game: browser games (there's a [Phaser example](https://honeytongue.dev/#visual)), Twine, Node, or a Discord bot. Spoken input works too, once your game turns speech into text. Engines outside JavaScript (Unity, Godot, Unreal, Ren'Py) aren't supported yet; a plain HTTP endpoint for them is on the roadmap. It has no dependencies and ships TypeScript types (TypeScript 5.9 or later).
+**Characters your players can actually argue with.** Give a character a name, a persona, and a goal, pass in whatever the player typed, and Honeytongue tells you whether they were convinced, judged by *that character's* values. The same line can win over a greedy merchant and offend an honest guard. It's for any game where players type or speak to characters, and it's powered by [Jev](https://docs.typesafe.ai), TypeSafe's typed decision model. It works in any JavaScript game: browser games (there's a [Phaser example](https://honeytongue.dev/#visual)), Twine, Node, or a Discord bot. Spoken input works too, once your game turns speech into text. Engines outside JavaScript (Unity, Godot, Unreal, Ren'Py) aren't supported yet; a plain HTTP endpoint for them is on the roadmap. It has no dependencies, ships TypeScript types (TypeScript 5.9 or later), and works with `import` or `require()`.
 
 **You only need three fields and one method. Everything else is optional.**
 
@@ -14,7 +14,7 @@
 
 ## Quick start
 
-You need Node 22 or later. In an empty folder:
+You need Node 22.12 or later. In an empty folder:
 
 ```bash
 npm install honeytongue
