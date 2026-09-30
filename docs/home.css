@@ -110,3 +110,5 @@ footer::before {
 /* The example transcript's timing (--i) and meter readings, as classes rather than style attributes. */
 .t0 { --i: 0; } .t1 { --i: 1; } .t2 { --i: 2; } .t3 { --i: 3; }
 .meter.s0 { --score: 0%; } .meter.s40 { --score: 40%; } .meter.s97 { --score: 97%; }
+/* Harry's threshold, 2.4 of 4 (test/pages.test.js keeps it equal to his preset). */
+.transcript .meter { --mark: 60%; }

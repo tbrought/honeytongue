@@ -21,25 +21,50 @@
           }
         ],
         "patience": 10,
-        "hostileReaction": "@[Cobb] stiffens on his stool. \"Forty winters I've kept this light. I'll not be spoken to like that in my own tower.\"",
+        "hostileReaction": [
+          "@[Cobb] stiffens on his stool. \"Forty winters I've kept this light. I'll not be spoken to like that in my own tower.\"",
+          "@[Cobb]'s kindly face closes like a door. \"I think you'd best mind your manners.\"",
+          "\"There's no call for that,\" @[Cobb] says, more hurt than angry."
+        ],
         "outOfPatience": {
           "text": "@[Cobb] sets the #[lamp key] down. \"I've heard enough. Go and wait at the harbour with the other families.\" He walks you down the stairs and bars the tower door behind you.",
           "goto": "stayed_dark"
         },
         "persuasion": {
           "goal": "Light the lamp tonight, despite the lord's order to keep the coast dark",
+          "difficulty": "normal",
           "reactions": [
             {
               "min": 0,
-              "text": "@[Cobb] shakes his head slowly. \"Lord's orders. The coast stays dark till the raiders pass.\""
+              "text": [
+                "@[Cobb] shakes his head slowly. \"Lord's orders. The coast stays dark till the raiders pass.\"",
+                "@[Cobb] turns the #[lamp key] over in his fingers and doesn't answer.",
+                "\"No,\" @[Cobb] says gently. \"Not tonight, and not for that.\""
+              ]
             },
             {
-              "min": 1.5,
-              "text": "@[Cobb] pulls up a second stool and pours you something hot. \"Go on, then. I'm listening.\""
+              "min": 1,
+              "text": [
+                "@[Cobb] pulls up a second stool and pours you something hot. \"Go on, then. I'm listening.\"",
+                "@[Cobb] nods slowly. \"I'm sorry for your trouble. Truly. But orders are orders.\"",
+                "\"Sit a while,\" @[Cobb] says, pushing the kettle your way. \"The answer's still no.\""
+              ]
             },
             {
-              "min": 2.5,
-              "text": "@[Cobb] looks out at the black water, turning the #[lamp key] over in his fingers. \"And if I'm wrong, the whole town pays for it.\""
+              "min": 1.8,
+              "text": [
+                "@[Cobb] rubs his beard. \"You're honest, I'll give you that. But honest doesn't keep raiders off the town.\"",
+                "@[Cobb] listens all the way through, then shakes his head. \"A good reason, and a hard one. Not hard enough.\"",
+                "\"I hear you,\" @[Cobb] says. \"I've heard a lot of sad stories in forty years.\""
+              ]
+            },
+            {
+              "min": 2.6,
+              "text": [
+                "@[Cobb] looks out at the black water, turning the #[lamp key] over in his fingers. \"Nearly. But if I'm wrong, the whole town pays for it.\"",
+                "@[Cobb] glances at the #[spyglass], then at you. \"Close. Show me the raiders won't come for the town, and we'll talk.\"",
+                "\"Nearly,\" @[Cobb] murmurs, resting a hand on the lamp's brass cage. \"Tell me who'd see this light, and who wouldn't.\""
+              ]
             }
           ],
           "success": {
@@ -47,7 +72,11 @@
             "goto": "light_on"
           }
         },
-        "repeatReaction": "@[Cobb] smiles tiredly. \"You told me that one already. I'm old, not forgetful.\""
+        "repeatReaction": [
+          "@[Cobb] smiles tiredly. \"You told me that one already. I'm old, not forgetful.\"",
+          "\"Aye, you said,\" @[Cobb] says. \"Tell me something new.\"",
+          "@[Cobb] pats your hand. \"Same tale twice. Tell me another.\""
+        ]
       },
       "actions": {
         "persuade_cobb": {
@@ -59,37 +88,51 @@
           "label": "Talk with @[Cobb] about himself",
           "description": "Make small talk with the keeper, or ask about himself, his years here, or his past, without asking him to light the lamp",
           "text": "@[Cobb] keeps his eyes on the window. \"Forty years I've kept this light. I only ever let it burn low the once.\" He taps a line in the #[logbook], ringed in black ink. \"The Wren. She never came home.\"",
-          "setFlags": ["lost_a_boat"]
+          "setFlags": [
+            "lost_a_boat"
+          ]
         },
         "read_logbook": {
           "label": "Read the #[logbook]",
           "description": "Read, examine, or study the keeper's logbook",
           "text": "Forty years of neat entries: weather, oil, boats sighted. One line from long ago is ringed in black: \"Lamp burned low. The Wren lost on the rocks. My fault.\"",
-          "setFlags": ["lost_a_boat"]
+          "setFlags": [
+            "lost_a_boat"
+          ]
         },
         "use_spyglass": {
           "label": "Look through the #[spyglass]",
           "description": "Use the spyglass to look out to sea, at the raiders or the boat",
           "text": "Through the rain, you find the raiders' sails, anchored behind the island with their lanterns out. Nobody is putting to sea in this. Nearer in, your sister's boat is being driven toward the rocks.",
-          "setFlags": ["raiders_sheltering"]
+          "setFlags": [
+            "raiders_sheltering"
+          ]
         },
         "examine_lamp": {
           "label": "Examine the lamp",
           "description": "Look at, examine, or inspect the great lamp, its brass cage, or its shutter",
           "text": "The lamp sits in a brass cage with a heavy shutter on one side. Turned the right way, the shutter would send the beam straight out to sea, and nowhere near the island.",
-          "setFlags": ["knows_about_shutter"]
+          "setFlags": [
+            "knows_about_shutter"
+          ]
         },
         "search_stores": {
           "label": "Search the #[stores]",
           "description": "Search the storeroom, supplies, casks, or cupboards on the stairs below",
           "text": "On the landing below, you find a cask of #[lamp oil] and a #[tinderbox]. @[Cobb] is too busy watching the sea to notice you take them.",
-          "giveItems": ["lamp oil", "tinderbox"]
+          "giveItems": [
+            "lamp oil",
+            "tinderbox"
+          ]
         },
         "light_beacon": {
           "label": "Light a beacon on the headland",
           "description": "Go out to the headland and light a fire or beacon so the boat can see the shore",
           "requires": {
-            "items": ["lamp oil", "tinderbox"]
+            "items": [
+              "lamp oil",
+              "tinderbox"
+            ]
           },
           "blockedText": "In this rain, you'd never get a fire going with what you're carrying.",
           "text": "You slip down the stairs and out onto the headland, heap driftwood in the lee of a rock, and soak it in oil. The fire catches with a roar.",

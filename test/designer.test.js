@@ -35,10 +35,16 @@ test("a preset's note is shown by the playground, and isn't part of the characte
   assert.throws(() => readPresets({ x: { note: "hi" } }), /Preset "x" is invalid/);
 });
 
+// The same character once defined. "normal" is the default difficulty, so saying it or not is the same.
+const settled = (character) => {
+  const { difficulty, ...rest } = defineCharacter(character);
+  return difficulty === undefined || difficulty === "normal" ? rest : { difficulty, ...rest };
+};
+
 test("generated code round-trips through defineCharacter()", () => {
   for (const { id, character } of presets) {
     const made = runSnippet(characterCode(character), character);
-    assert.deepEqual(made.character, defineCharacter(character), `preset "${id}"`);
+    assert.deepEqual(settled(made.character), settled(character), `preset "${id}"`);
     assert.equal(made.client, "client");
   }
   const literal = new Function(`return ${characterLiteral(simple)}`)();
@@ -60,7 +66,7 @@ test("generated code only includes settings that differ from the defaults", () =
 test("generated code keeps the difficulty word, not a threshold", () => {
   assert.deepEqual(minimalCharacter({ ...simple, difficulty: " Very-Hard " }).difficulty, "very hard");
   assert.equal(minimalCharacter({ ...simple, difficulty: "hard" }).threshold, undefined);
-  // A threshold that matches a word becomes the word; Harry's 3.2 of 4 is "normal", the default.
+  // A threshold that matches a word becomes the word; 3.2 of 4 is "normal", the default.
   assert.equal(minimalCharacter({ ...simple, threshold: 3.6 }).difficulty, "hard");
   assert.equal(minimalCharacter({ ...simple, threshold: 3.6 }).threshold, undefined);
   assert.deepEqual(Object.keys(minimalCharacter(preset("harry"))).includes("threshold"), false);
@@ -93,7 +99,7 @@ test("story JSON is a valid npc block, with unmistakable placeholders", () => {
     // Everything the playground knows carries over unchanged.
     const { success, ...persuasion } = npc.persuasion;
     const back = { name: npc.name, persona: npc.persona, patience: npc.patience, secrets: npc.secrets, repeatReaction: npc.repeatReaction, ...persuasion };
-    assert.deepEqual(defineCharacter(back), defineCharacter(character), `preset "${id}"`);
+    assert.deepEqual(settled(back), settled(character), `preset "${id}"`);
   }
 });
 

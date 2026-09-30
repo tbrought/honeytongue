@@ -13,11 +13,11 @@
 import { createProxyHandler } from "../src/proxy.js";
 import gatehouse from "../stories/gatehouse.json" with { type: "json" };
 import goblinCamp from "../stories/goblin-camp.json" with { type: "json" };
-import tidyProfit from "../stories/tidy-profit.json" with { type: "json" };
 import lighthouse from "../stories/lighthouse.json" with { type: "json" };
+import tidyProfit from "../stories/tidy-profit.json" with { type: "json" };
 import { troll } from "./phaser/character.js";
 
-export const DEMO_STORIES = [gatehouse, goblinCamp, tidyProfit, lighthouse];
+export const DEMO_STORIES = [gatehouse, goblinCamp, lighthouse, tidyProfit];
 // Characters judged on their own, outside a story: the Phaser example's troll (honeytongue.dev/phaser/).
 export const DEMO_CHARACTERS = [troll];
 

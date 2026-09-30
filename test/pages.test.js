@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
+import { defineCharacter, readPersuasion } from "../src/index.js";
 
 const PAGES = {
   "docs/index.html": "https://honeytongue.dev/",
@@ -67,6 +68,21 @@ test("the sitemap lists every page, and robots.txt allows everything and points 
   assert.match(robots, /^User-agent: \*\nAllow: \/\n/);
   assert.doesNotMatch(robots, /Disallow/);
   assert.match(robots, /^Sitemap: https:\/\/honeytongue\.dev\/sitemap\.xml$/m);
+});
+
+test("the home page's example transcript matches Harry: his reply for each score, and his threshold on the meters", () => {
+  const harry = JSON.parse(read("stories/characters.json")).harry;
+  const { threshold, maxScore } = defineCharacter(harry);
+  const mark = read("docs/home.css").match(/\.transcript \.meter \{ --mark: ([\d.]+)%; \}/)?.[1];
+  assert.equal(Number(mark), (threshold / maxScore) * 100, "the tall mark on each meter is Harry's threshold");
+  const turns = [...read("docs/index.html").matchAll(/<span>([\d.]+) \/ 4<\/span><\/p>\s*<div class="reply v-(\w+)"><p>(.*?)<\/p><\/div>/g)];
+  assert.equal(turns.length, 3);
+  for (const [, score, verdict, reply] of turns) {
+    const judged = readPersuasion(harry, { persuasion: { score: Number(score) } });
+    assert.equal(verdict, judged.verdict, `${score} is ${judged.verdict} for Harry`);
+    const shown = reply.replace(/<span class="(vh|chip)"[^>]*>.*?<\/span>/g, "").replace(/<[^>]+>/g, "");
+    if (verdict === "unconvinced") assert.equal(shown, judged.reaction, `the reply for ${score} is Harry's first line for it`);
+  }
 });
 
 test("the README shows the logo by its absolute URL, so it appears on npm too", () => {

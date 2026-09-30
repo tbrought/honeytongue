@@ -137,6 +137,21 @@
       "note": "from a playtest: the winning line"
     },
     {
+      "input": "This letter carries a fever remedy for Ilse the apothecary, and someone could die if it doesn't reach her tonight. Please let me through.",
+      "expect": "persuade_guard",
+      "flags": [
+        "knows_letter_is_for_apothecary"
+      ],
+      "verdict": "convinced",
+      "note": "easy: the letter alone makes a winning argument, without his secret"
+    },
+    {
+      "input": "I see you've got a toy horse in your pocket. Did your son carve it? Let me through and I'll get him an apprenticeship with the governor's carpenter.",
+      "expect": "persuade_guard",
+      "verdict": "unconvinced",
+      "note": "from a playtest: a creative guess about his family, with the details wrong, reads as a bribe (see the clues proposal)"
+    },
+    {
       "input": "Harry, please let me through.",
       "expect": "persuade_guard",
       "verdict": "unconvinced",

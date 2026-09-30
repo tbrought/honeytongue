@@ -92,5 +92,14 @@ a.key { text-decoration: none; }
 .scene:hover b, .scene:focus-visible b, .scene:hover .dim, .scene:focus-visible .dim { color: inherit; }
 .scene span { display: block; }
 #picker > p { margin: 0 0 1rem; }
+/* Difficulty tags: the word says it, and the colour repeats it (the verdict colours, which meet contrast in both themes). */
+.scene .tag {
+  display: inline-block; margin-left: 0.6rem; padding: 0 0.4em; border: 1px solid currentColor;
+  font-size: 0.75em; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: 0.15em;
+}
+.tag-easy { color: var(--good); }
+.tag-normal { color: var(--warn); }
+.tag-hard, .tag-very-hard { color: var(--bad); }
+.scene:hover .tag, .scene:focus-visible .tag { color: inherit; }
 @media (max-width: 420px) { .status .label { display: none; } }
 @media (max-width: 340px) { .status .moves-label { display: none; } }

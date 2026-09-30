@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { VERDICT_LABELS, spokenLabel, typingSpeed, endingSummary, scoreLine } from "../docs/play/present.js";
+import { VERDICT_LABELS, spokenLabel, typingSpeed, endingSummary, scoreLine, difficultyTag } from "../docs/play/present.js";
 
 test("every verdict has a label, the repeated one included", () => {
   assert.deepEqual(VERDICT_LABELS, { convinced: "CONVINCED", unconvinced: "NOT YET", offended: "OFFENDED", repeated: "REPEATED" });
@@ -30,4 +30,11 @@ test("the ending summary lists the arguments that landed and the closest misses"
   assert.deepEqual(summary.landed.map((x) => x.input), ["the letter is her remedy"]);
   assert.deepEqual(summary.closest.map((x) => x.input), ["i've got her medicine", "think of your girl"]);
   assert.equal(scoreLine(summary.landed[0]), "3.82 of 4, needed 3.2");
+});
+
+test("a scene's difficulty tag says the word, with a class for its colour", () => {
+  assert.deepEqual(difficultyTag("easy"), { label: "Easy", className: "tag tag-easy" });
+  assert.deepEqual(difficultyTag("very hard"), { label: "Very hard", className: "tag tag-very-hard" });
+  assert.equal(difficultyTag(undefined), null);
+  assert.equal(difficultyTag("toString"), null);
 });

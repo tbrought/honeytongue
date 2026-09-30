@@ -8,7 +8,7 @@ const suite = JSON.parse(read("evals/showcase.json"));
 const characters = JSON.parse(read("stories/characters.json"));
 
 test("the showcase tries every tactic on every preset character", () => {
-  assert.deepEqual(suite.lines.map((l) => l.tactic), ["Threat", "Insult", "Plea", "Flattery", "Honest offer"]);
+  assert.deepEqual(suite.lines.map((l) => l.tactic), ["Threat", "Insult", "Plea", "Flattery", "Honest offer", "Plain truth"]);
   for (const line of suite.lines) assert.deepEqual(Object.keys(line.expect).sort(), Object.keys(characters).sort(), line.tactic);
 });
 
@@ -38,4 +38,10 @@ test("the docs site's grid shows the showcase suite's expected verdicts", () => 
     assert.deepEqual(labels.map((m) => [m[2], m[3]]), verdicts.map((v) => [v, v]), `${line.tactic}: labels match`);
   }
   assert.match(table, /10 live runs/, "the scores are labelled as live results");
+  // The caption says each character's difficulty and the score it needs, so it's clear why a line wins over one.
+  const caption = table.match(/<caption>(.*?)<\/caption>/)?.[1] ?? "";
+  for (const id of columns) {
+    const { name, difficulty, threshold } = defineCharacter(characters[id]);
+    assert.ok(caption.includes(`${name.split(" ")[0]} ${difficulty} (${threshold})`), `the caption gives ${id}'s difficulty and threshold`);
+  }
 });

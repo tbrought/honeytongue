@@ -21,7 +21,11 @@
           }
         ],
         "patience": 3,
-        "hostileReaction": "@[Nib]'s ears droop, then go flat. \"That's what the big ones say.\" He turns his back on you and stirs the stew very hard.",
+        "hostileReaction": [
+          "@[Nib]'s ears droop, then go flat. \"That's what the big ones say.\" He turns his back on you and stirs the stew very hard.",
+          "@[Nib] flinches as if you'd thrown something. \"I'm a guard, not a worm.\" His lip wobbles, and he won't look at you now.",
+          "\"Everyone's always calling Nib names,\" he mutters, and drags his stool further from the #[cage]."
+        ],
         "outOfPatience": {
           "text": "\"I'm telling!\" @[Nib] snatches up a stick and bangs the camp gong. Far off in the trees, something much bigger than @[Nib] roars back.",
           "goto": "chief_returns"
@@ -29,15 +33,41 @@
         "persuasion": {
           "goal": "Unlock the cage and let the player go before the war chief comes back",
           "difficulty": "easy",
-          "offendedBy": ["insults"],
+          "offendedBy": [
+            "insults"
+          ],
           "reactions": [
             {
               "min": 0,
-              "text": "@[Nib] jabs his spear at the #[bars] without much conviction. \"No talking to the prisoner!\""
+              "text": [
+                "@[Nib] jabs his spear at the #[bars] without much conviction. \"No talking to the prisoner!\"",
+                "@[Nib] covers his ears. \"Not listening! Prisoners always say stuff.\"",
+                "\"The big ones said you'd try tricks,\" @[Nib] says, and pokes the fire importantly."
+              ]
             },
             {
-              "min": 1.5,
-              "text": "@[Nib] chews his lip and glances toward the war chief's tent. \"I'd get in so much trouble...\""
+              "min": 1,
+              "text": [
+                "@[Nib] chews his lip and glances toward the war chief's tent. \"I'd get in so much trouble...\"",
+                "\"If I let you go, the war chief puts me in the cage instead,\" @[Nib] whispers.",
+                "@[Nib] shuffles his feet and stares at the fire. \"Can't. Won't. Probably shouldn't.\""
+              ]
+            },
+            {
+              "min": 1.6,
+              "text": [
+                "@[Nib] stops stirring and looks at you properly for the first time. \"...Really?\" Then he shakes his head. \"No. No, no.\"",
+                "\"That's a good one,\" @[Nib] admits. \"The big ones never say good ones.\" He doesn't move.",
+                "@[Nib] hugs his spear, thinking so hard his ears wobble. \"Still no. Probably.\""
+              ]
+            },
+            {
+              "min": 2,
+              "text": [
+                "@[Nib]'s ears twitch. \"Nearly. Sounds nice for you. What happens to Nib, after?\"",
+                "@[Nib] glances at his #[bedroll], then away again, quickly. \"Close. But what's in it for me?\"",
+                "\"Nearly,\" @[Nib] whispers, stirring the #[stew pot]. \"If I went, where would I even go?\""
+              ]
             }
           ],
           "success": {
@@ -45,7 +75,11 @@
             "goto": "talked_out"
           }
         },
-        "repeatReaction": "\"You said that one,\" @[Nib] mutters. \"Say a different thing.\""
+        "repeatReaction": [
+          "\"You said that one,\" @[Nib] mutters. \"Say a different thing.\"",
+          "@[Nib] counts on his claws. \"That's the same one again.\"",
+          "\"Already heard that one,\" @[Nib] says, a bit proud he noticed."
+        ]
       },
       "actions": {
         "persuade_nib": {
@@ -57,25 +91,33 @@
           "label": "Chat with @[Nib]",
           "description": "Make small talk with the goblin, or ask about himself, his stew, or cooking, without asking to be let out",
           "text": "@[Nib] brightens. \"Mushroom and turnip. The big ones call it slop.\" He lowers his voice. \"In a town kitchen they'd call it a stew. And they'd call me a cook.\"",
-          "setFlags": ["wants_to_be_a_cook"]
+          "setFlags": [
+            "wants_to_be_a_cook"
+          ]
         },
         "examine_bedroll": {
           "label": "Look at @[Nib]'s #[bedroll]",
           "description": "Look at, examine, or peer at the goblin's bedroll or belongings by the fire",
           "text": "A battered book pokes out from under the blanket: Hearty Suppers for Town and Tavern. Its pages are spattered with gravy. Inside the cover, someone has written NIB'S, then crossed it out in a panic.",
-          "setFlags": ["wants_to_be_a_cook"]
+          "setFlags": [
+            "wants_to_be_a_cook"
+          ]
         },
         "examine_cage": {
           "label": "Examine the #[cage]",
           "description": "Look at, examine, or test the bars and lashings of the cage",
           "text": "The wicker is newer than the rope that binds it. At the back corner, the lashing on one bar has rotted almost through.",
-          "setFlags": ["found_rotten_lashing"]
+          "setFlags": [
+            "found_rotten_lashing"
+          ]
         },
         "break_bar": {
           "label": "Work the loose bar free",
           "description": "Pull, twist, or work a bar of the cage loose to squeeze out and escape",
           "requires": {
-            "flags": ["found_rotten_lashing"]
+            "flags": [
+              "found_rotten_lashing"
+            ]
           },
           "blockedText": "You rattle the #[bars]. They're lashed tight, and the rattling only makes @[Nib] jump.",
           "text": "You wait until @[Nib] bends over the #[stew pot], then twist the bar. The old rope gives with a soft snap, and you squeeze out and slip away into the trees.",

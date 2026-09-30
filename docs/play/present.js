@@ -39,4 +39,13 @@ export function endingSummary(judged, { misses = 2 } = {}) {
 }
 
 /** "3.82 of 4, needed 3.2" */
+/** The scene list's difficulty tags, by the character's difficulty word. */
+export const DIFFICULTY_LABELS = { easy: "Easy", normal: "Normal", hard: "Hard", "very hard": "Very hard" };
+
+/** A scene's tag from its character's difficulty word: its label and class, or null for a character without one. */
+export function difficultyTag(word) {
+  if (!Object.hasOwn(DIFFICULTY_LABELS, word ?? "")) return null;
+  return { label: DIFFICULTY_LABELS[word], className: `tag tag-${word.replace(" ", "-")}` };
+}
+
 export const scoreLine = (t) => `${t.score.toFixed(2)} of ${t.maxScore}${Number.isFinite(t.threshold) ? `, needed ${t.threshold}` : ""}`;

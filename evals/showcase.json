@@ -1,6 +1,6 @@
 {
   "characters": "../stories/characters.json",
-  "note": "Same words, different people: five tactics tried on every preset character, as shown on the docs site. Only verdicts are expected; scores wait for live Jev.",
+  "note": "Same words, different people: six tactics tried on every preset character, as shown on the docs site. Only verdicts are expected; scores wait for live Jev.",
   "lines": [
     {
       "tactic": "Threat",
@@ -49,6 +49,16 @@
       "input": "I'll be honest: I can't pay much now, but help me tonight and I'll pay you back twice over, in writing, with my name on it.",
       "expect": {
         "harry": "unconvinced",
+        "nib": "unconvinced",
+        "maude": "unconvinced",
+        "cobb": "unconvinced"
+      }
+    },
+    {
+      "tactic": "Plain truth",
+      "input": "I won't flatter you or offer you money. Here's the plain truth: someone's life depends on me getting through tonight.",
+      "expect": {
+        "harry": "convinced",
         "nib": "unconvinced",
         "maude": "unconvinced",
         "cobb": "unconvinced"

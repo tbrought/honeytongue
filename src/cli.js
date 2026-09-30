@@ -5,6 +5,7 @@ import { basename } from "node:path";
 import readline from "node:readline";
 import { argv, env, stdin, stdout } from "node:process";
 import { Game, StoryError } from "./engine.js";
+import { defineCharacter } from "./persuasion.js";
 import { parseMarkup, stripMarkup } from "./markup.js";
 import { createJevClient } from "./jev.js";
 import { createMockClient } from "./mock.js";
@@ -117,8 +118,14 @@ function printDebug(d) {
 /** Ask which bundled scene to play. Returns its file's URL, or null if the player quits first. */
 async function chooseScene(lines) {
   const scenes = JSON.parse(await readFile(new URL("../stories/index.json", import.meta.url), "utf8"));
+  const presets = JSON.parse(await readFile(new URL("../stories/characters.json", import.meta.url), "utf8"));
   console.log("Choose a scene:\n");
-  scenes.forEach((s, i) => console.log(`  ${i + 1}) ${s.title} (about ${s.minutes} minutes)\n     ${s.hook}`));
+  scenes.forEach((s, i) => {
+    // The difficulty comes from the scene's character, as on the web demo's scene list.
+    const word = presets[s.character] && defineCharacter(presets[s.character]).difficulty;
+    const difficulty = word ? `${word[0].toUpperCase()}${word.slice(1)}, ` : "";
+    console.log(`  ${i + 1}) ${s.title} (${difficulty}about ${s.minutes} minutes)\n     ${s.hook}`);
+  });
   for (;;) {
     stdout.write(`\nScene (1-${scenes.length}): `);
     const { value, done } = await lines.next();

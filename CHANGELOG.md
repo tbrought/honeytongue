@@ -10,6 +10,21 @@
   - Plain strings work as before, and nothing sent to Jev changes.
   - The playground edits variants one per line, and `validateStory` checks each one's markup.
 
+### Changed
+
+- **The demo scenes say more.** Every character has three replies per score band, and three each when offended and when repeated, so replies rarely repeat.
+  - Each character also has a near-miss band just below their threshold, starting "Nearly" or "Close", that points towards what would move them without giving the answer.
+  - Nothing sent to Jev changed.
+- **The Gatehouse is now clearly the easiest scene**, since it's everyone's first:
+  - Harry is `"easy"` (a threshold of 2.4, was 3.2) with patience 6 (was 4).
+  - Reading the letter alone now makes a winning argument, without finding his secret.
+  - The preset in `stories/characters.json` changed with him. For the old Harry, set `threshold: 3.2` and `patience: 4`.
+- **The scenes are listed easiest first**, each with its difficulty: The Gatehouse and The Goblin Camp (easy), The Dark Lighthouse (normal), The Tidy Profit (hard).
+  - The web demo's scene list shows it as a coloured tag with the word on it, and the terminal's menu names it.
+  - Both read it from the scene's character, and every demo character now sets `difficulty` (Cobb's `"normal"` is written out).
+  - The demo's scene list also says what to expect: characters judge rather than chat, and every reply is hand-written.
+- **A sixth line in "Same words, different people":** the plain truth wins over Harry alone. The grid's caption now gives each character's difficulty and the score they need.
+
 ### Repository
 
 - **The site is easier for search engines to list:**

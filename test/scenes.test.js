@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
-import { Game, validateStory, createMockClient } from "../src/index.js";
+import { Game, validateStory, createMockClient, defineCharacter } from "../src/index.js";
 import { stripMarkup } from "../src/markup.js";
 
 const load = (file) => JSON.parse(readFileSync(new URL(`../stories/${file}`, import.meta.url), "utf8"));
@@ -59,6 +59,18 @@ test("the scene list covers every bundled story, and each one is valid", () => {
     assert.ok(endings.length >= 2 && endings.length <= 4, `${scene.id}: two to four endings`);
   }
   assert.equal(scenes[0].id, "gatehouse", "The Gatehouse stays the introductory scene");
+});
+
+test("scenes are listed easiest first, The Gatehouse clearly the easiest, and each says its difficulty out loud", () => {
+  const characters = JSON.parse(readFileSync(new URL("../stories/characters.json", import.meta.url), "utf8"));
+  const defined = scenes.map((s) => defineCharacter(characters[s.character]));
+  for (const [i, c] of defined.entries()) {
+    assert.ok(characters[scenes[i].character].difficulty, `${scenes[i].id}: a difficulty word, for the scene list's tag`);
+    if (i) assert.ok(c.threshold >= defined[i - 1].threshold, `${scenes[i].id} is no easier than the scene before it`);
+  }
+  const [gatehouse, ...rest] = defined;
+  assert.ok(rest.every((c) => gatehouse.threshold < c.threshold || (gatehouse.threshold === c.threshold && gatehouse.patience > c.patience)),
+    "The Gatehouse is easier than every other scene: a lower threshold, or the same with more patience");
 });
 
 test("each scene has one main character, with one secret to discover", () => {

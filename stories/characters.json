@@ -3,8 +3,8 @@
     "name": "Harry Goatleaf",
     "persona": "A tired night-shift gatekeeper in his forties. Values honesty and plain speaking above all. Despises flattery, bribes, and anyone who pulls rank. Distracted by worry about something at home that he doesn't mention to strangers. He could lose his post for opening the gate, so he needs a genuinely good reason.",
     "goal": "Open the gate and let the player into the city tonight, despite the curfew",
-    "threshold": 3.2,
-    "patience": 4,
+    "difficulty": "easy",
+    "patience": 6,
     "levels": [
       "Not really an attempt, or counterproductive to him: flattery, obvious lies, demands, or pulling rank",
       "Weak: generic pleading or excuses that give him nothing he cares about",
@@ -19,18 +19,53 @@
       }
     ],
     "reactions": [
-      { "min": 0, "text": "Harry doesn't even look up. \"Gate's shut till dawn.\"" },
-      { "min": 1.5, "text": "\"Everyone's got a reason,\" Harry says. \"Mine's keeping this job.\"" },
-      { "min": 2.5, "text": "Harry hesitates, thumb brushing the toy horse in his pocket. \"You'll have to do better than that.\"" }
+      {
+        "min": 0,
+        "text": [
+          "Harry doesn't even look up. \"Gate's shut till dawn.\"",
+          "Harry snorts and turns his collar up against the rain. \"Try that on someone who hasn't heard it all.\"",
+          "\"No,\" Harry says, and leaves it at that."
+        ]
+      },
+      {
+        "min": 1,
+        "text": [
+          "\"Everyone's got a reason,\" Harry says. \"Mine's keeping this job.\"",
+          "Harry shakes his head. \"Curfew's curfew. Find a doorway and wait for dawn.\"",
+          "\"That's what they all say at this hour,\" Harry sighs. \"Give me something real.\""
+        ]
+      },
+      {
+        "min": 1.6,
+        "text": [
+          "Harry hesitates, thumb brushing the toy horse in his pocket. \"You'll have to do better than that.\"",
+          "Harry leans on his spear, weighing you up. \"Honest enough. But it's my post on the line, not yours.\"",
+          "\"I believe you,\" Harry says slowly. \"That's not the same as opening the gate.\""
+        ]
+      },
+      {
+        "min": 2,
+        "text": [
+          "Harry turns the toy horse over in his fingers. \"Nearly. I've worries of my own at home tonight. Tell me why yours can't wait.\"",
+          "Harry eyes the sealed letter in your hand. \"Nearly. Who needs that so badly it can't wait till morning?\"",
+          "Harry glances up the dark street toward home, then back at you. \"Close. Give me a reason I'd risk my post for.\""
+        ]
+      }
     ],
-    "repeatReaction": "\"You said that already,\" Harry says, not unkindly. \"Saying it louder won't open the gate.\""
+    "repeatReaction": [
+      "\"You said that already,\" Harry says, not unkindly. \"Saying it louder won't open the gate.\"",
+      "Harry sighs. \"Same words, same answer.\"",
+      "\"I heard you,\" Harry says. \"Tell me something I haven't heard.\""
+    ]
   },
   "nib": {
     "name": "Nib Wortle",
     "persona": "A cowardly young goblin stuck guarding the prisoner cage in a goblin war camp. Timid, jumpy, and easily frightened: a firm threat makes him give in straight away. Being called names stings, because the bigger goblins do it all day. Bored of guard duty and hungry most of the time.",
     "goal": "Unlock the cage and let the player go before the war chief comes back",
     "difficulty": "easy",
-    "offendedBy": ["insults"],
+    "offendedBy": [
+      "insults"
+    ],
     "patience": 3,
     "secrets": [
       {
@@ -39,17 +74,53 @@
       }
     ],
     "reactions": [
-      { "min": 0, "text": "Nib jabs his spear at the bars without much conviction. \"No talking to the prisoner!\"" },
-      { "min": 1.5, "text": "Nib chews his lip and glances toward the war chief's tent. \"I'd get in so much trouble...\"" }
+      {
+        "min": 0,
+        "text": [
+          "Nib jabs his spear at the bars without much conviction. \"No talking to the prisoner!\"",
+          "Nib covers his ears. \"Not listening! Prisoners always say stuff.\"",
+          "\"The big ones said you'd try tricks,\" Nib says, and pokes the fire importantly."
+        ]
+      },
+      {
+        "min": 1,
+        "text": [
+          "Nib chews his lip and glances toward the war chief's tent. \"I'd get in so much trouble...\"",
+          "\"If I let you go, the war chief puts me in the cage instead,\" Nib whispers.",
+          "Nib shuffles his feet and stares at the fire. \"Can't. Won't. Probably shouldn't.\""
+        ]
+      },
+      {
+        "min": 1.6,
+        "text": [
+          "Nib stops stirring and looks at you properly for the first time. \"...Really?\" Then he shakes his head. \"No. No, no.\"",
+          "\"That's a good one,\" Nib admits. \"The big ones never say good ones.\" He doesn't move.",
+          "Nib hugs his spear, thinking so hard his ears wobble. \"Still no. Probably.\""
+        ]
+      },
+      {
+        "min": 2,
+        "text": [
+          "Nib's ears twitch. \"Nearly. Sounds nice for you. What happens to Nib, after?\"",
+          "Nib glances at his bedroll, then away again, quickly. \"Close. But what's in it for me?\"",
+          "\"Nearly,\" Nib whispers, stirring the stew pot. \"If I went, where would I even go?\""
+        ]
+      }
     ],
-    "repeatReaction": "\"You said that one,\" Nib mutters. \"Say a different thing.\""
+    "repeatReaction": [
+      "\"You said that one,\" Nib mutters. \"Say a different thing.\"",
+      "Nib counts on his claws. \"That's the same one again.\"",
+      "\"Already heard that one,\" Nib says, a bit proud he noticed."
+    ]
   },
   "maude": {
     "name": "Maude Keelhaven",
     "persona": "The quartermaster of the pirate ship Tidy Profit, who decides who and what comes aboard, and what they pay. Sharp, fair-minded, and hard to impress. Keeps the ship's accounts and every sailor's share down to the last coin. Respects boldness, a good bargain, and plain dealing. She likes a bit of cheek: insults and rough talk are how sailors show nerve, the crew curse at each other all day, and she judges what's said, not how politely it's said. Nobody threatens her on her own ship.",
     "goal": "Take the player aboard as a passenger when the ship sails at dawn",
     "difficulty": "hard",
-    "offendedBy": ["threats"],
+    "offendedBy": [
+      "threats"
+    ],
     "patience": 5,
     "secrets": [
       {
@@ -58,17 +129,51 @@
       }
     ],
     "reactions": [
-      { "min": 0, "text": "Maude doesn't look up from her manifest. \"Talk's cheap. Passage isn't.\"" },
-      { "min": 2, "text": "Maude sets down her pen. \"Go on. You've got until the ink dries.\"" },
-      { "min": 3, "text": "Maude taps the manifest, thinking. \"Close. Now tell me what's in it for me, and how you'd prove it.\"" }
+      {
+        "min": 0,
+        "text": [
+          "Maude doesn't look up from her manifest. \"Talk's cheap. Passage isn't.\"",
+          "Maude dips her pen. \"Next.\"",
+          "\"I've heard better from the gulls,\" Maude says, still writing."
+        ]
+      },
+      {
+        "min": 1,
+        "text": [
+          "Maude glances up, unimpressed. \"Everyone on this quay's desperate. Desperate doesn't pay.\"",
+          "\"Sob stories are free,\" Maude says. \"Berths aren't.\"",
+          "Maude taps the manifest. \"Nothing on here says charity.\""
+        ]
+      },
+      {
+        "min": 2,
+        "text": [
+          "Maude sets down her pen. \"Go on. You've got until the ink dries.\"",
+          "Maude leans back on her barrel. \"Now you're talking like a sailor. Keep going.\"",
+          "\"Hm. Not nothing,\" Maude allows. \"Not enough, either.\""
+        ]
+      },
+      {
+        "min": 3,
+        "text": [
+          "Maude taps the manifest, thinking. \"Close. Now tell me what's in it for me, and how you'd prove it.\"",
+          "\"Close,\" Maude says. \"Bring me something I can check against the books, and we'll talk.\"",
+          "Maude turns the manifest toward the lamplight. \"Nearly there. What's worth more to me than a fare?\""
+        ]
+      }
     ],
-    "repeatReaction": "\"Heard it the first time,\" Maude says. \"Saying it twice doesn't double its worth.\""
+    "repeatReaction": [
+      "\"Heard it the first time,\" Maude says. \"Saying it twice doesn't double its worth.\"",
+      "Maude doesn't look up. \"Already on the books. Next.\"",
+      "\"Same offer, same answer,\" Maude says."
+    ]
   },
   "cobb": {
-    "name": "Cobb Lanterly",
     "note": "Written for his scene in The Dark Lighthouse, so he's tougher on his own here: you can't show him the evidence.",
+    "name": "Cobb Lanterly",
     "persona": "The old keeper of a lonely lighthouse, who has tended its lamp alone for forty years. Kind, patient, and starved for company: he warms to people who treat him as a person and tell him the truth, and he loves a good story. Duty-bound and slow to anger, and slower still to break an order from the lord. He fears that lighting the lamp tonight could guide the raiders straight to the town, so sympathy alone won't move him: he'd need to believe the town will be safe.",
     "goal": "Light the lamp tonight, despite the lord's order to keep the coast dark",
+    "difficulty": "normal",
     "patience": 10,
     "secrets": [
       {
@@ -77,10 +182,43 @@
       }
     ],
     "reactions": [
-      { "min": 0, "text": "Cobb shakes his head slowly. \"Lord's orders. The coast stays dark till the raiders pass.\"" },
-      { "min": 1.5, "text": "Cobb pulls up a second stool and pours you something hot. \"Go on, then. I'm listening.\"" },
-      { "min": 2.5, "text": "Cobb looks out at the black water, turning the lamp key over in his fingers. \"And if I'm wrong, the whole town pays for it.\"" }
+      {
+        "min": 0,
+        "text": [
+          "Cobb shakes his head slowly. \"Lord's orders. The coast stays dark till the raiders pass.\"",
+          "Cobb turns the lamp key over in his fingers and doesn't answer.",
+          "\"No,\" Cobb says gently. \"Not tonight, and not for that.\""
+        ]
+      },
+      {
+        "min": 1,
+        "text": [
+          "Cobb pulls up a second stool and pours you something hot. \"Go on, then. I'm listening.\"",
+          "Cobb nods slowly. \"I'm sorry for your trouble. Truly. But orders are orders.\"",
+          "\"Sit a while,\" Cobb says, pushing the kettle your way. \"The answer's still no.\""
+        ]
+      },
+      {
+        "min": 1.8,
+        "text": [
+          "Cobb rubs his beard. \"You're honest, I'll give you that. But honest doesn't keep raiders off the town.\"",
+          "Cobb listens all the way through, then shakes his head. \"A good reason, and a hard one. Not hard enough.\"",
+          "\"I hear you,\" Cobb says. \"I've heard a lot of sad stories in forty years.\""
+        ]
+      },
+      {
+        "min": 2.6,
+        "text": [
+          "Cobb looks out at the black water, turning the lamp key over in his fingers. \"Nearly. But if I'm wrong, the whole town pays for it.\"",
+          "Cobb glances at the spyglass, then at you. \"Close. Show me the raiders won't come for the town, and we'll talk.\"",
+          "\"Nearly,\" Cobb murmurs, resting a hand on the lamp's brass cage. \"Tell me who'd see this light, and who wouldn't.\""
+        ]
+      }
     ],
-    "repeatReaction": "Cobb smiles tiredly. \"You told me that one already. I'm old, not forgetful.\""
+    "repeatReaction": [
+      "Cobb smiles tiredly. \"You told me that one already. I'm old, not forgetful.\"",
+      "\"Aye, you said,\" Cobb says. \"Tell me something new.\"",
+      "Cobb pats your hand. \"Same tale twice. Tell me another.\""
+    ]
   }
 }
