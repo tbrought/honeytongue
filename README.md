@@ -64,6 +64,10 @@ else say(result.reaction ?? "Harry's hand drops to his club.");
 - **Demo**: [four short scenes](https://honeytongue.dev/play/) built with Honeytongue's text adventure engine, or `npx honeytongue` in a terminal.
 - **Browser games and Twine**: keep your key on a small proxy that ships with Honeytongue and only judges your own characters. See [Browser games](https://honeytongue.dev/#browser).
 
+## Feedback
+
+Issues and feedback are welcome: [report a bug or share a playtest](https://github.com/tbrought/honeytongue/issues/new/choose). Honeytongue is a solo project, so pull requests aren't being accepted for now. Security problems go to private reporting instead (see [SECURITY.md](SECURITY.md)).
+
 ## License
 
 MIT. Built on Jev by TypeSafe AI, and not affiliated with TypeSafe.
