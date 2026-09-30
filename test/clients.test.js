@@ -383,3 +383,17 @@ test("a full engine turn fits within the proxy's default limits", async () => {
   assert.match((await game.turn("read the letter")).text, /wax seal/);
   assert.deepEqual(sizes, [4]);
 });
+
+test("when a proxy refuses the page's origin, the error names the exact origin to add", async () => {
+  const saved = Object.getOwnPropertyDescriptor(globalThis, "location");
+  // As in a game hosted in a frame on another domain, like itch.io's: the page's own origin is what to allow.
+  Object.defineProperty(globalThis, "location", { value: { origin: "https://html-classic.itch.zone" }, configurable: true });
+  try {
+    const client = createProxyClient({ url: "https://proxy.test/", maxRetries: 0,
+      fetch: async () => new Response(JSON.stringify({ error: "Origin not allowed" }), { status: 403 }) });
+    await assert.rejects(client.ask({ player_input: "hi" }, {}), (err) =>
+      err.status === 403 && /Add https:\/\/html-classic\.itch\.zone to allowedOrigins/.test(err.message));
+  } finally {
+    if (saved) Object.defineProperty(globalThis, "location", saved); else delete globalThis.location;
+  }
+});

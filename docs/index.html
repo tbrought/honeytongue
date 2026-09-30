@@ -111,7 +111,7 @@
   <main>
     <section id="start">
       <h2>Get started</h2>
-      <p><strong>You only need three fields and one method. Everything else is optional.</strong> A character needs a <code>name</code>, a <code>persona</code>, and a <code>goal</code>, and <code>attempt()</code> judges whatever the player typed. Honeytongue runs on <a href="https://docs.typesafe.ai">Jev</a>, a model from TypeSafe that makes typed judgements instead of writing text. It has no dependencies, ships TypeScript types, and works with <code>import</code> or <code>require()</code>.</p>
+      <p><strong>You only need three fields and one method. Everything else is optional.</strong> A character needs a <code>name</code>, a <code>persona</code>, and a <code>goal</code>, and <code>attempt()</code> judges whatever the player typed. Honeytongue runs on <a href="https://docs.typesafe.ai">Jev</a>, a model from TypeSafe that makes typed judgements instead of writing text. It has no dependencies, ships TypeScript types, and works with <code>import</code> or <code>require()</code> (on Node 22.12 itself, <code>require()</code> prints an experimental-feature warning; 22.13 and later don't).</p>
       <ol class="steps">
         <li>
           <p>You need Node 22.12 or later. In an empty folder, install the package:</p>
@@ -285,7 +285,7 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
     <section id="browser">
       <h2>Browser games and the proxy</h2>
       <p class="note"><strong>Never put your API key in browser code.</strong> Anyone can read it there. Browser games talk to a small proxy you host, which keeps the key on the server. As a safety net, <code>createJevClient()</code> refuses to run in a browser.</p>
-      <p>Honeytongue includes a proxy that runs on Cloudflare Workers, Vercel, Deno, Bun, or Node.</p>
+      <p>Honeytongue includes a proxy built on the standard <code>Request</code> and <code>Response</code>. It's tested on Cloudflare Workers, Node, Deno, and Bun, and should run on other hosts with the same API, such as Vercel, though those aren't tested yet.</p>
       <ol class="steps">
         <li>
           <p>Create a Cloudflare Worker, install Honeytongue, and use this as its entry file:</p>
@@ -318,7 +318,7 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
         <li><strong>Nothing players type is logged.</strong> When Jev can't answer, the proxy logs only the status, and replies 502 with a <code>reason</code>: <code>"busy"</code> (try again soon), <code>"error"</code>, or <code>"unavailable"</code> (a bad key or no credit left, which won't fix itself). <code>createProxyClient()</code> keeps the <code>reason</code> on the error it throws, so your game can decide whether to wait or give up.</li>
         <li><strong>Local development.</strong> <code>npm run proxy</code> in a clone of the repository serves the proxy on <code>http://127.0.0.1:8787</code> (this machine only), using the offline mock until you set a key. It judges the demo scenes and the character in <code>examples/browser.html</code> (see <code>examples/node-proxy.js</code>). The proxy only uses the mock when it's passed in as <code>client</code>, as that example does; a deployed proxy with no key returns an error rather than falling back. Every reply says which one answered, <code>"source": "jev"</code> or <code>"mock"</code> beside <code>answers</code>, and the engine passes it on as <code>debug.source</code>.</li>
         <li><strong><code>allowedOrigins</code> only controls browsers.</strong> Scripts and servers send no <code>Origin</code>, so they aren't affected: <code>allowedStories</code> and <code>allowedCharacters</code> are what protect your key, and your TypeSafe spending limit is what caps the cost.</li>
-        <li><strong>Other hosts.</strong> On Cloudflare the proxy trusts <code>CF-Connecting-IP</code>; elsewhere it uses the last <code>X-Forwarded-For</code> entry, which is right for Vercel and most platforms. Clients whose address can't be found share one <code>"unknown"</code> address, so one busy client could rate-limit everyone. If your server is reachable directly, or your host reports the address another way, pass <code>clientIp: (request, env) =&gt; ...</code>, so the rate limit sees each player and can't be dodged with a forged header. The rate limit is kept in memory, per server instance: on platforms that run many instances, add your host's own rate limiting too.</li>
+        <li><strong>Other hosts.</strong> On Cloudflare the proxy trusts <code>CF-Connecting-IP</code>; elsewhere it uses the last <code>X-Forwarded-For</code> entry, which is the one most hosts' own proxies add (check your host's documentation). Clients whose address can't be found share one <code>"unknown"</code> address, so one busy client could rate-limit everyone. If your server is reachable directly, or your host reports the address another way, pass <code>clientIp: (request, env) =&gt; ...</code>, so the rate limit sees each player and can't be dodged with a forged header. The rate limit is kept in memory, per server instance: on platforms that run many instances, add your host's own rate limiting too.</li>
       </ul>
       <h3 id="node">Node servers</h3>
       <p>On a plain Node server, <code>toNodeListener()</code> turns Node's requests into standard ones, and refuses bodies over the limit as they arrive:</p>
@@ -374,7 +374,7 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
   <span class="k">else</span> <span class="f">showReply</span>(result.reaction);
 <span class="k">&lt;/script</span>&gt;</code></pre>
       <ul class="points">
-        <li><strong>The dialogue box is plain HTML over the canvas,</strong> so typing, phone keyboards, and screen readers just work. The example shows its text as text, never as HTML.</li>
+        <li><strong>The dialogue box is plain HTML over the canvas,</strong> so it gets the browser's own text input, phone keyboards, and screen reader support, as any form does. The example shows its text as text, never as HTML.</li>
         <li><strong>The world teaches secrets.</strong> Reading the sign calls <code>troll.learn("lonely")</code>, and from then on an argument that uses it can win.</li>
         <li><strong>Spoken input</strong> works the same way, once your game turns speech into text.</li>
         <li><strong>Engines outside JavaScript</strong> (Unity, Godot, Unreal, Ren'Py) aren't supported yet; a plain HTTP endpoint for them is on the roadmap.</li>

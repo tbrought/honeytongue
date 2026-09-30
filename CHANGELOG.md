@@ -10,9 +10,12 @@
 
 - **`result.debug` is documented as diagnostics** (the ranked actions, Jev's raw answers, and who answered) that may change in any version. Use `result.attempt` for anything a game builds on.
 
-- **Honeytongue needs Node 22.12 or later** (`engines` was `>=22`). From 22.12, Node's `require()` loads ES modules without a flag, so CommonJS projects can `require("honeytongue")` as well as `import` it. The package check tests both, on Node 22 and 24.
+- **Honeytongue needs Node 22.12 or later** (`engines` was `>=22`). From 22.12, Node's `require()` loads ES modules without a flag, so CommonJS projects can `require("honeytongue")` as well as `import` it. The package check tests both, on Node 22.12.0 and 24. On 22.12 itself, Node prints an experimental-feature warning when `require()` loads the package; 22.13 and later don't.
 
 ### Repository
+
+- **The proxy is tested on Deno and Bun** as well as Node and Cloudflare Workers: CI serves it with each runtime's own server and sends requests through it (`scripts/runtime-smoke.js`, on the mock). The docs now name the platforms it's tested on, and say it should run on other hosts with the standard `Request` and `Response`, such as Vercel, which isn't tested yet.
+- CI tests the oldest supported Node, 22.12.0, exactly.
 
 - Issues and feedback are welcome, with a bug-report template; pull requests aren't being accepted for now (README).
 

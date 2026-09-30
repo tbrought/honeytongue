@@ -286,6 +286,14 @@ try {
   check(after.talking && after.speaker === "Tolly Underarch: " && after.samePlayer && after.x === 182 && after.y === 135,
     "Phaser: typing never reads the sign, restarts the game, or moves the player", JSON.stringify(after));
 
+  // Hostile text said to the troll is shown as text: nothing it names is created or run.
+  const hostileLine = '<img src=x onerror=alert(1)> </textarea><script>alert(1)</script>';
+  await page.eval(`(() => { const i = document.getElementById("dialogue-input"); i.value = ${JSON.stringify(hostileLine)}; document.getElementById("dialogue-form").requestSubmit(); return true; })()`);
+  await page.waitFor(`[...document.querySelectorAll("#dialogue-log p")].some((p) => p.textContent === "You: " + ${JSON.stringify(hostileLine)})`, { what: "the hostile line in the log" }).catch(() => {});
+  const phaserHostile = JSON.parse(await page.eval(`JSON.stringify({ shown: [...document.querySelectorAll("#dialogue-log p")].some((p) => p.textContent === "You: " + ${JSON.stringify(hostileLine)}),
+    imgs: document.querySelectorAll("#dialogue img, #dialogue script").length, alerts: window.__alerts })`));
+  check(phaserHostile.shown && phaserHostile.imgs === 0 && phaserHostile.alerts === 0, "Phaser: hostile text said to the troll is shown literally, and nothing runs", JSON.stringify(phaserHostile));
+
   // ---- The local playground server ----
   const local = await startPlayground({ port: 0, apiKey: "", mock: true });
   try {
