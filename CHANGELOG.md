@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-alpha.12 (2026-09-30)
 
 ### Added
 
@@ -24,6 +24,8 @@
 - **The key for live runs moves to `.env.live`**, a git-ignored file at the repository root that npm never packs. Only commands that call live Jev load it: the live scripts load it themselves, and `npm run play`, `example`, `proxy`, and `playground` use `node --env-file-if-exists=.env.live`. Everything else runs without the key. Package users are unaffected: the library still reads `TYPESAFE_API_KEY` from its environment.
 - `node scripts/headroom.js` measures how many tokens the largest request the demo Worker accepts can cost, against a normal turn. At worst, with Japanese text in every field, it's about 5 times a normal turn (`docs/demo-proxy.md`).
 - The package check refuses to pack any environment or credential file.
+- **Redeploy the demo Worker after every release**, whatever changed, so it always runs the site's version (the release steps in `CLAUDE.md` and `docs/demo-proxy.md`). Those docs no longer say an older Worker refuses a newer page: it judges only a request's questions and state, so it keeps working until those change, and the version only explains a refusal.
+- `package-lock.json` carries the package's version again (it had stayed at 0.1.0-alpha.9).
 
 ## 0.1.0-alpha.11 (2026-09-29)
 

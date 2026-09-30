@@ -24,7 +24,7 @@ Only the maintainer can do these steps, because they involve accounts, keys, and
 
 ## Deploy
 
-Run these from the repository root, on the commit being released (usually `main` just after the release's pull request is merged). The Worker's code, stories, and version must match the demo's exactly.
+Run these from the repository root, on the commit being released (usually `main` just after the release's pull request is merged). Deploy from the same commit as the site, so the Worker's code, stories, and version match the demo's (the check script below confirms the version).
 
 ```
 npx wrangler login
@@ -112,7 +112,7 @@ When the demo page runs on `localhost` or `127.0.0.1` (for example with `npx ser
 
 ## Later
 
-- **Every release that changes the persuasion questions, the stories, the personas, or the Phaser example's troll:** deploy the Worker again from the release's commit, then rerun the check script (Releasing, step 7). Until you do, the demo explains the version mismatch and uses the offline stand-in.
+- **Every release, whatever it changed:** deploy the Worker again from the release's commit, then rerun the check script (step 8 of "Releasing" in `CLAUDE.md`). The Worker judges a request by its questions and state only, not by the version it came from, so an older Worker keeps judging a newer page until what the library sends changes (new persuasion questions, stories, personas, or the Phaser example's troll). From then on it refuses the page's requests, and the demo explains the version mismatch and uses the offline stand-in. Redeploying on every release means nobody has to work out which case applies, and the check script fails until the Worker runs the release's version.
 - **Another page address:** add it to `ALLOWED_ORIGINS` in `examples/demo-wrangler.toml` (comma-separated, no trailing slash), then run `npx wrangler deploy --config examples/demo-wrangler.toml` again. No code changes are needed.
 - **Limits, all together:**
   - Cloudflare's rule: 10 requests per 10 seconds per IP. Tighten it if the usage graph shows abuse.
