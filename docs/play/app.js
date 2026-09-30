@@ -19,6 +19,7 @@ const log = $("log");
 const choices = $("choices");
 const form = $("prompt");
 const input = $("cmd");
+const PICKER_TITLE = document.title; // the page's own <title>, shown again when back at the scene list
 // The live proxy, unless the page is being previewed locally, which the proxy would refuse (see chooseJudge).
 const { judge, url: proxyUrl } = chooseJudge({
   proxyUrl: document.querySelector('meta[name="honeytongue-proxy"]')?.content,
@@ -404,7 +405,7 @@ async function route() {
     $("title").textContent = "Demo Scenes";
     $("room").textContent = "Demo scenes";
     $("patience").hidden = true;
-    document.title = "Honeytongue Demo Scenes";
+    document.title = PICKER_TITLE;
     if (id) history.replaceState(null, "", location.pathname + location.search); // an unknown scene: just list them
     return;
   }

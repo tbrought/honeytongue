@@ -41,6 +41,34 @@ test("every page has Open Graph and Twitter card tags, so shared links show the 
   }
 });
 
+test("every page names Honeytongue first, has its own description, and gives its honeytongue.dev address as canonical", () => {
+  const descriptions = new Set();
+  for (const [page, url] of Object.entries(PAGES)) {
+    const html = read(page);
+    const title = html.match(/<title>([^<]+)<\/title>/)?.[1];
+    assert.match(title ?? "", /^Honeytongue[: ].{10,}/, `${page}: the title starts with "Honeytongue" and says what the page is`);
+    assert.equal(meta(html, "property", "og:title"), title, `${page}: og:title matches the title`);
+    assert.equal(meta(html, "name", "twitter:title"), title, `${page}: twitter:title matches the title`);
+    const description = meta(html, "name", "description");
+    assert.ok(description?.length >= 50 && description.length <= 160, `${page}: a description of 50 to 160 characters`);
+    assert.ok(!descriptions.has(description), `${page}: its description is its own`);
+    descriptions.add(description);
+    // The old tbrought.github.io address redirects here; the canonical link says which address search engines should list.
+    const canonical = [...html.matchAll(/<link rel="canonical" href="([^"]+)">/g)].map((m) => m[1]);
+    assert.deepEqual(canonical, [url], `${page}: one canonical link, to ${url}`);
+  }
+});
+
+test("the sitemap lists every page, and robots.txt allows everything and points to it", () => {
+  const listed = [...read("docs/sitemap.xml").matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  assert.deepEqual(listed.sort(), Object.values(PAGES).sort());
+  assert.match(read("docs/sitemap.xml"), /^<\?xml version="1\.0" encoding="UTF-8"\?>\n<urlset xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9">/);
+  const robots = read("docs/robots.txt");
+  assert.match(robots, /^User-agent: \*\nAllow: \/\n/);
+  assert.doesNotMatch(robots, /Disallow/);
+  assert.match(robots, /^Sitemap: https:\/\/honeytongue\.dev\/sitemap\.xml$/m);
+});
+
 test("the README shows the logo by its absolute URL, so it appears on npm too", () => {
   const readme = read("README.md");
   assert.match(readme.split("\n")[0], /^<p align="center"><img src="https:\/\/honeytongue\.dev\/assets\/honeytongue-logo-512\.png" alt="[^"]+"/);
