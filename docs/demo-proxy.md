@@ -5,7 +5,7 @@ The web demo on honeytongue.dev plays with Jev through a Cloudflare Worker named
 - **Code:** `examples/demo-worker.js`, configured in `examples/demo-wrangler.toml`.
 - **Address:** `https://api.honeytongue.dev/judge`. Every other path answers 404, and there's no workers.dev address.
 - **Scope:** it only judges the four demo scenes and the Phaser example's troll (`examples/phaser/character.js`, played at honeytongue.dev/phaser/), and only for the pages listed in `ALLOWED_ORIGINS`: `https://honeytongue.dev`. (`https://tbrought.github.io` was removed in 0.1.0-alpha.11: GitHub redirects it to honeytongue.dev.)
-- **Limits:** request bodies up to 17,000 bytes (`MAX_BYTES` in the Worker), and nothing longer than the library itself sends: each character's `memoryLength` of remembered attempts, each story's `recentTurnLength` of recent turns, and so on. These cost nothing to refuse, since refused requests never reach Jev.
+- **Limits:** request bodies up to 18,000 bytes (`MAX_BYTES` in the Worker), and nothing longer than the library itself sends: each character's `memoryLength` of remembered attempts, each story's `recentTurnLength` of recent turns, and so on. These cost nothing to refuse, since refused requests never reach Jev.
 
 Without it, or when it can't answer, the demo falls back to the offline stand-in.
 
@@ -19,7 +19,7 @@ Only the maintainer can do these steps, because they involve accounts, keys, and
    - **If there's no spending limit, use prepaid credit instead:** buy a small balance (such as $5), and turn off automatic top-ups so no card is charged again. When the credit runs out, Jev stops answering, and the demo switches to the offline stand-in with a note that the live demo is resting.
    - **If TypeSafe offers neither,** don't go live yet. The only remaining limits would be the rate limits below.
 
-   For scale: a demo turn is about 1,300 input tokens, so about $0.00005 at $0.042 per million. A tab gets at most 50 live turns (under a third of a cent), and $5 covers about 90,000 turns.
+   For scale: a demo turn is about 1,900 input tokens at the start of a scene and about 2,100 a few turns in, since the demo characters have clues and angles. That's about $0.00009 a turn at $0.042 per million. A tab gets at most 50 live turns (under half a cent), and $5 covers about 55,000 turns.
 4. **Check that `api.honeytongue.dev` is free.** In the Cloudflare dashboard, open the `honeytongue.dev` zone, then DNS > Records. There must be no existing record named `api`. Cloudflare can't attach a Worker to a hostname that already has a CNAME record.
 
 ## Deploy
@@ -68,7 +68,7 @@ The script acts as the demo's page, `https://honeytongue.dev`, and checks that:
 - the page may call the proxy;
 - other paths answer 404;
 - other sites (the old `https://tbrought.github.io` included) and other characters are refused;
-- bodies over 17,000 bytes, and remembered attempts longer than the library sends, are refused;
+- bodies over 18,000 bytes, and remembered attempts longer than the library sends, are refused;
 - the proxy runs this checkout's Honeytongue version.
 
 It then plays one Gatehouse turn and makes one attempt on the Phaser example's troll: two live Jev calls. It doesn't need your key. It should end with "All checks passed."
@@ -92,19 +92,24 @@ The guard only accepts requests shaped like the demo's own, with every free-text
 
 `--dry-run` does steps 1 and 2 only, with no live calls.
 
-Measured on 2026-09-30 for 0.1.0-alpha.14, whose turns carry the clue and angle questions, `jev-1.13.0`, 5 live calls (28,493 tokens in all):
+Measured on 2026-09-30 for 0.1.0-alpha.14, with the final clue and angle questions, `jev-1.13.0`, 5 live calls (28,623 tokens in all):
 
 | Request | Bytes | Input tokens | Against a normal turn |
 |---|---|---|---|
-| A normal turn (the Gatehouse, a few turns in) | 6,374 | 2,075 | 1.00× |
-| The largest accepted, padded with ASCII | 9,989 | 4,678 | 2.25× |
-| The largest accepted, padded with emoji | 13,339 | 5,985 | 2.88× |
-| The largest accepted, padded with emoji and Japanese | 14,229 | 6,588 | 3.17× |
-| The largest accepted, padded with Japanese | 16,225 | 7,759 | 3.74× |
+| A normal turn (the Gatehouse, a few turns in) | 6,462 | 2,101 | 1.00× |
+| The largest accepted, padded with ASCII | 10,077 | 4,704 | 2.24× |
+| The largest accepted, padded with emoji | 13,427 | 6,011 | 2.86× |
+| The largest accepted, padded with emoji and Japanese | 14,317 | 6,614 | 3.15× |
+| The largest accepted, padded with Japanese | 16,313 | 7,785 | 3.71× |
 
-The clue and angle questions made a normal turn about 40% dearer (1,450 input tokens on 2026-09-29), about $0.00009 a turn. They're fixed text, so the worst case grew less, and is now a smaller multiple of a normal turn.
+**With and without clues and angles.** The demo characters have both. The questions are fixed text, so they add the same amount, about 650 input tokens, to every request, the smallest and the largest alike:
 
-**The worst case is Japanese text in every field, at under 4 times a normal turn:** about $0.0003 a request at $0.042 per million input tokens. At Cloudflare's rule (10 requests per 10 seconds per IP), one address sending nothing but worst-case requests could spend about $28 a day. More addresses spend it faster, and the spending cap stops all of it.
+| | A normal turn | The worst case | The worst case against a normal turn |
+|---|---|---|---|
+| Without clues and angles (measured for 0.1.0-alpha.11, 2026-09-29) | 1,450 | 7,153 | 4.9× |
+| With both (the demo now) | 2,101 | 7,785 | 3.7× |
+
+**The worst case is Japanese text in every field, at under 4 times a normal turn:** about $0.0003 a request at $0.042 per million input tokens, nearly the same as without clues and angles. At Cloudflare's rule (10 requests per 10 seconds per IP), one address sending nothing but worst-case requests could spend about $28 a day (about $26 without clues and angles). More addresses spend it faster, and the spending cap stops all of it.
 
 That's within what the limits were designed for, so nothing was changed. If it ever needs lowering, the cheapest lever is the demo characters' `maxInputLength` and `memoryLength`. Lowering them trims what the demo sends, then the Worker needs redeploying.
 

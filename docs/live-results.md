@@ -283,6 +283,21 @@ The whole alpha.14 phase took 1,906 calls and 2,916,941 tokens, about $0.12:
 | Headroom | 5 |
 | This rerun | 684 |
 
+## Costs by clues and angles (2026-09-30)
+
+Input tokens, which is what Jev charges for, at the start of a conversation (`node scripts/costs.js`). The attempts are two lines on each preset character, and the turns are two in each scene. 52 calls, 73,469 tokens. The ranges are across characters or scenes.
+
+| Call | Neither | Clues | Angles | Both |
+|---|---|---|---|---|
+| An attempt | 717 (696 to 758) | 887 (865 to 937) | 1,183 (1,162 to 1,225) | 1,353 (1,331 to 1,404) |
+| A text adventure turn | 1,250 (1,156 to 1,250) | 1,325 (The Gatehouse) | 1,622 (The Gatehouse) | 1,886 (1,791 to 1,886) |
+| Per 10,000 attempts | $0.30 | $0.37 | $0.50 | $0.57 |
+| Per 10,000 turns | $0.53 | $0.56 | $0.68 | $0.79 |
+
+Latency was the same with or without them: 73 to 103 ms at the median.
+
+The demo's headroom with the final questions (`scripts/headroom.js`, 5 calls, 28,623 tokens): a normal turn is 2,101 input tokens, and the worst accepted request (Japanese in every field) is 7,785, 3.71 times as many and 16,313 bytes. The demo Worker's body limit went to 18,000 bytes, to keep a margin over that.
+
 ## Reproducing
 
 With `TYPESAFE_API_KEY` set:

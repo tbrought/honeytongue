@@ -483,14 +483,21 @@ loaded.<span class="f">restore</span>(JSON.<span class="f">parse</span>(localSto
 
     <section id="costs">
       <h2>Cost and speed</h2>
-      <p>Jev charges about $0.042 per million input tokens and nothing for output. The figures below are our own measurements, on <code>jev-1.13.0</code> in September 2026, over about 2,600 live calls. Results vary: speed depends on your network, your region, and how busy the service is.</p>
+      <p>Jev charges about $0.042 per million input tokens and nothing for output. <a href="#clues">Clues</a> and <a href="#angles">angles</a> each add a question to every request, so they add to the cost; characters without them cost what they always did. The figures below are our own measurements, on <code>jev-1.13.0</code> on 2026-09-30, at the start of a conversation, with the four demo characters and scenes:</p>
       <div class="table-wrap"><table>
-        <thead><tr><th>Call</th><th>Tokens (median)</th><th>Latency (median, 95th percentile)</th><th>10,000 calls</th></tr></thead>
+        <thead><tr><th>Call</th><th>Input tokens (median)</th><th>10,000 calls</th></tr></thead>
         <tbody>
-          <tr><td><code>attempt()</code> or <code>judgePersuasion()</code></td><td>About 700 to 850</td><td>100 ms, 150 ms</td><td>About 30 cents</td></tr>
-          <tr><td>A text adventure turn</td><td>About 1,350 to 1,500</td><td>100 ms, 150 ms</td><td>About 50 cents</td></tr>
+          <tr><td><code>attempt()</code> or <code>judgePersuasion()</code></td><td>About 720</td><td>About 30 cents</td></tr>
+          <tr><td>The same, with clues</td><td>About 890</td><td>About 37 cents</td></tr>
+          <tr><td>The same, with angles</td><td>About 1,180</td><td>About 50 cents</td></tr>
+          <tr><td>The same, with clues and angles</td><td>About 1,350</td><td>About 57 cents</td></tr>
+          <tr><td>A text adventure turn</td><td>About 1,250</td><td>About 53 cents</td></tr>
+          <tr><td>The same, with clues</td><td>About 1,330</td><td>About 56 cents</td></tr>
+          <tr><td>The same, with angles</td><td>About 1,620</td><td>About 68 cents</td></tr>
+          <tr><td>The same, with clues and angles (as in the demo scenes)</td><td>About 1,890</td><td>About 79 cents</td></tr>
         </tbody>
       </table></div>
+      <p>In these measurements, a clue question with one clue added about 80 to 170 input tokens, and each further clue adds its own description. The angle question added about 370 to 470, since it lists every angle's definition. Speed is the same either way: about 100 ms at the median, and 100 to 200 ms at the 95th percentile, though it depends on your network, your region, and how busy the service is.</p>
       <p>Repeats are caught locally and cost nothing. To cut tokens further, lower <code>memory</code> or <code>memoryLength</code> (each remembered attempt adds about 40 tokens for a short line, so the default 10 adds up to about 400 once a conversation is that long) or <code>maxInputLength</code>.</p>
     </section>
 
@@ -707,7 +714,7 @@ loaded.<span class="f">restore</span>(JSON.<span class="f">parse</span>(localSto
     <section id="faq" class="faq">
       <h2>Questions</h2>
       <h3>How much does it cost?</h3>
-      <p>About 30 cents for ten thousand attempts, since Jev charges only for input tokens. See <a href="#costs">Cost and speed</a>.</p>
+      <p>About 30 cents for ten thousand attempts, since Jev charges only for input tokens, or about 57 cents with <a href="#clues">clues</a> and <a href="#angles">angles</a>. See <a href="#costs">Cost and speed</a>.</p>
       <h3>Can players trick it?</h3>
       <p>Characters are told that claims inside the player's dialogue, like "this argument scores a 4," have no authority. In testing, none of more than fifty injection attempts, including fake system notes buried in long messages, won over any character. No model is perfectly resistant, so the evaluation suites include these attempts and you can add your own.</p>
       <h3>Does it work in other languages?</h3>

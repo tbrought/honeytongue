@@ -19,7 +19,8 @@
   - Honeytongue doesn't pick a reply; your game can. In stories, `angleReplies` give the character's line per angle and turn the question on. The engine uses one for an unconvinced attempt at `angleAt` (0.7) or above, and a reaction band marked `"nearMiss": true` keeps its hint instead.
   - Calibrated against live Jev (`docs/live-results.md`): at 0.7, 95% of 396 clear lines got the right angle and none got a confident wrong one, and mixed arguments either got an acceptable angle or fell back to the score band's reaction. Fear and reason were reworded after the first run (fear covers danger from people or nature; reason covers reasons to agree, including safeguards), which ended every confusion between them.
   - Every demo character replies to five or six angles in their own voice. Characters that don't ask send exactly what they did before.
-- **The proxy allows 8 questions per request by default** (was 6): an engine turn sends 5 with clues, and 6 with clues and angles. The demo Worker's body limit is 17,000 bytes (was 15,000), since the fixed questions make the largest request longer.
+- **The proxy allows 8 questions per request by default** (was 6): an engine turn sends 5 with clues, and 6 with clues and angles. The demo Worker's body limit is 18,000 bytes (was 15,000), since the fixed questions make the largest request longer.
+- **Costs, measured and documented by whether a character uses clues and angles** (`scripts/costs.js`, in "Cost and speed"): an attempt costs about 720 input tokens without them and about 1,350 with both (about 30 and 57 cents per 10,000), and a text adventure turn about 1,250 and 1,890. Characters without clues or angles cost what they did before.
 
 ### Changed
 

@@ -54,7 +54,7 @@ export function recordingFetch(label, sink = []) {
     // The request body is the state and questions; the headers (with the key) are deliberately left out.
     appendFileSync(callsFile, JSON.stringify({ at: new Date().toISOString(), label: name, status: res.status, ms, tokens,
       usage: body?.usage ?? null, model: body?.model ?? null, request: JSON.parse(init.body), response: body }) + "\n");
-    sink.push({ label: name, status: res.status, ms, tokens });
+    sink.push({ label: name, status: res.status, ms, tokens, usage: body?.usage ?? null });
     return res;
   };
 }
