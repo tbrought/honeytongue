@@ -231,7 +231,20 @@ The library's angle set, with the sharpened definitions, was tried on Harry and 
 | 0.7 | 94% | 0 | 73% | 0 |
 | 0.8 | 91% | 0 | 50% | 0 |
 
-Everything else falls back to the score band's reaction. `angleAt` is 0.7, the lowest setting with no jarring replies. Mixed arguments below it sat between their acceptable angles: money at 0.53 to 0.69 for "I'm desperate, and I'll pay whatever you ask", authority or duty at 0.52 to 0.65 for "Your captain would want this, and it's the right thing by your own rules".
+Everything else falls back to the score band's reaction. `angleAt` is 0.7, the lowest setting with no jarring replies.
+
+**Second run, with two definitions sharpened** (456 calls, 704,297 tokens):
+- Fear now names "danger if they refuse, from people or nature", so storms and failing bridges count.
+- Reason now names "reasons to agree, not warnings", including "a safeguard (such as a way to check up on the player)".
+
+| The line leans on | First run | Second run |
+|---|---|---|
+| fear | 32 of 36 (4 read as reason) | 36 of 36 |
+| reason | 32 of 36 (4 read as other) | 36 of 36 |
+| family | 34 of 36 (2 read as honesty) | 34 of 36 (the same line, which is about both) |
+| every other angle | 36 of 36 | 36 of 36 |
+
+At 0.7: 95% of clear lines got the right angle (94% before), 72% of mixed lines an acceptable one, and none, clear or mixed, a confident wrong one. The two confident wrong answers at 0.6 were both "My mother raised me to keep my word to my family" read as honesty. Mixed arguments below it sat between their acceptable angles: money at 0.53 to 0.69 for "I'm desperate, and I'll pay whatever you ask", authority or duty at 0.52 to 0.65 for "Your captain would want this, and it's the right thing by your own rules".
 
 ## Scores with the clue and angle questions (2026-09-30)
 

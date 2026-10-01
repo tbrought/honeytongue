@@ -302,14 +302,14 @@ result.triggered; <span class="c">// ["threats"], so you can narrate it as intim
           <tr><td><code>benefit</code></td><td>Something the character wants for themselves other than money: their own hopes, a chance, a favour, a way out</td></tr>
           <tr><td><code>duty</code></td><td>The character's own obligations: their job, oath, or rules</td></tr>
           <tr><td><code>authority</code></td><td>Someone else's rank or power over them, including orders from above</td></tr>
-          <tr><td><code>fear</code></td><td>Danger from elsewhere if they refuse; a threat from the player is the <a href="#intimidation">threats tell</a> instead</td></tr>
+          <tr><td><code>fear</code></td><td>Danger if they refuse, from people or nature, such as raiders or a storm; a threat from the player is the <a href="#intimidation">threats tell</a> instead</td></tr>
           <tr><td><code>flattery</code></td><td>Praise of them</td></tr>
           <tr><td><code>honesty</code></td><td>Plain truth, being straight with them, or a sincere promise</td></tr>
-          <tr><td><code>reason</code></td><td>Facts, a plan, or proof that agreeing is safe or sensible</td></tr>
+          <tr><td><code>reason</code></td><td>Reasons to agree, not warnings: facts, a plan, proof, or a safeguard (such as a way to check up on the player) that makes agreeing safe or sensible</td></tr>
           <tr><td><code>other</code></td><td>No clear appeal: a bare request, a command, small talk, or an insult</td></tr>
         </tbody>
       </table></div>
-      <p>The set is public API: changing it would change every game's results, so from 0.1.0 any change counts as a breaking change. A mixed argument, such as a heartfelt plea that also offers money, spreads Jev's probability, so check <code>confidence</code> before replying to the angle. In calibration, at 0.7 no clear or mixed line got a confident wrong angle, and 94% of clear lines got the right one. Asking costs one more question per attempt; characters that don't ask send exactly what they did before.</p>
+      <p>The set is public API: changing it would change every game's results, so from 0.1.0 any change counts as a breaking change. A mixed argument, such as a heartfelt plea that also offers money, spreads Jev's probability, so check <code>confidence</code> before replying to the angle. In calibration, at 0.7 no clear or mixed line got a confident wrong angle, and 95% of clear lines got the right one. Asking costs one more question per attempt; characters that don't ask send exactly what they did before.</p>
       <p>In a story, the npc's <code>angleReplies</code> give a line per angle (a list of variants is fine), and turn the question on. The engine uses one for an unconvinced attempt when Jev is at least <code>angleAt</code> sure (0.7), and otherwise, or for an angle with no reply, the score band's reaction. Mark the band just below the threshold <code>"nearMiss": true</code>, and its hint wins over an angle reply: telling a close player what's missing matters more.</p>
     </section>
 

@@ -55,10 +55,10 @@ const ANGLE_CRITERIA = {
   benefit: "Something they want for themselves other than money or goods: their own hopes, a chance, a favour, or a way out of trouble",
   duty: "Their own obligations: their job, oath, or rules, and what they are responsible for",
   authority: "Someone else's rank or power over them: who the player is or claims to be, or orders from someone above them",
-  fear: "Danger from elsewhere if they refuse: harm, punishment, or disaster that will follow, not a threat from the player",
+  fear: "Danger if they refuse, from people or nature: harm, punishment, raiders, storms, or disaster to come, but not a threat from the player",
   flattery: "Praise of them: their qualities, skill, or importance",
   honesty: "Honesty itself: plain truth, being straight with them, or a sincere promise or word of honour",
-  reason: "Reasons and evidence: facts, a plan, or proof that agreeing is safe or sensible",
+  reason: "Reasons to agree, not warnings: facts, a plan, proof, or a safeguard (such as a way to check up on the player) that makes agreeing safe or sensible",
   other: "No clear appeal: a bare request, a command, small talk, or an insult",
 };
 export const ANGLES = Object.freeze(Object.keys(ANGLE_CRITERIA));
