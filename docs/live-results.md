@@ -298,6 +298,34 @@ Latency was the same with or without them: 73 to 103 ms at the median.
 
 The demo's headroom with the final questions (`scripts/headroom.js`, 5 calls, 28,623 tokens): a normal turn is 2,101 input tokens, and the worst accepted request (Japanese in every field) is 7,785, 3.71 times as many and 16,313 bytes. The demo Worker's body limit went to 18,000 bytes, to keep a margin over that.
 
+## The full rerun on alpha.14's final build (2026-09-30)
+
+Repeated after the fear and reason rewording, on the build that will be released (`eval --all --repeats 10`, then `live.js routes --repeats 10`). 684 calls, 1,388,561 tokens. The results were the same as the first rerun:
+
+| Check | Result |
+|---|---|
+| Verdicts | 58/58 |
+| Reliable scripted lines | 45/45 |
+| Scores in range | 18/18 |
+| Threats | 12/12 |
+| Insults | 8/8 |
+| Actions | 86/88 (the same two parser cases) |
+| Route winning lines | 8/8, from 3.57 (Cobb, needs 3.2) to 3.81 (Harry, needs 2.4) |
+| Clue routes | 4/4, each 10 of 10, at a probability of 0.90 to 0.99 |
+| Endings | every route reached its intended one |
+
+The whole alpha.14 phase took 3,103 calls and 5,111,891 tokens, about $0.21. The guard was raised to 5.5M for this rerun.
+
+| Run | Calls |
+|---|---|
+| Clue calibration | 470 |
+| Angle coverage | 171 |
+| Angle calibration, twice | 912 |
+| Score shift | 120 |
+| Costs | 52 |
+| Headroom, twice | 10 |
+| Full reruns, twice | 1,368 |
+
 ## Reproducing
 
 With `TYPESAFE_API_KEY` set:
