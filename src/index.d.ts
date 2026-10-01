@@ -221,6 +221,29 @@ export class Persuadable {
   /** Negative amounts restore patience. Patience never drops below 0. Returns outOfPatience. */
   losePatience(amount?: number): boolean;
   reset(): void;
+  /** This character's state as plain JSON, for a save file. The character itself isn't included. */
+  snapshot(): PersuadableSnapshot;
+  /**
+   * Puts back a snapshot() of this character. Throws HoneytongueError, leaving the character as it was, if the
+   * snapshot is for another character, from a newer Honeytongue, or damaged. Returns this character.
+   */
+  restore(snapshot: PersuadableSnapshot): this;
+}
+
+/** A Persuadable's state as plain JSON (from snapshot()), for save files. */
+export interface PersuadableSnapshot {
+  /** The snapshot format: 1. A newer Honeytongue may write a higher one, which this version refuses to restore. */
+  format: 1;
+  kind: "persuadable";
+  /** The character's name, checked on restore. */
+  character: string;
+  attempts: { said: string; outcome: Verdict; triggered?: Tell[] }[];
+  knows: string[];
+  /** null for unlimited patience (JSON has no Infinity). */
+  patienceLeft: number | null;
+  convinced: boolean;
+  /** How many times each reply slot has been used, so lists of variants carry on in turn. */
+  replies: Record<string, number>;
 }
 
 // ---- Stories and the text adventure engine ------------------------------------
@@ -377,6 +400,31 @@ export class Game {
   interpret(input: string): Promise<{ answers: Record<string, any>; ranked: [string, number][] }>;
   /** What a story sends to Jev from each playable scene (used by the proxy's allowedStories). */
   static requests(story: Story): { scene: string; questions: Record<string, any>; character: DefinedCharacter | null }[];
+  /** The game's state as plain JSON, for a save file. The story itself isn't included. */
+  snapshot(): GameSnapshot;
+  /**
+   * Puts back a snapshot() of this game. Throws HoneytongueError, leaving the game as it was, if the snapshot is of
+   * another story, from a newer Honeytongue, names a scene, action, or character the story doesn't have, or is damaged.
+   * Returns this game.
+   */
+  restore(snapshot: GameSnapshot): this;
+}
+
+/** A Game's state as plain JSON (from snapshot()), for save files. */
+export interface GameSnapshot {
+  format: 1;
+  kind: "game";
+  /** The story's title, checked on restore. */
+  story: string;
+  scene: string;
+  inventory: string[];
+  flags: string[];
+  history: { player: string; result: string }[];
+  pending: { options: string[]; input: string; answers: Record<string, any> } | null;
+  over: boolean;
+  /** Each character met so far, by its id. */
+  npcs: Record<string, PersuadableSnapshot>;
+  replies: Record<string, number>;
 }
 
 // ---- Clients and the proxy -----------------------------------------------------

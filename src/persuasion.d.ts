@@ -16,6 +16,7 @@ export type {
   Tell,
   Difficulty,
   Lines,
+  PersuadableSnapshot,
   DecideHook,
   DecideContext,
   Secret,

@@ -1,6 +1,6 @@
 # Honeytongue in Twine (SugarCube 2)
 
-Tested in the Twine web app, Twine 2.12.0 with SugarCube 2.37.3, using the offline stand-in (`createMockClient()`): winning, an empty line, and running out of patience all work, with no console errors.
+Tested in the Twine web app, Twine 2.12.0 with SugarCube 2.37.3, using the offline stand-in (`createMockClient()`): winning, an empty line, and running out of patience all work, with no console errors. Saving and loading (the `:passagestart` handler and `$harry`, added in 0.1.0-alpha.14) is waiting to be tested in Twine.
 
 ## 1. Story JavaScript
 
@@ -14,9 +14,19 @@ setup.ready = import("https://cdn.jsdelivr.net/npm/honeytongue@alpha/src/index.j
       patience: 4,
     }, { client: hon.createMockClient() });
   });
+
+// Harry's memory and patience are kept in $harry, so saves, loads, and Back carry them.
+$(document).on(":passagestart", function () {
+  setup.ready.then(function () {
+    if (State.variables.harry) setup.harry.restore(State.variables.harry);
+    else setup.harry.reset();
+  });
+});
 ```
 
 `setup.ready` finishes once Honeytongue has loaded, a moment after the story starts, so the button waits for it.
+
+Harry's state is a plain object from `setup.harry.snapshot()`, kept in the story variable `$harry` after each attempt. At the start of every passage, `setup.harry.restore()` puts it back, so SugarCube's saves, loads, and Back button all carry his memory and patience. With no `$harry` yet, he starts fresh.
 
 ## 2. A passage called "At the gate" (the start passage)
 
@@ -31,6 +41,7 @@ Harry blocks the gate.
     setup.ready
       .then(function () { return setup.harry.attempt(plea); })
       .then(function (r) {
+        State.variables.harry = setup.harry.snapshot();
         State.variables.reply = r.reaction || "Harry glares at you.";
         if (r.verdict === "convinced") { Engine.play("Through the gate"); }
         else if (r.outOfPatience) { Engine.play("The cell"); }
@@ -51,13 +62,13 @@ Harry blocks the gate.
 A passage called "Through the gate":
 
 ```
-Harry lifts the bar. You're through! <<link "Play again" "At the gate">><<run setup.harry.reset()>><<set $reply to "">><</link>>
+Harry lifts the bar. You're through! <<link "Play again" "At the gate">><<unset $harry>><<set $reply to "">><</link>>
 ```
 
 A passage called "The cell":
 
 ```
-"Enough," Harry says, and calls the watch. <<link "Try again" "At the gate">><<run setup.harry.reset()>><<set $reply to "">><</link>>
+"Enough," Harry says, and calls the watch. <<link "Try again" "At the gate">><<unset $harry>><<set $reply to "">><</link>>
 ```
 
 ## Judging with Jev
@@ -74,6 +85,6 @@ With a proxy, an error can also mean the proxy couldn't be reached or refused th
 
 ## Things to know
 
-- `setup.harry` lives in memory, so its patience and memory aren't included in SugarCube saves. The endings' links call `setup.harry.reset()` to start a new game.
+- `setup.harry` itself lives in memory; its state lives in `$harry`, which SugarCube saves with everything else. The endings' links unset `$harry`, so the next passage starts Harry fresh.
 - A quick double click sends the line twice: if the first doesn't convince, the second counts as a repeat and costs patience too. If that matters, disable the button until the reply comes back.
 - Use `setup.harry.learn("secret_id")` in the passage where the player discovers a secret.

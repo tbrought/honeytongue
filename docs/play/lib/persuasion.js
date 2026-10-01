@@ -5,6 +5,8 @@
 //   const result = await guard.attempt("Please, my sister is sick...");
 //   result.verdict  // "convinced" | "unconvinced" | "offended" | "repeated"
 
+import { SNAPSHOT_FORMAT, snapshotChecker, isCounts, isStrings } from "./snapshot.js";
+
 export class HoneytongueError extends Error {
   constructor(message) {
     super(message);
@@ -453,6 +455,64 @@ export class Persuadable {
     if (this.#attempts.length > KEPT_ATTEMPTS) this.#attempts.shift();
     this.#triggered.set(attempt, result.triggered);
     return { ...result, patienceLeft: this.#patienceLeft, outOfPatience: this.outOfPatience };
+  }
+
+  /**
+   * This character's state as plain JSON, for a save file: the attempts it remembers, the secrets the player has
+   * learned, patience, whether it's convinced, and where each list of reply variants is up to. The character itself
+   * isn't included: restore() puts the state back into a Persuadable made from the same character.
+   */
+  snapshot() {
+    return {
+      format: SNAPSHOT_FORMAT,
+      kind: "persuadable",
+      character: this.character.name,
+      attempts: this.#attempts.map((a) => {
+        const triggered = this.#triggered.get(a) ?? [];
+        return { said: a.said, outcome: a.outcome, ...(triggered.length && { triggered: [...triggered] }) };
+      }),
+      knows: [...this.#knows],
+      patienceLeft: Number.isFinite(this.#patienceLeft) ? this.#patienceLeft : null, // JSON has no Infinity
+      convinced: this.#convinced,
+      replies: Object.fromEntries(this.#replies),
+    };
+  }
+
+  /**
+   * Put back a snapshot() of this character, for example from a save file. It's checked first: a snapshot for
+   * another character, from a newer Honeytongue, or with a damaged field throws a HoneytongueError saying which,
+   * and leaves this character as it was. Don't restore while an attempt is still waiting for Jev.
+   */
+  restore(snapshot) {
+    const c = this.character;
+    const fail = (message) => { throw new HoneytongueError(`Can't restore ${c.name}: ${message}.`); };
+    const { field, isObject } = snapshotChecker(snapshot, "persuadable", fail);
+    if (snapshot.character !== c.name) {
+      fail(`this snapshot is for ${JSON.stringify(snapshot.character)}, not ${JSON.stringify(c.name)}`);
+    }
+    const attempts = field("attempts", (v) => Array.isArray(v) && v.length <= KEPT_ATTEMPTS && v.every((a) => isObject(a) &&
+      typeof a.said === "string" && VERDICTS.includes(a.outcome) &&
+      (a.triggered === undefined || (Array.isArray(a.triggered) && a.triggered.every((t) => TELLS.includes(t))))),
+      `a list of at most ${KEPT_ATTEMPTS} { said, outcome } attempts`);
+    const knows = field("knows", isStrings, "a list of secret ids");
+    const unlimited = c.patience === Infinity;
+    const patienceLeft = field("patienceLeft",
+      (v) => (unlimited ? v === null : typeof v === "number" && v >= 0 && v <= c.patience),
+      unlimited ? `null (${c.name}'s patience is unlimited)` : `a number from 0 to ${c.patience} (${c.name}'s patience)`);
+    const convinced = field("convinced", (v) => typeof v === "boolean", "true or false");
+    const replies = field("replies", isCounts, "counts of how often each reply has been used");
+
+    this.reset();
+    this.#attempts = attempts.map(({ said, outcome, triggered }) => {
+      const attempt = Object.freeze({ said, outcome });
+      this.#triggered.set(attempt, [...(triggered ?? [])]);
+      return attempt;
+    });
+    this.#knows = new Set(knows);
+    this.#patienceLeft = unlimited ? Infinity : patienceLeft;
+    this.#convinced = convinced;
+    this.#replies = new Map(Object.entries(replies));
+    return this;
   }
 
   /** Negative amounts restore patience. Patience never drops below 0. */

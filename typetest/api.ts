@@ -10,6 +10,7 @@ import {
 import type {
   Character, DefinedCharacter, Verdict, Tell, Difficulty, PersuasionResult, AttemptResult, Attempt,
   Story, TurnResult, TurnDebug, JevClient, ProxyHandlerOptions, ProxyEnv, DecideHook, Part, PartKind,
+  PersuadableSnapshot, GameSnapshot,
 } from "honeytongue";
 import * as persuasion from "honeytongue/persuasion";
 import type { Character as SubpathCharacter, JevClient as SubpathClient } from "honeytongue/persuasion";
@@ -90,6 +91,13 @@ async function persuasionApi(client: JevClient) {
   defineCharacter({ ...harry, offendedBy: ["rudeness"] });
   // @ts-expect-error: patience is a number
   defineCharacter({ ...harry, patience: "5" });
+  // Save and load: plain JSON in, the same character out.
+  const saving = new Persuadable(harry, { client });
+  const saved: PersuadableSnapshot = JSON.parse(JSON.stringify(saving.snapshot()));
+  expectType<Persuadable>(saving.restore(saved));
+  expectType<number | null>(saved.patienceLeft);
+  // @ts-expect-error: a game's snapshot isn't a character's
+  saving.restore({} as GameSnapshot);
   // @ts-expect-error: a reaction's variants are text
   defineCharacter({ ...harry, reactions: [{ min: 0, text: ["Hmm.", 2] }] });
 }
@@ -101,6 +109,9 @@ async function engineApi(client: JevClient) {
   // @ts-expect-error: without validateStory (or a cast), a JSON story with a difficulty isn't a Story
   const unchecked: Story = tidyProfitJson;
   const game = new Game(story, client);
+  const save: GameSnapshot = game.snapshot();
+  expectType<Game>(game.restore(save));
+  expectType<Record<string, PersuadableSnapshot>>(save.npcs);
   const turn = await game.turn("look");
   exact<typeof turn, TurnResult>(true);
   // The stable judgement: attempt()'s result plus the threshold, or null.

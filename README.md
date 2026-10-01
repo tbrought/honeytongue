@@ -59,7 +59,7 @@ else say(result.reaction ?? "Harry's hand drops to his club.");
 
 ## Where next
 
-- **[Documentation](https://honeytongue.dev/)**: writing personas, difficulty, secrets, patience, and every option, from simple to advanced.
+- **[Documentation](https://honeytongue.dev/)**: writing personas, difficulty, secrets, patience, saving and loading, and every option, from simple to advanced.
 - **Playground**: tune a character by trying lines against it, with `npx honeytongue playground`, or [in your browser](https://honeytongue.dev/playground/).
 - **Demo**: [four short scenes](https://honeytongue.dev/play/) built with Honeytongue's text adventure engine, or `npx honeytongue` in a terminal.
 - **Browser games and Twine**: keep your key on a small proxy that ships with Honeytongue and only judges your own characters. See [Browser games](https://honeytongue.dev/#browser).

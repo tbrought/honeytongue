@@ -101,6 +101,7 @@
       <li><a href="#decide">Your own rule</a></li>
       <li><a href="#costs">Cost and speed</a></li>
       <li><a href="#merging">Merging requests</a></li>
+      <li><a href="#saving">Save and load</a></li>
       <li><a href="#engine">Text adventures</a></li>
       <li><a href="#models">Choosing a model</a></li>
       <li><a href="#tuning">Testing and tuning</a></li>
@@ -345,9 +346,21 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
       <p>Behind a reverse proxy, leave out <code>clientIp</code> so the last <code>X-Forwarded-For</code> entry is used. <code>examples/node-proxy.js</code> is a complete one, which <code>npm run proxy</code> runs.</p>
     </section>
 
+    <section id="saving">
+      <h2>Save and load</h2>
+      <p>A character's memory, patience, and learned secrets live in its <code>Persuadable</code>. To keep them in a save file, <code>snapshot()</code> gives them as plain JSON, and <code>restore(snapshot)</code> puts them back into a <code>Persuadable</code> made from the same character. A story's <code>Game</code> has the same pair, covering the scene, items, flags, recent turns, a question waiting for an answer, and every character met so far.</p>
+<pre data-lang="JavaScript"><code><span class="c">// Saving</span>
+localStorage.<span class="f">setItem</span>(<span class="s">"harry"</span>, JSON.<span class="f">stringify</span>(guard.<span class="f">snapshot</span>()));
+
+<span class="c">// Loading, into a Persuadable made from the same character</span>
+<span class="k">const</span> loaded = <span class="k">new</span> <span class="f">Persuadable</span>(character, { client });
+loaded.<span class="f">restore</span>(JSON.<span class="f">parse</span>(localStorage.<span class="f">getItem</span>(<span class="s">"harry"</span>)));</code></pre>
+      <p>A snapshot holds state, not the character or story, which stay in your code. It carries a format version, and <code>restore()</code> checks everything before changing anything: a snapshot for another character or story, from a newer version of Honeytongue, or with a damaged field throws a <code>HoneytongueError</code> that says which, and leaves the character or game as it was. Lists of reply variants carry on where they left off. Don't restore while an attempt is waiting for Jev. The <a href="#twine">Twine recipe</a> keeps a snapshot in a story variable, so SugarCube's saves and Back button carry it.</p>
+    </section>
+
     <section id="twine">
       <h2>Twine</h2>
-      <p>For SugarCube 2, load Honeytongue in your Story JavaScript and keep the character on <code>setup</code>. This recipe is tested in Twine 2.12.0 with SugarCube 2.37.3, using the offline stand-in:</p>
+      <p>For SugarCube 2, load Honeytongue in your Story JavaScript and keep the character on <code>setup</code>, with its state in a story variable so saves carry it. This recipe is tested in Twine 2.12.0 with SugarCube 2.37.3, using the offline stand-in (the save and load part is waiting to be tested in Twine):</p>
 <pre data-lang="JavaScript"><code>setup.ready = <span class="k">import</span>(<span class="s">"https://cdn.jsdelivr.net/npm/honeytongue@alpha/src/index.js"</span>)
   .<span class="f">then</span>(<span class="k">function</span> (hon) {
     setup.harry = <span class="k">new</span> hon.<span class="f">Persuadable</span>({
@@ -356,7 +369,15 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
       goal: <span class="s">"Open the gate after curfew"</span>,
       patience: <span class="n">4</span>,
     }, { client: hon.<span class="f">createMockClient</span>() });
-  });</code></pre>
+  });
+
+<span class="c">// Harry's memory and patience are kept in $harry, so saves, loads, and Back carry them.</span>
+<span class="f">$</span>(document).<span class="f">on</span>(<span class="s">":passagestart"</span>, <span class="k">function</span> () {
+  setup.ready.<span class="f">then</span>(<span class="k">function</span> () {
+    <span class="k">if</span> (State.variables.harry) setup.harry.<span class="f">restore</span>(State.variables.harry);
+    <span class="k">else</span> setup.harry.<span class="f">reset</span>();
+  });
+});</code></pre>
       <p>Then a button calls <code>setup.harry.attempt(_plea)</code> once <code>setup.ready</code> has finished, and sends the player to a passage based on the verdict. The full recipe in <code>examples/twine-sugarcube.md</code> has the passages, including an empty line and running out of patience.</p>
       <p class="note">To judge with Jev, swap <code>hon.createMockClient()</code> for <code>hon.createProxyClient({ url: "https://your-proxy.workers.dev" })</code>, with a <a href="#browser">proxy</a> that allows your story's origin (the error names it) and your character. That part hasn't been tested inside Twine yet.</p>
     </section>
@@ -566,6 +587,7 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
           <tr><td><code>record(input, answers)</code></td><td>Applies answers you fetched yourself (<a href="#merging">Merging requests</a>)</td></tr>
           <tr><td><code>losePatience(amount)</code></td><td>Negative amounts restore patience; returns <code>outOfPatience</code></td></tr>
           <tr><td><code>reset()</code></td><td>Forgets attempts and learned secrets, and restores patience</td></tr>
+          <tr><td><code>snapshot()</code>, <code>restore(snapshot)</code></td><td>The state as plain JSON for a save file, and putting it back, checked first (<a href="#saving">Save and load</a>). <code>Game</code> has the same pair</td></tr>
           <tr><td><code>findRepeat(input)</code>, <code>state(input, options)</code></td><td>The earlier attempt an input repeats, and the state an attempt would send</td></tr>
           <tr><td><code>character</code>, <code>attempts</code>, <code>knows</code>, <code>patienceLeft</code>, <code>convinced</code>, <code>outOfPatience</code></td><td>The defined character and its current state, read-only: change it through the methods. <code>attempts</code> holds the last 100, for spotting repeats</td></tr>
         </tbody>

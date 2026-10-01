@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Added
+
+- **Save and load:** `snapshot()` gives a `Persuadable`'s or a `Game`'s state as plain JSON for a save file, and `restore(snapshot)` puts it back.
+  - A character's snapshot covers its memory, patience, learned secrets, and reply rotation; a game's adds the scene, items, flags, recent turns, a pending question, and every character met so far.
+  - Snapshots carry a format version. `restore()` checks everything first, and throws a readable `HoneytongueError` (leaving the state as it was) for another character or story, a newer format, or a damaged field.
+  - The Twine recipe keeps Harry's snapshot in `$harry`, so SugarCube's saves, loads, and Back button carry his memory and patience.
+
 ### Repository
 
 - **Favicons search results can show:** every page also declares the 192x192 logo as a favicon, since Google only shows square favicons whose size is a multiple of 48px. `docs/favicon.ico` holds the 32x32 and 192x192 logos unchanged, for crawlers that ask for `/favicon.ico` (written by `npm run build:demo`). The page tests and the browser checks cover both.
