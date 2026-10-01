@@ -1,6 +1,6 @@
 # Honeytongue in Twine (SugarCube 2)
 
-Tested in the Twine web app, Twine 2.12.0 with SugarCube 2.37.3, using the offline stand-in (`createMockClient()`): winning, an empty line, and running out of patience all work, with no console errors. Saving and loading (the `:passagestart` handler and `$harry`, added in 0.1.0-alpha.14) is waiting to be tested in Twine.
+Tested in the Twine web app, Twine 2.12.0 with SugarCube 2.37.3, using the offline stand-in (`createMockClient()`): winning, an empty line, and running out of patience all work, with no console errors. Two parts haven't been tested inside Twine yet: saving and loading (the `:passagestart` handler and `$harry`, added in 0.1.0-alpha.14), and judging with Jev through a proxy.
 
 ## 1. Story JavaScript
 
@@ -27,6 +27,8 @@ $(document).on(":passagestart", function () {
 `setup.ready` finishes once Honeytongue has loaded, a moment after the story starts, so the button waits for it.
 
 Harry's state is a plain object from `setup.harry.snapshot()`, kept in the story variable `$harry` after each attempt. At the start of every passage, `setup.harry.restore()` puts it back, so SugarCube's saves, loads, and Back button all carry his memory and patience. With no `$harry` yet, he starts fresh.
+
+> The save and load part hasn't been tested inside Twine yet. If something doesn't work, please open an issue.
 
 ## 2. A passage called "At the gate" (the start passage)
 

@@ -180,8 +180,8 @@ export function createProxyHandler({
     } catch (err) {
       // Only the status: an error's message can quote Jev's reply, which can quote what the player typed.
       console.error(`honeytongue proxy: no answer from Jev (${err?.status ?? err?.name ?? "error"})`);
-      // The reason tells the page what to do: "busy" and "error" may pass, "unavailable" (a bad key, or no
-      // credit left; TypeSafe doesn't document which status that is) won't until you fix it.
+      // The reason tells the page what to do: "busy" and "error" may pass, "unavailable" won't until you fix it: a bad
+      // key (401, 403), or no prepaid credit left (402 with a billing_error, as TypeSafe confirmed on 2026-10-01).
       const reason = err?.status === 429 || err?.status === 529 ? "busy" : [401, 402, 403].includes(err?.status) ? "unavailable" : "error";
       const error = { busy: "Jev is busy right now. Try again in a moment.", unavailable: "The proxy can't use Jev right now.",
         error: "The proxy couldn't get an answer from Jev." }[reason];

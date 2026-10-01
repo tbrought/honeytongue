@@ -7,7 +7,7 @@
 - **Save and load:** `snapshot()` gives a `Persuadable`'s or a `Game`'s state as plain JSON for a save file, and `restore(snapshot)` puts it back.
   - A character's snapshot covers its memory, patience, learned secrets, and reply rotation; a game's adds the scene, items, flags, recent turns, a pending question, and every character met so far.
   - Snapshots carry a format version. `restore()` checks everything first, and throws a readable `HoneytongueError` (leaving the state as it was) for another character or story, a newer format, or a damaged field.
-  - The Twine recipe keeps Harry's snapshot in `$harry`, so SugarCube's saves, loads, and Back button carry his memory and patience.
+  - The Twine recipe keeps Harry's snapshot in `$harry`, so SugarCube's saves, loads, and Back button carry his memory and patience. That part hasn't been tested inside Twine yet, and the recipe says so.
 - **Clues:** a character's `clues` (`{ id, when, reveals }`) are things a line can do that teach the player a secret, such as guessing at the character's family.
   - Characters with clues ask Jev one more question per attempt, and every result carries `clue` (`{ id, reveals, confidence, revealed }`, or `null`). Characters without clues send exactly what they did before.
   - A match on a secret the player hasn't learned, in a line that doesn't offend, reveals it: the `Persuadable` learns it, and that attempt costs no patience. Later lines matching the same clue are judged and charged as usual.
@@ -24,6 +24,7 @@
 
 ### Changed
 
+- **Running out of TypeSafe credit is confirmed:** TypeSafe answers HTTP 402 with a `billing_error`. The Jev client's error now says the prepaid credit has run out, and isn't retried; the proxy reports it as `unavailable`; and the web demo judges with the offline stand-in for the rest of the session. A test plays it through, and `docs/demo-proxy.md` no longer calls it an assumption.
 - **`learn()` rejects secret ids the character doesn't have**, with an error naming their secrets, so a typo (`learn("sick_daugter")`) no longer fails silently. `restore()` checks a snapshot's learned secrets the same way. The `knows` option of `attempt()` is unchanged: ids that aren't secrets are ignored there, as the engine passes all its flags.
 
 ### Repository
