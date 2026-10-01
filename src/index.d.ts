@@ -168,7 +168,7 @@ export interface Character {
   clueAt?: number;
   /** Ask which angle each attempt appeals to (result.angle). Default false; a story with angleReplies turns it on. */
   angles?: boolean;
-  /** The confidence at which the engine uses an angle's reply. Default 0.6. */
+  /** The confidence at which the engine uses an angle's reply. Default 0.7. */
   angleAt?: number;
   /**
    * Lets attempt() send `context` through a proxy with allowedCharacters: at most this many characters of it as JSON.

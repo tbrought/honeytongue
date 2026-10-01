@@ -1,0 +1,144 @@
+{
+  "note": "Angle calibration: lines that lean clearly on one angle (9 per angle, including other), and mixed arguments with the angles that would be acceptable replies. Tried on Harry and Maude with their full requests. Run with node scripts/angles.js calibrate.",
+  "characters": ["harry", "maude"],
+  "clear": {
+    "family": [
+      "My brother is waiting for me on the other side, and I promised I'd be there.",
+      "Think of your own family. Wouldn't you want someone to do this for them?",
+      "My mother raised me to keep my word to my family, and I gave it tonight.",
+      "We look after our own. Your people and mine are kin, after all.",
+      "My wife is expecting me home tonight. She'll be frantic if I don't come.",
+      "You'd do anything for your children. I'm only doing the same for mine.",
+      "My father and yours fought side by side. That has to count for something.",
+      "I'm going to my sister's wedding. She'd never forgive me if I missed it.",
+      "A friend would do this for a friend, and I'd like to think we could be friends."
+    ],
+    "compassion": [
+      "A child is dying of fever, and the medicine I carry is her only chance.",
+      "I'm soaked, freezing, and I haven't eaten in two days. Please, have mercy.",
+      "There's a man bleeding badly back on the road, and I need help for him.",
+      "Someone's life depends on me getting through tonight.",
+      "I'm begging you for pity. I have nowhere left to sleep and the cold is getting worse.",
+      "People are sick and suffering in there, and I have what they need.",
+      "Please, I'm hurt. I can barely stand.",
+      "An old woman will die alone if I don't reach her tonight.",
+      "Have a heart. I'm desperate and I've no one else to turn to."
+    ],
+    "money": [
+      "Here's a silver coin for your trouble.",
+      "I'll pay double the usual fare, in gold, right now.",
+      "Name your price and I'll pay it.",
+      "There's a purse of coins in it for you if you help.",
+      "I can trade you this fine knife for the favour.",
+      "I'll make it worth your while: ten silver pieces.",
+      "Take this ring. It's worth more than a month of your wages.",
+      "I have goods to sell, and you can have a share of the profit.",
+      "Consider it a fee. Coin up front, no questions asked."
+    ],
+    "benefit": [
+      "Help me, and I'll put in a word for you to get the promotion you deserve.",
+      "Help me, and you'll never have to stand out in this rain again: I'll find you a warmer post.",
+      "I can teach you to read, if you'd like. Just help me tonight.",
+      "You want out of this place, don't you? Come with me and you'll be free of it.",
+      "Do this and I'll get you the apprenticeship you've always wanted.",
+      "I know someone who can clear your name. Help me and I'll introduce you.",
+      "I'll take the blame for this, so you'll be out of trouble whatever happens.",
+      "Help me and I'll owe you a favour, any favour, whenever you need it.",
+      "Imagine finally getting the chance to do what you love. I can make that happen."
+    ],
+    "duty": [
+      "Your job is to keep people safe, and I'm the one who needs keeping safe tonight.",
+      "You swore an oath to serve the people of this town. I'm one of them.",
+      "Isn't it your duty to help travellers in need?",
+      "The rules say urgent messages can pass at any hour. You're bound by that.",
+      "You're responsible for what happens at your post. Do the right thing by it.",
+      "A good guard does the job properly, and properly means letting me through.",
+      "Your post exists to serve people, not just to keep them out.",
+      "You keep the records, so you know the rules allow it.",
+      "Doing your job well means more than following the letter of it."
+    ],
+    "authority": [
+      "I'm a knight of the realm, and I'm telling you to stand aside.",
+      "The governor sent me himself. You'll answer to him if I'm delayed.",
+      "I carry the lord's seal. Read it and step aside.",
+      "Your captain gave me permission. Go and ask him if you doubt it.",
+      "I outrank you, soldier. Open the way.",
+      "By order of the council, I'm to pass at once.",
+      "Do you know who I am? I sit on the town council.",
+      "The magistrate himself will hear about this if you refuse me.",
+      "I'm the lord's own cousin, and he'd want you to let me through."
+    ],
+    "fear": [
+      "Raiders are coming down the coast road. If you keep me here, we'll both be caught.",
+      "If this message doesn't get through, the whole town could burn by morning.",
+      "There's a storm rolling in that'll flood this road within the hour.",
+      "If the bridge goes before dawn, nobody gets in or out for weeks.",
+      "Bounty hunters are right behind me, and they won't care whose post this is.",
+      "Wolves have been seen on this road tonight. Nobody's safe out here.",
+      "The war chief will be back at moonrise, and he punishes everyone when things go wrong.",
+      "If the fire on the hill spreads, this place will be the first to go.",
+      "Something's moving in the dark out there. We'd both be safer behind the walls."
+    ],
+    "flattery": [
+      "You're clearly the cleverest guard on this whole wall.",
+      "Someone as wise as you can surely see I mean no harm.",
+      "I've heard you're the kindest soul on the coast.",
+      "What a fine figure you cut in that uniform.",
+      "You must be the most respected person in this town.",
+      "Only someone as brave as you would dare to make an exception.",
+      "Your judgement is famous. I trust it completely.",
+      "They say you're the best at your job. It shows.",
+      "A person of your quality doesn't need to follow every little rule."
+    ],
+    "honesty": [
+      "I won't lie to you. I'm in trouble, and I need to get through.",
+      "Here's the plain truth: I have no papers and no excuse, only my word.",
+      "I swear on my honour I'll cause no trouble.",
+      "I'll be straight with you, as you've been with me.",
+      "Everything I've told you is true. Look me in the eye and judge for yourself.",
+      "I give you my word: I'll be gone by morning.",
+      "No tricks, no stories. I just need to pass.",
+      "I promise you, hand on heart, I mean no harm.",
+      "Honestly, I'd rather tell you the truth and be turned away than lie to you."
+    ],
+    "reason": [
+      "The road is empty and the storm keeps raiders away, so letting me pass for a moment risks nothing.",
+      "You can search me first. If I'm carrying nothing dangerous, there's no harm in letting me pass.",
+      "Here's the plan: you walk me in, watch me deliver the letter, and walk me out.",
+      "The rule is there to stop thieves, and I'm not one: here's my merchant's licence.",
+      "If you let me in now, it's one quiet traveller. If you wait till dawn, it's a crowd.",
+      "I can prove it: the seal on this letter is the apothecary's own.",
+      "It makes sense: I'm unarmed, alone, and expected. Where's the danger?",
+      "Look at the facts. The order was about raiders, and they're anchored miles away.",
+      "Write my name down. If anything goes wrong, you'll know exactly who to find."
+    ],
+    "other": [
+      "Let me through.",
+      "Open up.",
+      "Please.",
+      "Come on, just this once.",
+      "What's that in your pocket?",
+      "Nice weather tonight, isn't it?",
+      "Move, you idiot.",
+      "I want to go in.",
+      "Hello there."
+    ]
+  },
+  "mixed": [
+    { "line": "I'll pay you well, and I swear on my honour I'll cause no trouble.", "ok": ["money", "honesty"] },
+    { "line": "My little girl is sick, and here's a gold coin for your kindness.", "ok": ["compassion", "family", "money"] },
+    { "line": "You're the wisest guard here, so you'll see the facts: the road is clear and I'm unarmed.", "ok": ["flattery", "reason"] },
+    { "line": "The lord sent me, and raiders are coming, so open up.", "ok": ["authority", "fear"] },
+    { "line": "It's your duty to help, and a man is dying out there.", "ok": ["duty", "compassion"] },
+    { "line": "I won't lie: I'm desperate, and I'll pay whatever you ask.", "ok": ["honesty", "compassion", "money"] },
+    { "line": "Help me and you'll get out of this miserable post, and I'll pay you besides.", "ok": ["benefit", "money"] },
+    { "line": "My brother is out there in the storm, and he'll drown if you don't help.", "ok": ["family", "compassion", "fear"] },
+    { "line": "Your captain would want this, and it's the right thing by your own rules.", "ok": ["authority", "duty"] },
+    { "line": "Please, I'm begging you, I'll do anything: I'll pay, I'll work, anything.", "ok": ["compassion", "money", "other"] },
+    { "line": "I'm telling you the truth: the plan is safe, and nobody will know.", "ok": ["honesty", "reason"] },
+    { "line": "Think of your family, and think of what the raiders will do to them.", "ok": ["family", "fear"] },
+    { "line": "A kind soul like you wouldn't leave a freezing traveller outside.", "ok": ["flattery", "compassion"] },
+    { "line": "Let me pass and I'll teach you to read, and I promise I'll be quick about it.", "ok": ["benefit", "honesty"] },
+    { "line": "Coin for you, and a word with the governor about your promotion.", "ok": ["money", "benefit", "authority"] }
+  ]
+}

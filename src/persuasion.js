@@ -40,7 +40,7 @@ const DEFAULTS = {
   maxInputLength: 500,    // longer input is truncated before it's sent
   clueAt: 0.8,            // probability at which a clue counts as matched (calibrated: guesses 97%, false matches 0%)
   angles: false,          // whether each attempt asks Jev which angle it appeals to
-  angleAt: 0.6,           // confidence at which the engine uses an angle's reply (a guess until calibrated)
+  angleAt: 0.7,           // confidence at which the engine uses an angle's reply (calibrated: the lowest with no wrong replies)
 };
 
 /**

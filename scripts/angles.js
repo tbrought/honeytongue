@@ -4,8 +4,12 @@
 //     Which appeals real arguments make: every persuasion line in the scene suites, the showcase, the calibration
 //     argument sets, and the playtest transcripts in playtests/ (if any), each classified once against three
 //     candidate angle sets in one request, to see how many land in "other" and which appeals are missing.
+//   node scripts/angles.js calibrate [--repeats 2] [--dry-run]
+//     The library's angle set (ANGLES): evals/calibration/angles.json's clear lines (one appeal each) and mixed
+//     arguments, as standalone attempts with each character's full request. A confusion matrix (which angles are
+//     mistaken for which), and how often a confident answer is wrong (a jarring reply) at several angleAt values.
 import { readFileSync, readdirSync, existsSync, writeFileSync, mkdirSync } from "node:fs";
-import { defineCharacter, persuasionState } from "../src/persuasion.js";
+import { ANGLES, defineCharacter, persuasionQuestions, persuasionState, readPersuasion } from "../src/persuasion.js";
 import { liveClient, summarize } from "./live-recorder.js";
 import { loadLiveEnv } from "./live-env.js";
 
@@ -14,8 +18,9 @@ const presets = load("stories/characters.json");
 const scenes = load("stories/index.json");
 const sceneCharacter = Object.fromEntries(scenes.map((s) => [s.id, s.character]));
 
-// Candidate angle sets: A as first proposed, B with compassion and honesty, C with three more.
-const ANGLES = {
+// Candidate angle sets for the coverage step: A as first proposed, B with compassion and honesty, C with three more.
+// (These were the first wordings; the library's own set, ANGLES, has sharper ones.)
+const CANDIDATES = {
   family: "Family or loved ones: theirs, or the player's",
   money: "Money, payment, goods, or a trade",
   duty: "Duty, rules, orders, their job, or what's right by the law",
@@ -37,7 +42,7 @@ const question = (name, set) => ({
   type: "choice",
   instructions: `\`player_input\` is what the player says aloud to ${name}, inside the game, to persuade them. ` +
     "What does it mainly appeal to? Pick the one appeal it leans on most.",
-  criteria: Object.fromEntries(set.map((a) => [a, ANGLES[a]])),
+  criteria: Object.fromEntries(set.map((a) => [a, CANDIDATES[a]])),
 });
 
 /** Every persuasion line we have, with the character it was said to. */
@@ -94,7 +99,67 @@ async function coverage() {
   console.log("\n" + summarize(recorded));
 }
 
-const steps = { coverage };
+async function calibrate() {
+  const set = load("evals/calibration/angles.json");
+  const repeats = Number(process.argv.includes("--repeats") ? process.argv[process.argv.indexOf("--repeats") + 1] : 2);
+  const jobs = [
+    ...Object.entries(set.clear).flatMap(([angle, inputs]) => inputs.map((input) => ({ input, ok: [angle], label: angle }))),
+    ...set.mixed.map((m) => ({ input: m.line, ok: m.ok, label: "mixed" })),
+  ];
+  console.log(`${jobs.length} lines x ${set.characters.length} characters x ${repeats} repeats = ${jobs.length * set.characters.length * repeats} calls`);
+  if (process.argv.includes("--dry-run")) return;
+  loadLiveEnv();
+  const recorded = [];
+  let current = "";
+  const client = liveClient(() => current, recorded);
+  const rows = [];
+  for (const id of set.characters) {
+    const c = defineCharacter({ ...presets[id], angles: true });
+    for (const job of jobs) {
+      current = `angles ${id} ${job.label}`;
+      for (let i = 0; i < repeats; i++) {
+        const answers = await client.ask(persuasionState(c, job.input), persuasionQuestions(c));
+        const { angle } = readPersuasion(c, answers);
+        rows.push({ character: id, ...job, angle: angle?.angle ?? null, confidence: angle?.confidence ?? 0, probabilities: angle?.probabilities ?? {} });
+      }
+    }
+  }
+  mkdirSync(new URL("../live-runs/", import.meta.url), { recursive: true });
+  writeFileSync(new URL(`../live-runs/angles-calibrate-${Date.now()}.json`, import.meta.url), JSON.stringify(rows, null, 2));
+
+  const clear = rows.filter((r) => r.label !== "mixed");
+  const short = (a) => a.slice(0, 6);
+  console.log("\nConfusion matrix, clear lines (rows: the angle the line leans on; columns: what Jev chose, any confidence):");
+  console.log("            " + ANGLES.map((a) => short(a).padStart(7)).join(""));
+  for (const label of ANGLES) {
+    const mine = clear.filter((r) => r.label === label);
+    console.log(`  ${label.padEnd(10)}` + ANGLES.map((a) => String(mine.filter((r) => r.angle === a).length || ".").padStart(7)).join("") + `   of ${mine.length}`);
+  }
+  console.log("\nBy angle at angleAt 0.6: right and confident / wrong and confident (jarring) / unsure (falls back):");
+  for (const label of ANGLES) {
+    const mine = clear.filter((r) => r.label === label);
+    const right = mine.filter((r) => r.angle === label && r.confidence >= 0.6).length;
+    const wrong = mine.filter((r) => r.angle !== label && r.confidence >= 0.6).length;
+    console.log(`  ${label.padEnd(10)} ${String(right).padStart(2)} / ${String(wrong).padStart(2)} / ${String(mine.length - right - wrong).padStart(2)}  of ${mine.length}`);
+  }
+  const pct = (n, d) => `${Math.round((100 * n) / d)}%`;
+  console.log("\nWhere angleAt could cut (clear lines right / jarring; mixed lines acceptable / jarring; the rest fall back):");
+  const mixed = rows.filter((r) => r.label === "mixed");
+  for (const at of [0.5, 0.6, 0.7, 0.8, 0.9]) {
+    const conf = (r) => r.confidence >= at;
+    const jar = (r) => conf(r) && !r.ok.includes(r.angle) && r.angle !== "other";
+    console.log(`  angleAt ${at.toFixed(1)}: clear ${pct(clear.filter((r) => conf(r) && r.ok.includes(r.angle)).length, clear.length)} right,` +
+      ` ${pct(clear.filter(jar).length, clear.length)} jarring (${clear.filter(jar).length}); mixed ${pct(mixed.filter((r) => conf(r) && r.ok.includes(r.angle)).length, mixed.length)}` +
+      ` acceptable, ${pct(mixed.filter(jar).length, mixed.length)} jarring (${mixed.filter(jar).length})`);
+  }
+  console.log("\nConfident wrong answers at 0.6:");
+  for (const r of rows.filter((x) => x.confidence >= 0.6 && !x.ok.includes(x.angle))) {
+    console.log(`  ${r.character} ${r.label} -> ${r.angle} ${r.confidence.toFixed(2)}: "${r.input.slice(0, 80)}"`);
+  }
+  console.log("\n" + summarize(recorded));
+}
+
+const steps = { coverage, calibrate };
 const step = steps[process.argv[2]];
 if (!step) { console.error(`Usage: node scripts/angles.js ${Object.keys(steps).join("|")} [--dry-run]`); process.exit(1); }
 await step();

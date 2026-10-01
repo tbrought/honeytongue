@@ -205,6 +205,34 @@ Before calibrating angles, every persuasion line we had was classified against t
 - **Benefit** (21) covers offers of what the character wants for themselves other than money, such as Nib's cooking.
 - What's left in C's "other" is bare pleas, commands, and insults ("Come on, just open the gate"), which have no appeal to reply to, so the score band's reaction is right for them.
 
+## Angles (0.1.0-alpha.14, 2026-09-30)
+
+The library's angle set, with the sharpened definitions, was tried on Harry and Maude with their full requests, twice each (`evals/calibration/angles.json`, `node scripts/angles.js calibrate`). That's 99 clear lines (9 per angle, each leaning on one appeal) and 15 mixed arguments, each with the angles that would be acceptable replies. 456 calls, 692,441 tokens.
+
+**Which angles were mistaken for which** (clear lines, at any confidence, out of 36 per angle):
+
+| The line leans on | Jev chose it | Mistaken for |
+|---|---|---|
+| family | 34 | honesty 2 |
+| compassion, money, benefit, duty, authority, flattery, honesty, other | 36 each | none |
+| fear | 32 | reason 4 |
+| reason | 32 | other 4 |
+
+- **Fear read as reason:** natural dangers, with no person behind them ("If the bridge goes before dawn, nobody gets in or out for weeks"), at about 0.5, so they're unsure and fall back.
+- **Family read as honesty:** "My mother raised me to keep my word to my family", which really is both.
+- **Reason read as other:** "Write my name down. If anything goes wrong, you'll know exactly who to find."
+
+**Where `angleAt` cuts:**
+
+| `angleAt` | Clear lines right | Clear lines jarring (confidently wrong) | Mixed lines acceptable | Mixed lines jarring |
+|---|---|---|---|---|
+| 0.5 | 97% | 5 | 100% | 0 |
+| 0.6 | 96% | 2 | 90% | 0 |
+| 0.7 | 94% | 0 | 73% | 0 |
+| 0.8 | 91% | 0 | 50% | 0 |
+
+Everything else falls back to the score band's reaction. `angleAt` is 0.7, the lowest setting with no jarring replies. Mixed arguments below it sat between their acceptable angles: money at 0.53 to 0.69 for "I'm desperate, and I'll pay whatever you ask", authority or duty at 0.52 to 0.65 for "Your captain would want this, and it's the right thing by your own rules".
+
 ## Reproducing
 
 With `TYPESAFE_API_KEY` set:
