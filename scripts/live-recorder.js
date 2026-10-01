@@ -5,7 +5,7 @@
 import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createJevClient } from "../src/jev.js";
 
-export const BUDGET = 4_000_000; // per phase (4M from alpha.14, whose turns carry clue and angle questions; 3M before): archive live-runs/ledger.json at the start of each phase to reset it
+export const BUDGET = 5_500_000; // per phase (5.5M for alpha.14, whose turns carry clue and angle questions and which reran everything on its final build; 3M before): archive live-runs/ledger.json at the start of each phase to reset it
 const dir = new URL("../live-runs/", import.meta.url);
 const ledgerFile = new URL("ledger.json", dir);
 const callsFile = new URL("calls.jsonl", dir);
