@@ -597,7 +597,7 @@ loaded.<span class="f">restore</span>(JSON.<span class="f">parse</span>(localSto
         <tbody>
           <tr><td><code>new Persuadable(character, { client })</code></td><td>A character with memory and patience</td></tr>
           <tr><td><code>attempt(input, { context, knows })</code></td><td>Judges an attempt and returns a result; <code>context</code> is extra game state for Jev (through a guarded proxy, the character needs a <code>maxContextLength</code>), <code>knows</code> the secret ids learned (defaults to those passed to <code>learn()</code>). It still asks Jev once the character is convinced or out of patience</td></tr>
-          <tr><td><code>learn(secretId)</code></td><td>Marks a secret as learned</td></tr>
+          <tr><td><code>learn(secretId)</code></td><td>Marks a secret as learned. An id that isn't one of the character's secrets throws, so a typo doesn't fail silently</td></tr>
           <tr><td><code>record(input, answers)</code></td><td>Applies answers you fetched yourself (<a href="#merging">Merging requests</a>)</td></tr>
           <tr><td><code>losePatience(amount)</code></td><td>Negative amounts restore patience; returns <code>outOfPatience</code></td></tr>
           <tr><td><code>reset()</code></td><td>Forgets attempts and learned secrets, and restores patience</td></tr>

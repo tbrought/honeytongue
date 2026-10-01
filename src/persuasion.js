@@ -350,6 +350,9 @@ function reactionFor(c, verdict, score) {
 
 const VERDICTS = ["convinced", "unconvinced", "offended", "repeated"];
 
+/** A character's secret ids, for error messages. */
+const secretList = (c) => (c.secrets.length ? `their secrets are ${c.secrets.map((s) => `"${s.id}"`).join(", ")}` : "they have no secrets");
+
 const describe = (v) => {
   if (typeof v === "function") return "a function";
   try { return JSON.stringify(v) ?? String(v); } catch { return String(v); }
@@ -435,8 +438,12 @@ export class Persuadable {
     return this.#patienceLeft <= 0;
   }
 
-  /** Mark a secret as known to the player, so arguments using it count. */
+  /** Mark a secret as known to the player, so arguments using it count. Throws for an id that isn't one of its secrets. */
   learn(secretId) {
+    const c = this.character;
+    if (!c.secrets.some((s) => s.id === secretId)) {
+      throw new HoneytongueError(`${c.name} has no secret ${describe(secretId)} to learn: ${secretList(c)}`);
+    }
     this.#knows.add(secretId);
   }
 
@@ -562,7 +569,8 @@ export class Persuadable {
       typeof a.said === "string" && VERDICTS.includes(a.outcome) &&
       (a.triggered === undefined || (Array.isArray(a.triggered) && a.triggered.every((t) => TELLS.includes(t))))),
       `a list of at most ${KEPT_ATTEMPTS} { said, outcome } attempts`);
-    const knows = field("knows", isStrings, "a list of secret ids");
+    const knows = field("knows", (v) => isStrings(v) && v.every((id) => c.secrets.some((s) => s.id === id)),
+      `a list of ${c.name}'s secret ids (${secretList(c)})`);
     const unlimited = c.patience === Infinity;
     const patienceLeft = field("patienceLeft",
       (v) => (unlimited ? v === null : typeof v === "number" && v >= 0 && v <= c.patience),

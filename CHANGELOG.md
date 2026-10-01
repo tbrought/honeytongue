@@ -16,6 +16,10 @@
   - Calibrated against live Jev (`docs/live-results.md`): at `clueAt` 0.8, the default, 97% of guesses matched and none of 114 near misses, injection attempts, and plain lines did. The question's options are numbered, so a line can't pick one by typing a clue's id.
 - **The proxy allows 8 questions per request by default** (was 6): an engine turn sends 5 with clues, and 6 with clues and angles.
 
+### Changed
+
+- **`learn()` rejects secret ids the character doesn't have**, with an error naming their secrets, so a typo (`learn("sick_daugter")`) no longer fails silently. `restore()` checks a snapshot's learned secrets the same way. The `knows` option of `attempt()` is unchanged: ids that aren't secrets are ignored there, as the engine passes all its flags.
+
 ### Repository
 
 - **Favicons search results can show:** every page also declares the 192x192 logo as a favicon, since Google only shows square favicons whose size is a multiple of 48px. `docs/favicon.ico` holds the 32x32 and 192x192 logos unchanged, for crawlers that ask for `/favicon.ico` (written by `npm run build:demo`). The page tests and the browser checks cover both.

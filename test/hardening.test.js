@@ -116,7 +116,7 @@ test("createJevClient refuses a browser's Web Worker too, but not a server's wor
 // ---- Persuadable's state ----
 
 test("a Persuadable's state can be read but only changed through its methods", async () => {
-  const npc = new Persuadable({ ...harry, patience: 3 }, { client: createMockClient() });
+  const npc = new Persuadable({ ...harry, patience: 3, secrets: [{ id: "secret", fact: "He's tired." }] }, { client: createMockClient() });
   await npc.attempt("You're the finest guard in the kingdom.");
   npc.learn("secret");
   assert.equal(npc.attempts.length, 1);

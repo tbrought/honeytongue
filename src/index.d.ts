@@ -245,6 +245,7 @@ export class Persuadable {
   attempt(input: string, options?: AttemptOptions): Promise<AttemptResult>;
   /** `knows`: the secrets the state you sent listed, if you passed your own (a clue only reveals what isn't among them). */
   record(input: string, answers: Record<string, any> | null, options?: { knows?: string[] }): AttemptResult;
+  /** Marks a secret as learned. Throws HoneytongueError for an id that isn't one of the character's secrets. */
   learn(secretId: string): void;
   findRepeat(input: string): Attempt | null;
   /** Exactly the state an attempt with this input would send to Jev. */

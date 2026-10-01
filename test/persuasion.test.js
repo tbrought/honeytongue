@@ -116,6 +116,9 @@ test("secrets are only sent to Jev once learned", () => {
   assert.doesNotMatch(JSON.stringify(persuasionState(c, "hi", { knows: ["sick_kid"] })), /owes the captain/);
   const npc = new Persuadable(c);
   npc.learn("sick_kid");
+  assert.throws(() => npc.learn("sick_kidd"), /Harry has no secret "sick_kidd" to learn: their secrets are "sick_kid", "debt"/);
+  assert.throws(() => new Persuadable(harry).learn("x"), /they have no secrets/);
+  assert.deepEqual([...npc.knows], ["sick_kid"], "a refused id isn't learned");
   assert.deepEqual(npc.state("hi").character.secrets.map((s) => s.fact), ["Her daughter is sick."]);
   assert.doesNotMatch(JSON.stringify(persuasionQuestions(c)), /player_knows/, "the questions don't need to explain unlearned secrets");
 });

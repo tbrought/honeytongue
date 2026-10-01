@@ -64,7 +64,8 @@ test("restoring a Persuadable checks the snapshot, says what's wrong, and leaves
     [{ ...good, patienceLeft: null }, /"patienceLeft"/],
     [{ ...good, attempts: [{ said: "hi", outcome: "maybe" }] }, /"attempts"/],
     [{ ...good, attempts: [{ said: "hi", outcome: "offended", triggered: ["rudeness"] }] }, /"attempts"/],
-    [{ ...good, knows: "sick_daughter" }, /"knows" should be a list of secret ids/],
+    [{ ...good, knows: "sick_daughter" }, /"knows" should be a list of Harry's secret ids \(their secrets are "sick_daughter"\)/],
+    [{ ...good, knows: ["sick_daugter"] }, /"knows" should be a list of Harry's secret ids/],
     [{ ...good, convinced: "no" }, /"convinced" should be true or false/],
     [{ ...good, replies: { "from 0": -1 } }, /"replies"/],
   ];
