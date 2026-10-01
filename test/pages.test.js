@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { defineCharacter, readPersuasion } from "../src/index.js";
+import { ICON_SOURCES, readIco } from "../scripts/favicon.js";
 
 const PAGES = {
   "docs/index.html": "https://honeytongue.dev/",
@@ -24,6 +25,30 @@ test("every page has the logo as its favicon and touch icon", () => {
     assert.deepEqual(size(new URL(icon, `file:///x/${dir}`).pathname.slice(3)), [32, 32], `${page} favicon`);
     assert.deepEqual(size(new URL(touch, `file:///x/${dir}`).pathname.slice(3)), [192, 192], `${page} touch icon`);
   }
+});
+
+test("every page declares a favicon search results can show: square, and a multiple of 48px", () => {
+  for (const page of Object.keys(PAGES)) {
+    const html = read(page);
+    const dir = page.slice(0, page.lastIndexOf("/") + 1);
+    const icons = [...html.matchAll(/<link rel="icon" type="image\/png" sizes="(\d+)x(\d+)" href="([^"]+)">/g)];
+    const searchable = icons.filter(([, w, h]) => w === h && Number(w) % 48 === 0);
+    assert.ok(searchable.length, `${page}: a favicon whose size is a multiple of 48 (Google ignores others)`);
+    for (const [, w, h, href] of searchable) {
+      assert.deepEqual(size(new URL(href, `file:///x/${dir}`).pathname.slice(3)), [Number(w), Number(h)], `${page}: ${href} is really ${w}x${h}`);
+    }
+  }
+});
+
+test("docs/favicon.ico holds the logos unchanged, for crawlers that ask for /favicon.ico", () => {
+  assert.ok(existsSync(new URL("../docs/favicon.ico", import.meta.url)), "docs/favicon.ico exists");
+  const images = readIco(readFileSync(new URL("../docs/favicon.ico", import.meta.url)));
+  assert.deepEqual(images.map((i) => i.size), ICON_SOURCES.map(([, s]) => s));
+  for (const [i, [path]] of ICON_SOURCES.entries()) {
+    assert.ok(images[i].bytes.equals(readFileSync(new URL(`../${path}`, import.meta.url))), `${path}, byte for byte (run npm run build:demo)`);
+  }
+  // Nothing in robots.txt keeps crawlers from the icons.
+  assert.doesNotMatch(read("docs/robots.txt"), /Disallow/);
 });
 
 test("every page has Open Graph and Twitter card tags, so shared links show the logo", () => {

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Repository
+
+- **Favicons search results can show:** every page also declares the 192x192 logo as a favicon, since Google only shows square favicons whose size is a multiple of 48px. `docs/favicon.ico` holds the 32x32 and 192x192 logos unchanged, for crawlers that ask for `/favicon.ico` (written by `npm run build:demo`). The page tests and the browser checks cover both.
+
 ## 0.1.0-alpha.13 (2026-09-30)
 
 ### Added
