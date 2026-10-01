@@ -190,6 +190,21 @@ Each demo character's clue was tried with 94 lines (`evals/calibration/clues.jso
 
 The near misses that still matched below 0.8 were "Family matters more than rules, doesn't it?" (0.65, Harry), "I'm starving. Is there any stew left?" (0.72 to 0.76, Nib), and "How long have you been up here tonight?" (0.66 to 0.68, Cobb). `clueAt` is 0.8.
 
+## Angle coverage (0.1.0-alpha.14, 2026-09-30)
+
+Before calibrating angles, every persuasion line we had was classified against three candidate sets of angles in one request each (`node scripts/angles.js coverage`). That's 171 lines: the scene suites, the showcase, the calibration argument sets, and four playtest transcripts. 171 calls, 243,197 tokens.
+
+| Set | Angles | In "other" | Confident (0.6 or more) |
+|---|---|---|---|
+| A | family, money, duty, fear, flattery | 47 (27%) | 144 |
+| B | A, plus compassion and honesty | 26 (15%) | 121 |
+| C | B, plus reason, benefit, and authority | 12 (7%) | 123 |
+
+- **Compassion** ("someone's life depends on it") was the most common appeal in sets B and C: 35 lines.
+- **Reasons and evidence** (33 lines in C) cover the demo's practical winning lines, such as Cobb's "the raiders won't sail in this storm, and the shutter can send the beam out to sea only".
+- **Benefit** (21) covers offers of what the character wants for themselves other than money, such as Nib's cooking.
+- What's left in C's "other" is bare pleas, commands, and insults ("Come on, just open the gate"), which have no appeal to reply to, so the score band's reaction is right for them.
+
 ## Reproducing
 
 With `TYPESAFE_API_KEY` set:
