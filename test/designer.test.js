@@ -291,3 +291,17 @@ test("clues: kept in drafts, share links, generated code, and story JSON, where 
   assert.throws(() => readDraft({ character: { ...character, clues: [{ id: 1 }] } }), /"clues"/);
 });
 
+test("angles and near-miss bands survive drafts, share links, and generated code", () => {
+  const character = { name: "Maude", persona: "A quartermaster.", goal: "Take me aboard", angles: true, angleAt: 0.7,
+    reactions: [{ min: 0, text: "Next." }, { min: 3, text: "Close.", nearMiss: true }] };
+  const back = decodeShare(encodeShare({ character, knows: [] })).character;
+  assert.equal(back.angles, true);
+  assert.equal(back.angleAt, 0.7);
+  assert.deepEqual(back.reactions, character.reactions);
+  const smallest = minimalCharacter(character);
+  assert.equal(smallest.angles, true);
+  assert.deepEqual(smallest.reactions, character.reactions);
+  assert.equal(minimalCharacter({ ...character, angles: false }).angles, undefined, "false is the default, so it's left out");
+  assert.throws(() => readDraft({ character: { ...character, angles: "yes" } }), /"angles"/);
+});
+

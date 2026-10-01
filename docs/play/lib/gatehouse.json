@@ -74,7 +74,8 @@
                 "@[Harry] turns the #[toy horse] over in his fingers, quiet for a moment. \"I've worries of my own at home tonight. Tell me why yours can't wait.\"",
                 "@[Harry] eyes the #[sealed letter] in your hand. \"Now that's more like it. Who needs that so badly it can't wait till morning?\"",
                 "@[Harry] glances up the dark street toward home, then back at you. \"You're getting somewhere. Give me a reason I'd risk my post for.\""
-              ]
+              ],
+              "nearMiss": true
             }
           ],
           "clues": [
@@ -98,6 +99,32 @@
           "family_at_home": [
             "@[Harry] is quiet for a moment, turning the #[toy horse] over in his fingers. \"My girl. She's had a fever three days, and the apothecary won't see anyone after curfew.\"",
             "@[Harry]'s hand closes round the #[toy horse]. \"It's my daughter's. She's had a fever three days, and the apothecary's shut till dawn.\""
+          ]
+        },
+        "angleReplies": {
+          "honesty": [
+            "@[Harry] studies your face for a long moment. \"Plain words. I like that better. Go on.\"",
+            "\"I believe you mean it,\" @[Harry] says slowly. \"Now tell me why it can't wait.\""
+          ],
+          "compassion": [
+            "@[Harry]'s thumb finds the #[toy horse] in his pocket. \"Everyone's got someone who needs them. Who needs you?\"",
+            "@[Harry] softens, just a little. \"I'm not made of stone. But I need more than that.\""
+          ],
+          "money": [
+            "@[Harry] looks at your hand, then at you. \"I don't take coin to open this gate. Put it away.\"",
+            "\"Money won't do it,\" @[Harry] says flatly. \"Plenty have tried.\""
+          ],
+          "authority": [
+            "@[Harry] doesn't move. \"I've heard every grand name in the city tonight. The gate stays shut for all of them.\"",
+            "\"Rank doesn't lift this bar,\" @[Harry] says. \"Curfew's curfew, whoever you are.\""
+          ],
+          "flattery": [
+            "@[Harry]'s mouth twists. \"Save the sweet talk. It won't lift the bar.\"",
+            "\"Flattery,\" @[Harry] says, unimpressed. \"Try the truth instead.\""
+          ],
+          "duty": [
+            "\"I know my job,\" @[Harry] says. \"Tonight it's keeping this gate shut.\"",
+            "@[Harry] taps the spear against the stones. \"My post, my rules. Give me a reason to bend them.\""
           ]
         }
       },

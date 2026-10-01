@@ -3,7 +3,7 @@
 // persuasion.js, how convincing they were (a Score). All state changes
 // and narration come from the author's story file.
 
-import { Persuadable, persuasionQuestions, readPersuasion, cleanInput, defineCharacter, HoneytongueError } from "./persuasion.js";
+import { Persuadable, persuasionQuestions, readPersuasion, cleanInput, defineCharacter, HoneytongueError, ANGLES } from "./persuasion.js";
 import { SOURCE } from "./jev.js";
 import { SNAPSHOT_FORMAT, snapshotChecker, isCounts, isStrings } from "./snapshot.js";
 import { parseMarkup, stripMarkup, stripMarkupDeep, markupProblems, hasMarkup } from "./markup.js";
@@ -53,6 +53,8 @@ const toCharacter = (npc) => ({
   patience: npc.patience,
   secrets: npc.secrets,
   repeatReaction: npc.repeatReaction,
+  // A story with angle replies needs the angle asked; one without asks only if its persuasion block says so.
+  ...(npc.angleReplies !== undefined && { angles: true }),
 });
 
 // Story text players read, where markup (@[name], #[thing]) is allowed. "*" matches any scene or action id, and "#"
@@ -70,6 +72,8 @@ const DISPLAY_TEXT = [
   ["scenes", "*", "npc", "repeatReaction", "#"],
   ["scenes", "*", "npc", "clueReplies", "*"],
   ["scenes", "*", "npc", "clueReplies", "*", "#"],
+  ["scenes", "*", "npc", "angleReplies", "*"],
+  ["scenes", "*", "npc", "angleReplies", "*", "#"],
   ["scenes", "*", "npc", "outOfPatience", "text"],
   ["scenes", "*", "npc", "persuasion", "success", "text"],
   ["scenes", "*", "npc", "persuasion", "reactions", "#", "text"],
@@ -175,6 +179,17 @@ export function validateStory(story) {
           }
           for (const id of Object.keys(clueReplies)) {
             if (!clueIds.includes(id)) problems.push(`${at}: "clueReplies" has "${id}", which isn't one of the npc's clues`);
+          }
+        }
+        // Angle replies: by the library's angles ("other" means no clear appeal, so the score band's reaction is used).
+        if (npc.angleReplies !== undefined) {
+          if (!isObject(npc.angleReplies)) problems.push(`${at}: npc "angleReplies" must be an object of { angle: reply }`);
+          else {
+            for (const [angle, reply] of Object.entries(npc.angleReplies)) {
+              if (!ANGLES.includes(angle) || angle === "other") {
+                problems.push(`${at}: "angleReplies" has "${angle}", which isn't an angle: use ${ANGLES.filter((a) => a !== "other").map((a) => `"${a}"`).join(", ")}`);
+              } else if (!lines(reply)) problems.push(`${at}: angle reply "${angle}" must be a non-empty string, or a list of them`);
+            }
           }
         }
         if (Number.isFinite(npc.patience)) {
@@ -585,9 +600,27 @@ export class Game {
     } else if (result.clue?.revealed) {
       // A good guess becomes progress: they tell you, instead of turning you down.
       lines.push(this.#clueReply(result.clue));
+    } else if (result.verdict === "offended") {
+      lines.push(this.hostileReaction());
     } else {
-      lines.push(result.verdict === "offended" ? this.hostileReaction() : result.reaction);
+      lines.push(this.#angleReply(result) ?? result.reaction);
     }
+  }
+
+  /**
+   * The reply to what an unconvinced line appealed to, when the story has one and Jev is sure enough (angleAt).
+   * A near-miss band ("nearMiss": true) keeps its own reaction: hints matter more than a reply to the angle.
+   */
+  #angleReply(result) {
+    const npc = this.scene.npc;
+    const c = this.npc.character;
+    const { angle } = result;
+    if (result.verdict !== "unconvinced" || !angle || angle.confidence < c.angleAt) return null;
+    const reply = npc.angleReplies?.[angle.angle];
+    if (reply === undefined) return null;
+    const band = [...c.reactions].sort((a, b) => b.min - a.min).find((r) => (result.score ?? 0) >= r.min);
+    if (band?.nearMiss) return null;
+    return this.#nextLine(`${npc.id} angle ${angle.angle}`, reply);
   }
 
   /** Change the NPC's patience. Running out plays their outOfPatience effect, once. */

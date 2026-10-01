@@ -109,9 +109,14 @@
           <button type="button" class="key" id="add-clue">Add a clue</button>
           <p class="error" id="e-clues"></p>
         </fieldset>
+        <fieldset aria-describedby="h-angles">
+          <legend>Angles</legend>
+          <label class="check"><input type="checkbox" id="f-angles" data-field="angles"> Ask what each line appeals to</label>
+          <p class="hint" id="h-angles">Family, compassion, money, benefit (something they want other than money), duty, authority, fear, flattery, honesty, reason, or other. Your game can reply to it.</p>
+        </fieldset>
         <fieldset aria-describedby="h-reactions e-reactions">
           <legend>Reactions</legend>
-          <p class="hint" id="h-reactions">What they say when unconvinced, picked by the highest score reached. Put each variant on its own line, and they're used in turn.</p>
+          <p class="hint" id="h-reactions">What they say when unconvinced, picked by the highest score reached. Put each variant on its own line, and they're used in turn. Mark the band just below the threshold as a near miss, so in a story its hint wins over a reply to the line's angle.</p>
           <ul class="rows" id="reactions"></ul>
           <button type="button" class="key" id="add-reaction">Add a reaction</button>
           <p class="error" id="e-reactions"></p>

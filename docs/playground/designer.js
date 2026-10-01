@@ -63,7 +63,7 @@ function wordFor(threshold, levels) {
 }
 
 // Output order, most important first. Anything else defineCharacter accepts goes after, in its own order.
-const ORDER = ["name", "persona", "goal", "difficulty", "threshold", "offendedBy", "patience", "secrets", "clues", "reactions",
+const ORDER = ["name", "persona", "goal", "difficulty", "threshold", "offendedBy", "patience", "secrets", "clues", "angles", "reactions",
   "repeatReaction", "levels", "hostileAt"];
 
 /**
@@ -82,7 +82,9 @@ export function minimalCharacter(character) {
   if (c.patience !== Infinity) out.patience = c.patience;
   if (c.secrets.length) out.secrets = c.secrets.map(({ id, fact }) => ({ id, fact }));
   if (c.clues.length) out.clues = c.clues.map(({ id, when, reveals }) => ({ id, when, reveals }));
-  if (c.reactions.length) out.reactions = [...c.reactions].sort((a, b) => a.min - b.min).map(({ min, text }) => ({ min, text }));
+  if (c.reactions.length) {
+    out.reactions = [...c.reactions].sort((a, b) => a.min - b.min).map(({ min, text, nearMiss }) => ({ min, text, ...(nearMiss && { nearMiss }) }));
+  }
   if (c.repeatReaction) out.repeatReaction = c.repeatReaction;
   if (levels) out.levels = levels;
   for (const [key, value] of Object.entries(c)) {
@@ -174,7 +176,7 @@ export const storyJson = (character, options) => safeJson(storyNpc(character, op
 // ---- Drafts and share links -----------------------------------------------------
 
 const TEXT_FIELDS = ["name", "persona", "goal", "difficulty"];
-const NUMBER_FIELDS = ["patience", "threshold", "hostileAt", "failCost", "offendedCost", "memory", "repeatSimilarity", "maxInputLength"];
+const NUMBER_FIELDS = ["patience", "threshold", "hostileAt", "failCost", "offendedCost", "memory", "repeatSimilarity", "maxInputLength", "clueAt", "angleAt"];
 const damaged = (what) => new HoneytongueError(`This character couldn't be loaded: ${what}.`);
 
 /**
@@ -200,6 +202,10 @@ export function readDraft(value) {
     if (typeof given[f] !== "string") throw damaged(`"${f}" should be text`);
     character[f] = given[f];
   }
+  if (given.angles !== undefined) {
+    if (typeof given.angles !== "boolean") throw damaged('"angles" should be true or false');
+    character.angles = given.angles;
+  }
   if (given.repeatReaction !== undefined) {
     if (!isLines(given.repeatReaction)) throw damaged('"repeatReaction" should be text, or a list of it');
     character.repeatReaction = copyLines(given.repeatReaction);
@@ -218,10 +224,12 @@ export function readDraft(value) {
   list("levels", (l) => typeof l === "string", "a list of level descriptions");
   list("secrets", (s) => typeof s?.id === "string" && typeof s?.fact === "string", "a list of { id, fact }");
   list("clues", (k) => ["id", "when", "reveals"].every((f) => typeof k?.[f] === "string"), "a list of { id, when, reveals }");
-  list("reactions", (r) => typeof r?.min === "number" && isLines(r?.text), "a list of { min, text }");
+  list("reactions", (r) => typeof r?.min === "number" && isLines(r?.text) && (r.nearMiss === undefined || typeof r.nearMiss === "boolean"), "a list of { min, text }");
   if (character.secrets) character.secrets = character.secrets.map(({ id, fact }) => ({ id, fact }));
   if (character.clues) character.clues = character.clues.map(({ id, when, reveals }) => ({ id, when, reveals }));
-  if (character.reactions) character.reactions = character.reactions.map(({ min, text }) => ({ min, text: copyLines(text) }));
+  if (character.reactions) {
+    character.reactions = character.reactions.map(({ min, text, nearMiss }) => ({ min, text: copyLines(text), ...(nearMiss !== undefined && { nearMiss }) }));
+  }
   const knows = value.knows ?? [];
   if (!Array.isArray(knows) || !knows.every((k) => typeof k === "string")) throw damaged('"knows" should be a list of secret ids');
   return { character, knows: [...knows], ...line };

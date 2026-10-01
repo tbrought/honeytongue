@@ -49,7 +49,8 @@
           "Harry turns the toy horse over in his fingers, quiet for a moment. \"I've worries of my own at home tonight. Tell me why yours can't wait.\"",
           "Harry eyes the sealed letter in your hand. \"Now that's more like it. Who needs that so badly it can't wait till morning?\"",
           "Harry glances up the dark street toward home, then back at you. \"You're getting somewhere. Give me a reason I'd risk my post for.\""
-        ]
+        ],
+        "nearMiss": true
       }
     ],
     "clues": [
@@ -59,6 +60,7 @@
         "reveals": "knows_daughter_is_sick"
       }
     ],
+    "angles": true,
     "repeatReaction": [
       "\"You said that already,\" Harry says, not unkindly. \"Saying it louder won't open the gate.\"",
       "Harry sighs. \"Same words, same answer.\"",
@@ -111,7 +113,8 @@
           "Nib's ears twitch up, just a little. \"Ooh. But what happens to Nib, after?\"",
           "Nib glances at his bedroll, then away again, quickly. \"Maybe. Maybe maybe. But what's in it for me?\"",
           "Nib stirs the stew pot slower and slower. \"If I went... where would I even go?\""
-        ]
+        ],
+        "nearMiss": true
       }
     ],
     "clues": [
@@ -121,6 +124,7 @@
         "reveals": "wants_to_be_a_cook"
       }
     ],
+    "angles": true,
     "repeatReaction": [
       "\"You said that one,\" Nib mutters. \"Say a different thing.\"",
       "Nib counts on his claws. \"That's the same one again.\"",
@@ -173,7 +177,8 @@
           "Maude taps the manifest, thinking. \"Now we're haggling. Tell me what's in it for me, and how you'd prove it.\"",
           "\"You've got my attention,\" Maude says, and means it. \"Bring me something I can check against the books.\"",
           "Maude turns the manifest toward the lamplight. \"Warmer. What's worth more to me than a fare?\""
-        ]
+        ],
+        "nearMiss": true
       }
     ],
     "clues": [
@@ -183,6 +188,7 @@
         "reveals": "suspects_the_captain"
       }
     ],
+    "angles": true,
     "repeatReaction": [
       "\"Heard it the first time,\" Maude says. \"Saying it twice doesn't double its worth.\"",
       "Maude doesn't look up. \"Already on the books. Next.\"",
@@ -233,7 +239,8 @@
           "Cobb looks out at the black water, turning the lamp key over in his fingers. \"You've near enough talked me round. But if I'm wrong, the whole town pays for it.\"",
           "Cobb glances at the spyglass, then at you. \"Aye, I'm listening now. Show me the raiders won't come for the town.\"",
           "\"There's something in that,\" Cobb murmurs, resting a hand on the lamp's brass cage. \"Tell me who'd see this light, and who wouldn't.\""
-        ]
+        ],
+        "nearMiss": true
       }
     ],
     "clues": [
@@ -243,6 +250,7 @@
         "reveals": "lost_a_boat"
       }
     ],
+    "angles": true,
     "repeatReaction": [
       "Cobb smiles tiredly. \"You told me that one already. I'm old, not forgetful.\"",
       "\"Aye, you said,\" Cobb says. \"Tell me something new.\"",

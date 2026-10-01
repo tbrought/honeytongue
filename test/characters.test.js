@@ -28,7 +28,9 @@ test("each scene's character matches its preset", () => {
     const npc = Object.values(story.scenes).find((s) => s.npc?.id === scene.character).npc;
     const { success, ...persuasion } = npc.persuasion;
     // Presets are for Persuadable, which has no markup: the scene's reactions match once it's stripped.
-    const fromStory = stripMarkupDeep({ name: npc.name, persona: npc.persona, patience: npc.patience, secrets: npc.secrets, repeatReaction: npc.repeatReaction, ...persuasion });
+    // A story with angle replies asks for the angle, as the engine does (toCharacter).
+    const fromStory = stripMarkupDeep({ name: npc.name, persona: npc.persona, patience: npc.patience, secrets: npc.secrets,
+      repeatReaction: npc.repeatReaction, ...persuasion, ...(npc.angleReplies && { angles: true }) });
     assert.deepEqual(defineCharacter(withoutNote(characters[scene.character])), defineCharacter(fromStory), scene.id);
   }
   assert.deepEqual(scenes.map((s) => s.character).sort(), Object.keys(characters).sort(), "every preset has a scene");

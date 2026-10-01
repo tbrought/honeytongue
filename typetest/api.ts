@@ -10,8 +10,9 @@ import {
 import type {
   Character, DefinedCharacter, Verdict, Tell, Difficulty, PersuasionResult, AttemptResult, Attempt,
   Story, TurnResult, TurnDebug, JevClient, ProxyHandlerOptions, ProxyEnv, DecideHook, Part, PartKind,
-  PersuadableSnapshot, GameSnapshot, Clue, ClueMatch,
+  PersuadableSnapshot, GameSnapshot, Clue, ClueMatch, Angle, AngleSignal,
 } from "honeytongue";
+import { ANGLES } from "honeytongue";
 import * as persuasion from "honeytongue/persuasion";
 import type { Character as SubpathCharacter, JevClient as SubpathClient } from "honeytongue/persuasion";
 import { createProxyHandler as subpathHandler } from "honeytongue/proxy";
@@ -99,6 +100,14 @@ async function persuasionApi(client: JevClient) {
   expectType<Clue[]>(defineCharacter(harry).clues);
   // @ts-expect-error: a clue says which secret it reveals
   defineCharacter({ ...harry, clues: [{ id: "family", when: "Asks about his family" }] });
+  // Angles: a fixed set, and a signal on every result.
+  expectType<readonly Angle[]>(ANGLES);
+  const appealing = new Persuadable({ ...harry, angles: true, angleAt: 0.7 }, { client });
+  const appeal = (await appealing.attempt("here's a coin")).angle;
+  expectType<AngleSignal | null>(appeal);
+  if (appeal) expectType<number>(appeal.probabilities.compassion);
+  // @ts-expect-error: not an angle
+  const notAnAngle: Angle = "bribery";
   // Save and load: plain JSON in, the same character out.
   const saving = new Persuadable(harry, { client });
   const saved: PersuadableSnapshot = JSON.parse(JSON.stringify(saving.snapshot()));

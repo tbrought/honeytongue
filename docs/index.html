@@ -92,6 +92,7 @@
       <li><a href="#intimidation">Threats, insults</a></li>
       <li><a href="#secrets">Secrets</a></li>
       <li><a href="#clues">Clues</a></li>
+      <li><a href="#angles">Angles</a></li>
       <li><a href="#reactions">Reactions</a></li>
       <li class="group">Browser games</li>
       <li><a href="#browser">The proxy</a></li>
@@ -287,6 +288,29 @@ result.triggered; <span class="c">// ["threats"], so you can narrate it as intim
 }],</code></pre>
       <p>Each attempt then asks Jev one more question, and every result carries <code>clue</code>: <code>{ id, reveals, confidence, revealed }</code>, or <code>null</code>. When a line matches a clue whose secret the player hasn't learned, and doesn't offend, <code>revealed</code> is true: the character learns that the player knows the secret, and that attempt costs no patience. What the character says about it is up to your game. After that, lines matching the same clue are judged and charged as usual, so a player can't keep guessing for free. A clue counts as matched at a probability of <code>clueAt</code> (0.8). Characters without clues send exactly what they did before.</p>
       <p>In a story, give the npc <code>clueReplies</code>: what they say when each clue reveals their secret (a list of variants is fine). The engine checks clues on every turn the character is present, in the same request. On a persuasion attempt, the clue's reply replaces the usual reaction. On any other action, the clue is checked after the action's own effects, so an action that already teaches the secret (like asking Harry about the toy horse) isn't repeated, and a clue doesn't apply once the action has taken the player elsewhere. In <a href="play/#gatehouse">The Gatehouse</a>, offering to find Harry's son an apprenticeship gets: "My girl. She's had a fever three days, and the apothecary won't see anyone after curfew."</p>
+    </section>
+
+    <section id="angles">
+      <h2>Angles</h2>
+      <p>Set <code>angles: true</code>, and every judged result also says what the line appealed to: <code>angle</code> is <code>{ angle, confidence, probabilities }</code>. Honeytongue doesn't pick a reply for it. Your dialogue system can, so a bribe offered to an honest guard gets a different line from a plea for a sick child. The angles are a fixed set, the same in every game, exported as <code>ANGLES</code>:</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Angle</th><th>What the line appeals to</th></tr></thead>
+        <tbody>
+          <tr><td><code>family</code></td><td>Relationships and loyalty: family, friends, or loved ones, theirs or the player's</td></tr>
+          <tr><td><code>compassion</code></td><td>Suffering and need: someone sick, hurt, in danger, or whose life depends on it</td></tr>
+          <tr><td><code>money</code></td><td>Money or goods: payment, a bribe, a fare, a reward, or a trade</td></tr>
+          <tr><td><code>benefit</code></td><td>Something the character wants for themselves other than money: their own hopes, a chance, a favour, a way out</td></tr>
+          <tr><td><code>duty</code></td><td>The character's own obligations: their job, oath, or rules</td></tr>
+          <tr><td><code>authority</code></td><td>Someone else's rank or power over them, including orders from above</td></tr>
+          <tr><td><code>fear</code></td><td>Danger from elsewhere if they refuse; a threat from the player is the <a href="#intimidation">threats tell</a> instead</td></tr>
+          <tr><td><code>flattery</code></td><td>Praise of them</td></tr>
+          <tr><td><code>honesty</code></td><td>Plain truth, being straight with them, or a sincere promise</td></tr>
+          <tr><td><code>reason</code></td><td>Facts, a plan, or proof that agreeing is safe or sensible</td></tr>
+          <tr><td><code>other</code></td><td>No clear appeal: a bare request, a command, small talk, or an insult</td></tr>
+        </tbody>
+      </table></div>
+      <p>The set is public API: changing it would change every game's results, so from 0.1.0 any change counts as a breaking change. A mixed argument, such as a heartfelt plea that also offers money, spreads Jev's probability, so check <code>confidence</code> before replying to the angle. Asking costs one more question per attempt; characters that don't ask send exactly what they did before.</p>
+      <p>In a story, the npc's <code>angleReplies</code> give a line per angle (a list of variants is fine), and turn the question on. The engine uses one for an unconvinced attempt when Jev is at least <code>angleAt</code> sure (0.6), and otherwise, or for an angle with no reply, the score band's reaction. Mark the band just below the threshold <code>"nearMiss": true</code>, and its hint wins over an angle reply: telling a close player what's missing matters more.</p>
     </section>
 
     <section id="reactions">
@@ -578,7 +602,8 @@ loaded.<span class="f">restore</span>(JSON.<span class="f">parse</span>(localSto
           <tr><td><code>failCost</code>, <code>offendedCost</code></td><td>1, 2</td><td>Patience lost per unconvinced or repeated attempt, and per offensive one</td></tr>
           <tr><td><code>secrets</code></td><td>None</td><td><code>[{ id, fact }]</code>: facts Jev is only told once the player learns them (<a href="#secrets">Secrets</a>)</td></tr>
           <tr><td><code>clues</code>, <code>clueAt</code></td><td>None, 0.8</td><td><code>[{ id, when, reveals }]</code>: lines that teach the player a secret, and the probability at which one counts as matched (<a href="#clues">Clues</a>)</td></tr>
-          <tr><td><code>reactions</code></td><td>A generic line</td><td><code>[{ min, text }]</code>: lines for unconvinced attempts, by the highest <code>min</code> reached; each <code>text</code> may be a list of variants used in turn (<a href="#reactions">Reactions</a>)</td></tr>
+          <tr><td><code>angles</code>, <code>angleAt</code></td><td><code>false</code>, 0.6</td><td>Ask what each line appeals to, and the confidence at which the engine uses an angle reply (<a href="#angles">Angles</a>)</td></tr>
+          <tr><td><code>reactions</code></td><td>A generic line</td><td><code>[{ min, text, nearMiss }]</code>: lines for unconvinced attempts, by the highest <code>min</code> reached; each <code>text</code> may be a list of variants used in turn, and a <code>nearMiss</code> band keeps its hint over an angle reply (<a href="#reactions">Reactions</a>)</td></tr>
           <tr><td><code>repeatReaction</code></td><td>A generic line</td><td>What they say when the player repeats themselves: one line, or a list used in turn</td></tr>
           <tr><td><code>levels</code></td><td><code>DEFAULT_LEVELS</code></td><td>Your own rubric: 2 to 10 descriptions, weakest first (<a href="#control">Rubrics</a>)</td></tr>
           <tr><td><code>hostileAt</code></td><td>0.7</td><td>How sure Jev must be before a tell counts as triggered, above 0 and at most 1</td></tr>
@@ -616,6 +641,7 @@ loaded.<span class="f">restore</span>(JSON.<span class="f">parse</span>(localSto
           <tr><td><code>tells</code>, <code>triggered</code></td><td>Each tell's probability, and the tells at or above <code>hostileAt</code></td></tr>
           <tr><td><code>reaction</code></td><td>Text for unconvinced and repeated verdicts; <code>null</code> otherwise</td></tr>
           <tr><td><code>clue</code></td><td>The clue the line matched, <code>{ id, reveals, confidence, revealed }</code>, or <code>null</code> (<a href="#clues">Clues</a>)</td></tr>
+          <tr><td><code>angle</code></td><td>What the line appealed to, <code>{ angle, confidence, probabilities }</code>, or <code>null</code> when the character doesn't ask (<a href="#angles">Angles</a>)</td></tr>
           <tr><td><code>patienceLeft</code>, <code>outOfPatience</code></td><td>From <code>attempt()</code> and <code>record()</code> only</td></tr>
         </tbody>
       </table></div>
@@ -647,6 +673,7 @@ loaded.<span class="f">restore</span>(JSON.<span class="f">parse</span>(localSto
           <tr><td><code>toNodeListener(handle, { maxBytes, env })</code></td><td>The proxy on a plain Node server (<a href="#node">Node servers</a>), also in <code>honeytongue/proxy</code></td></tr>
           <tr><td><code>createMockClient()</code></td><td>A keyword-based stand-in for tests and offline development</td></tr>
           <tr><td><code>Game</code>, <code>validateStory()</code></td><td>The text adventure engine (<a href="#engine">Text adventures</a>)</td></tr>
+          <tr><td><code>ANGLES</code></td><td>The fixed list of angles (<a href="#angles">Angles</a>)</td></tr>
           <tr><td><code>HoneytongueError</code>, <code>StoryError</code></td><td>Readable errors; <code>status</code> holds the HTTP status for failed requests (and <code>reason</code> why, when a proxy said), and <code>StoryError</code>'s <code>problems</code> lists every problem in a story</td></tr>
           <tr><td><code>parseMarkup(text)</code>, <code>stripMarkup(text)</code></td><td>Story markup as meaningful parts, or as plain text (<a href="#markup">Story markup</a>)</td></tr>
           <tr><td><code>VERSION</code></td><td>This copy of Honeytongue's version, which the proxy client sends with each request</td></tr>

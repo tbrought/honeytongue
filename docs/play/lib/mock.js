@@ -100,6 +100,30 @@ function mockClue(input, criteria, character) {
   return { type: "choice", choice, probabilities, confidence: probabilities[choice] };
 }
 
+// The angle question: which appeal a line leans on, by word families. Generic: no story's wording.
+const ANGLE_WORDS = {
+  family: /\b(family|families|son|sons|daughter|daughters|child|children|kids?|wife|husband|mother|father|mum|mom|dad|brother|sister|friends?|loyal\w*|loved ones?)\b/,
+  compassion: /\b(sick|ill|fever|dying|die|dies|death|hurt|suffer\w*|mercy|pity|starving|drown\w*|life depends|lives|in danger|desperate)\b/,
+  money: /\b(coins?|gold|silver|pay|paid|payment|money|fare|reward|bribe|price|wages?)\b/,
+  benefit: /\b(your (own )?(dream|chance|future|freedom)|you could (be|become|have)|a real kitchen|cook|apprentice\w*|favou?r|a way out)\b/,
+  duty: /\b(duty|oath|your job|your post|your rules|responsib\w*|sworn)\b/,
+  authority: /\b(knight|lord|lady|captain of|i order|i command|by order|rank|cousin of|friend of the|important person)\b/,
+  fear: /\b(raiders?|bounty hunters?|war chief|they'?ll (find|catch|punish)|punish\w*|disaster|before it'?s too late)\b/,
+  flattery: /\b(finest|greatest|cleverest|wisest|bravest|kindest|smartest|best \w+ (in|on))\b/,
+  honesty: /\b(honest(ly)?|truth|truly|swear|promise|my word|i won'?t lie|straight with you)\b/,
+  reason: /\b(because|proof|prove|evidence|a plan|it'?s safe|makes sense|won'?t sail|no risk)\b/,
+};
+function mockAngle(input, criteria) {
+  const t = lower(input);
+  const hits = Object.keys(criteria).filter((a) => ANGLE_WORDS[a]?.test(t));
+  // One clear appeal is confident; several are a mixed argument, so the confidence is split; none is "other".
+  const choice = hits[0] ?? "other";
+  const top = hits.length > 1 ? 0.5 : 0.8;
+  const rest = (1 - top) / (Object.keys(criteria).length - 1);
+  const probabilities = Object.fromEntries(Object.keys(criteria).map((a) => [a, a === choice ? top : rest]));
+  return { type: "choice", choice, probabilities, confidence: top };
+}
+
 // A persona that suggests threats would work, for characters not offended by them.
 const TIMID = /\b(coward\w*|timid|nervous|scared|afraid|fearful|easily (frightened|scared|intimidated))\b/;
 
@@ -138,6 +162,7 @@ export function createMockClient() {
       const answers = {};
       for (const [id, q] of Object.entries(questions)) {
         if (q.type === "choice" && id === "clue") answers[id] = mockClue(input, q.criteria, state?.character);
+        else if (q.type === "choice" && id === "angle") answers[id] = mockAngle(input, q.criteria);
         else if (q.type === "choice") answers[id] = mockChoice(input, q.criteria, state?.character);
         else if (q.type === "score") answers[id] = mockScore(input, q.criteria, state?.character, q.instructions);
         else if (q.type === "noul") answers[id] = mockNoul(id, input);

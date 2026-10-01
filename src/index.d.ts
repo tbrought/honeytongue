@@ -60,6 +60,25 @@ export interface Clue {
   reveals: string;
 }
 
+/**
+ * What an argument appeals to. A fixed set, defined and calibrated by the library so it means the same in every game;
+ * it's public API from 0.1.0, since changing it would change every game's results. "other" is no clear appeal.
+ * "benefit" is something the character wants for themselves other than money or goods.
+ */
+export type Angle = "family" | "compassion" | "money" | "benefit" | "duty" | "authority" | "fear" | "flattery" | "honesty" | "reason" | "other";
+
+/** Every angle, in the order the angle question lists them. */
+export const ANGLES: readonly Angle[];
+
+/** Which angle a line appealed to (asked only for characters with angles: true). */
+export interface AngleSignal {
+  angle: Angle;
+  /** Jev's probability for that angle. The engine uses its angle replies at angleAt or above. */
+  confidence: number;
+  /** Every angle's probability, for games that want to weigh mixed arguments themselves. */
+  probabilities: Record<Angle, number>;
+}
+
 /** A clue a line matched (from the clue question, asked only for characters with clues). */
 export interface ClueMatch {
   id: string;
@@ -138,7 +157,7 @@ export interface Character {
    * Reaction text for unconvinced attempts, picked by the highest `min` reached. `text` may be a list of variants:
    * a Persuadable uses each band's variants in turn, so replies rarely repeat (judgePersuasion gives the first).
    */
-  reactions?: { min: number; text: Lines }[];
+  reactions?: { min: number; text: Lines; nearMiss?: boolean }[];
   /** Reaction text for repeated attempts: one line, or variants used in turn. */
   repeatReaction?: Lines;
   /** Facts the player must discover before they help an argument. */
@@ -147,6 +166,10 @@ export interface Character {
   clues?: Clue[];
   /** Probability at which a clue counts as matched. Default 0.8. */
   clueAt?: number;
+  /** Ask which angle each attempt appeals to (result.angle). Default false; a story with angleReplies turns it on. */
+  angles?: boolean;
+  /** The confidence at which the engine uses an angle's reply. Default 0.6. */
+  angleAt?: number;
   /**
    * Lets attempt() send `context` through a proxy with allowedCharacters: at most this many characters of it as JSON.
    * Without it, such a proxy refuses context. attempt() checks the limit too, so you find out before deploying.
@@ -184,6 +207,8 @@ export interface PersuasionResult {
   reaction: string | null;
   /** The clue the line matched, or null (no clues, no match, or a repeat, which isn't sent to Jev). */
   clue: ClueMatch | null;
+  /** What the line appealed to, or null (the character doesn't ask for angles, or a repeat). */
+  angle: AngleSignal | null;
 }
 
 export interface AttemptResult extends PersuasionResult {
@@ -315,6 +340,11 @@ export interface StoryNpc {
   repeatReaction?: Lines;
   /** What they say when a clue reveals their secret, by clue id. Every clue in persuasion.clues needs one. */
   clueReplies?: Record<string, Lines>;
+  /**
+   * What they say to an unconvinced line by what it appealed to, when Jev is at least angleAt sure. A near-miss band
+   * ("nearMiss": true) keeps its own reaction. Having these turns on the angle question for this character.
+   */
+  angleReplies?: Partial<Record<Exclude<Angle, "other">, Lines>>;
   /** Required when patience is finite. Plays once, when patience first runs out. */
   outOfPatience?: Effect & { text: string };
   /** Settings such as difficulty, offendedBy, and threshold go here. decide is only available in stories built in code. */

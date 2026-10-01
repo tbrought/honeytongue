@@ -14,7 +14,11 @@
   - In stories, `clueReplies` give the character's line for each clue. The engine checks clues on every turn the character is present: on a persuasion attempt the reply replaces the usual reaction, and on another action it comes after the action's own effects (an action that already teaches the secret isn't repeated).
   - Each demo character has a clue. In The Gatehouse, a guess about Harry's son gets his daughter's fever.
   - Calibrated against live Jev (`docs/live-results.md`): at `clueAt` 0.8, the default, 97% of guesses matched and none of 114 near misses, injection attempts, and plain lines did. The question's options are numbered, so a line can't pick one by typing a clue's id.
-- **The proxy allows 8 questions per request by default** (was 6): an engine turn sends 5 with clues, and 6 with clues and angles.
+- **Angles:** with `angles: true`, every judged result carries `angle` (`{ angle, confidence, probabilities }`): what the line appealed to, from a fixed set exported as `ANGLES`. The angles are family, compassion, money, benefit (something the character wants other than money), duty, authority, fear, flattery, honesty, reason, and other.
+  - The set is public API, chosen from the appeals 171 real lines make (`docs/live-results.md`), and changing it will count as a breaking change.
+  - Honeytongue doesn't pick a reply; your game can. In stories, `angleReplies` give the character's line per angle and turn the question on. The engine uses one for an unconvinced attempt at `angleAt` (0.6) or above, and a reaction band marked `"nearMiss": true` keeps its hint instead.
+  - Every demo character replies to five or six angles in their own voice. Characters that don't ask send exactly what they did before.
+- **The proxy allows 8 questions per request by default** (was 6): an engine turn sends 5 with clues, and 6 with clues and angles. The demo Worker's body limit is 17,000 bytes (was 15,000), since the fixed questions make the largest request longer.
 
 ### Changed
 

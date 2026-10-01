@@ -64,7 +64,8 @@
                 "@[Cobb] looks out at the black water, turning the #[lamp key] over in his fingers. \"You've near enough talked me round. But if I'm wrong, the whole town pays for it.\"",
                 "@[Cobb] glances at the #[spyglass], then at you. \"Aye, I'm listening now. Show me the raiders won't come for the town.\"",
                 "\"There's something in that,\" @[Cobb] murmurs, resting a hand on the lamp's brass cage. \"Tell me who'd see this light, and who wouldn't.\""
-              ]
+              ],
+              "nearMiss": true
             }
           ],
           "clues": [
@@ -88,6 +89,32 @@
           "his_past": [
             "@[Cobb] taps a line in the #[logbook], ringed in black ink. \"The Wren. I let the lamp burn low the once, forty years back. She never came home.\"",
             "@[Cobb] is quiet a long while. \"Forty years ago I let the light burn low, just the once. The Wren went onto the rocks. I've never let it fail since.\""
+          ]
+        },
+        "angleReplies": {
+          "reason": [
+            "@[Cobb] leans forward on his stool. \"Go on, then. Show me how it'd be safe.\"",
+            "\"Now that's something I can weigh,\" @[Cobb] says, frowning at the #[great lamp]."
+          ],
+          "duty": [
+            "@[Cobb] nods slowly. \"I've a duty to the boats, and one to the lord. Tonight they pull different ways.\"",
+            "\"Forty years I've kept my duty,\" @[Cobb] says. \"Don't ask me to choose which one breaks.\""
+          ],
+          "compassion": [
+            "@[Cobb]'s eyes go to the lantern bobbing out on the water. \"I know. But the town has lives in it too.\"",
+            "\"Don't think I don't feel it,\" @[Cobb] says quietly. \"I've watched the sea take people.\""
+          ],
+          "family": [
+            "@[Cobb] looks at you properly. \"Your sister. Aye. I'd want the light too, if she were mine.\"",
+            "\"Family,\" @[Cobb] sighs. \"Every boat out there is somebody's.\""
+          ],
+          "fear": [
+            "@[Cobb] grips the #[lamp key]. \"You think I don't fear for the town? That's the whole trouble.\"",
+            "\"Aye, it's dangerous out there,\" @[Cobb] says. \"And a light could bring the danger here.\""
+          ],
+          "authority": [
+            "\"The lord's orders are the lord's orders,\" @[Cobb] says. \"Whoever's cousin you are.\"",
+            "@[Cobb] shakes his head. \"Fine names don't change what a light does in the dark.\""
           ]
         }
       },

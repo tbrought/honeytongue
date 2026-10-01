@@ -116,18 +116,21 @@ function clueRow({ id = "", when = "", reveals = "" } = {}) {
       remove));
 }
 
-function reactionRow({ min = "", text = "" } = {}) {
+function reactionRow({ min = "", text = "", nearMiss = false } = {}) {
   const n = ++rowIds;
   const textInput = el("textarea", { id: `reaction-text-${n}`, rows: 2, value: linesToText(text) });
   textInput.dataset.k = "text";
   const minInput = el("input", { type: "number", id: `reaction-min-${n}`, value: String(min), step: "0.1", inputMode: "decimal" });
   minInput.dataset.k = "min";
+  const nearInput = el("input", { type: "checkbox", checked: nearMiss });
+  nearInput.dataset.k = "nearMiss";
   const remove = removeButton($("reactions"), "reaction");
   remove.setAttribute("aria-label", "Remove this reaction");
   return el("li", {},
     el("label", { className: "vh", htmlFor: textInput.id, textContent: "Reaction" }), textInput,
     el("div", { className: "row-foot" },
       el("span", { className: "min" }, el("label", { htmlFor: minInput.id, textContent: "From score" }), minInput),
+      el("label", { className: "check" }, nearInput, " Near miss"),
       remove));
 }
 
@@ -148,6 +151,7 @@ function writeForm({ character: given, knows }) {
   }
   fieldInput("levels").value = (c.levels ?? []).join("\n");
   for (const box of form.querySelectorAll("[data-tell]")) box.checked = (c.offendedBy ?? TELLS).includes(box.dataset.tell);
+  fieldInput("angles").checked = c.angles === true;
   $("secrets").replaceChildren(...(c.secrets ?? []).map((s) => secretRow(s, knows.includes(s.id))));
   $("clues").replaceChildren(...(c.clues ?? []).map((k) => clueRow(k)));
   $("reactions").replaceChildren(...(c.reactions ?? []).map((r) => reactionRow(r)));
@@ -165,6 +169,7 @@ function readForm() {
   const patience = number(fieldInput("patience"));
   if (patience !== undefined) c.patience = patience;
   c.offendedBy = [...form.querySelectorAll("[data-tell]")].filter((b) => b.checked).map((b) => b.dataset.tell);
+  if (fieldInput("angles").checked) c.angles = true;
   const knows = [];
   const secrets = [...$("secrets").children].map((row) => {
     const get = (k) => row.querySelector(`[data-k="${k}"]`);
@@ -180,7 +185,8 @@ function readForm() {
   if (clues.length) c.clues = clues;
   const reactions = [...$("reactions").children].map((row) => {
     const min = row.querySelector('[data-k="min"]').value.trim();
-    return { min: min === "" ? 0 : Number(min), text: textToLines(row.querySelector('[data-k="text"]').value) };
+    const nearMiss = row.querySelector('[data-k="nearMiss"]').checked;
+    return { min: min === "" ? 0 : Number(min), text: textToLines(row.querySelector('[data-k="text"]').value), ...(nearMiss && { nearMiss }) };
   }).filter((r) => r.text || r.min);
   if (reactions.length) c.reactions = reactions;
   const repeat = textToLines(fieldInput("repeatReaction").value);
@@ -300,6 +306,9 @@ function attemptCard(said, result, character, before) {
   }
   const tells = result.triggered.length ? `triggered ${result.triggered.join(" and ")}` : "no tells triggered";
   card.append(el("p", { className: "readout" }, el("span", {}, tells), el("span", {}, patienceText(result, character))));
+  if (result.angle) {
+    card.append(el("p", { className: "readout" }, el("span", {}, `appeals to ${result.angle.angle} (${fixed(result.angle.confidence)})`)));
+  }
   if (result.clue) {
     const k = result.clue;
     card.append(el("p", { className: "readout" }, el("span", {},

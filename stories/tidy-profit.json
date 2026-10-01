@@ -69,7 +69,8 @@
                 "@[Maude] taps the #[manifest], thinking. \"Now we're haggling. Tell me what's in it for me, and how you'd prove it.\"",
                 "\"You've got my attention,\" @[Maude] says, and means it. \"Bring me something I can check against the books.\"",
                 "@[Maude] turns the #[manifest] toward the lamplight. \"Warmer. What's worth more to me than a fare?\""
-              ]
+              ],
+              "nearMiss": true
             }
           ],
           "clues": [
@@ -93,6 +94,28 @@
           "crew_shares": [
             "@[Maude]'s pen stops. \"Shares came up short again this voyage. Third time running.\" She glances toward the captain's cabin. \"The captain says the sea takes its cut.\"",
             "@[Maude] looks up properly for the first time. \"You've a sharp eye. The crew's shares have been short three voyages running, and the captain blames the sea.\""
+          ]
+        },
+        "angleReplies": {
+          "money": [
+            "@[Maude] names a price twice what you've got, and goes back to her #[manifest].",
+            "\"Coin talks,\" @[Maude] says. \"Yours is whispering. Got anything louder?\""
+          ],
+          "honesty": [
+            "@[Maude] puts down her pen. \"Straight talk. Rare on this quay. Keep going.\"",
+            "\"Honest, are you?\" @[Maude] says. \"Prove it, and we'll get on fine.\""
+          ],
+          "reason": [
+            "@[Maude] taps her pen on the barrel, weighing it. \"Sensible. Now make it worth my while.\"",
+            "\"That adds up,\" @[Maude] allows. \"It just doesn't add up to a berth. Yet.\""
+          ],
+          "compassion": [
+            "@[Maude] doesn't look up. \"Everyone on this quay has a sad story. Mine's the ledger.\"",
+            "\"Pity doesn't fill a hold,\" @[Maude] says, not unkindly."
+          ],
+          "authority": [
+            "@[Maude] laughs. \"On this ship, the only rank that matters is in my book.\"",
+            "\"Important, are you?\" @[Maude] says. \"Important people pay full fare.\""
           ]
         }
       },

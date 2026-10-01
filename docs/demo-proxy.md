@@ -5,7 +5,7 @@ The web demo on honeytongue.dev plays with Jev through a Cloudflare Worker named
 - **Code:** `examples/demo-worker.js`, configured in `examples/demo-wrangler.toml`.
 - **Address:** `https://api.honeytongue.dev/judge`. Every other path answers 404, and there's no workers.dev address.
 - **Scope:** it only judges the four demo scenes and the Phaser example's troll (`examples/phaser/character.js`, played at honeytongue.dev/phaser/), and only for the pages listed in `ALLOWED_ORIGINS`: `https://honeytongue.dev`. (`https://tbrought.github.io` was removed in 0.1.0-alpha.11: GitHub redirects it to honeytongue.dev.)
-- **Limits:** request bodies up to 15,000 bytes (`MAX_BYTES` in the Worker), and nothing longer than the library itself sends: each character's `memoryLength` of remembered attempts, each story's `recentTurnLength` of recent turns, and so on. These cost nothing to refuse, since refused requests never reach Jev.
+- **Limits:** request bodies up to 17,000 bytes (`MAX_BYTES` in the Worker), and nothing longer than the library itself sends: each character's `memoryLength` of remembered attempts, each story's `recentTurnLength` of recent turns, and so on. These cost nothing to refuse, since refused requests never reach Jev.
 
 Without it, or when it can't answer, the demo falls back to the offline stand-in.
 
@@ -68,7 +68,7 @@ The script acts as the demo's page, `https://honeytongue.dev`, and checks that:
 - the page may call the proxy;
 - other paths answer 404;
 - other sites (the old `https://tbrought.github.io` included) and other characters are refused;
-- bodies over 15,000 bytes, and remembered attempts longer than the library sends, are refused;
+- bodies over 17,000 bytes, and remembered attempts longer than the library sends, are refused;
 - the proxy runs this checkout's Honeytongue version.
 
 It then plays one Gatehouse turn and makes one attempt on the Phaser example's troll: two live Jev calls. It doesn't need your key. It should end with "All checks passed."
