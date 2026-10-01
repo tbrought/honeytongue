@@ -233,6 +233,14 @@ The library's angle set, with the sharpened definitions, was tried on Harry and 
 
 Everything else falls back to the score band's reaction. `angleAt` is 0.7, the lowest setting with no jarring replies. Mixed arguments below it sat between their acceptable angles: money at 0.53 to 0.69 for "I'm desperate, and I'll pay whatever you ask", authority or duty at 0.52 to 0.65 for "Your captain would want this, and it's the right thing by your own rules".
 
+## Scores with the clue and angle questions (2026-09-30)
+
+Do the extra questions change how a line scores? The showcase grid's 24 cells, each scene's winning line (secret learned), and two pleas were judged with and without the clue and angle questions, twice each (`node scripts/angles.js shift`). 120 calls, 138,387 tokens.
+
+- **The average difference was 0.007,** within the noise of repeating the same line.
+- **The largest was 0.17:** Nib and the showcase's threat, 2.71 to 2.88, which convinces him either way.
+- **No verdict changed.**
+
 ## Reproducing
 
 With `TYPESAFE_API_KEY` set:

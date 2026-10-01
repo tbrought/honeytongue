@@ -4,6 +4,9 @@
 //     Which appeals real arguments make: every persuasion line in the scene suites, the showcase, the calibration
 //     argument sets, and the playtest transcripts in playtests/ (if any), each classified once against three
 //     candidate angle sets in one request, to see how many land in "other" and which appeals are missing.
+//   node scripts/angles.js shift [--repeats 2] [--dry-run]
+//     Whether asking the clue and angle questions changes the persuasion score: the showcase grid's 24 cells, each
+//     scene's winning line (secret learned), and two pleas, judged with and without them.
 //   node scripts/angles.js calibrate [--repeats 2] [--dry-run]
 //     The library's angle set (ANGLES): evals/calibration/angles.json's clear lines (one appeal each) and mixed
 //     arguments, as standalone attempts with each character's full request. A confusion matrix (which angles are
@@ -159,7 +162,48 @@ async function calibrate() {
   console.log("\n" + summarize(recorded));
 }
 
-const steps = { coverage, calibrate };
+async function shift() {
+  const repeats = Number(process.argv.includes("--repeats") ? process.argv[process.argv.indexOf("--repeats") + 1] : 2);
+  const pairs = [];
+  for (const l of load("evals/showcase.json").lines) for (const id of Object.keys(l.expect)) pairs.push({ id, input: l.input, knows: [] });
+  const winning = {
+    harry: "Harry, I have a letter for the apothecary that includes a recipe for a fever remedy. If you let me through the gate, I will bring the remedy to your daughter.",
+    nib: "Nib, please let me out. Come with me to town and I'll help you become a cook in a real kitchen.",
+    maude: "Maude, honestly: the captain is skimming the crew's shares. Six of his crates aren't on your manifest. Take me aboard and I'll give you the proof.",
+    cobb: "Cobb, the raiders are anchored behind the island and won't sail in this storm, and the shutter can send the beam out to sea only. You know what a dark night cost the Wren. Please light it for my sister.",
+  };
+  for (const [id, input] of Object.entries(winning)) pairs.push({ id, input, knows: presets[id].secrets.map((s) => s.id) });
+  pairs.push({ id: "harry", input: "Harry, please let me through.", knows: [] }, { id: "cobb", input: "Cobb, please light the lamp.", knows: [] });
+  console.log(`${pairs.length} pairs x 2 requests x ${repeats} repeats = ${pairs.length * 2 * repeats} calls`);
+  if (process.argv.includes("--dry-run")) return;
+  loadLiveEnv();
+  const recorded = [];
+  const client = liveClient("angles shift", recorded);
+  const rows = [];
+  for (const p of pairs) {
+    const full = defineCharacter({ ...presets[p.id], angles: true });
+    const base = defineCharacter({ ...presets[p.id], angles: false, clues: [] });
+    const score = async (c) => {
+      const s = [];
+      for (let i = 0; i < repeats; i++) s.push(readPersuasion(c, await client.ask(persuasionState(c, p.input, { knows: p.knows }), persuasionQuestions(c))).score);
+      return s.reduce((a, b) => a + b, 0) / s.length;
+    };
+    const without = await score(base);
+    const withThem = await score(full);
+    rows.push({ ...p, without, with: withThem, diff: withThem - without, threshold: full.threshold });
+  }
+  mkdirSync(new URL("../live-runs/", import.meta.url), { recursive: true });
+  writeFileSync(new URL(`../live-runs/angles-shift-${Date.now()}.json`, import.meta.url), JSON.stringify(rows, null, 2));
+  for (const r of rows) {
+    console.log(`  ${r.id.padEnd(6)} ${r.without.toFixed(2)} -> ${r.with.toFixed(2)} (${r.diff >= 0 ? "+" : ""}${r.diff.toFixed(2)})  "${r.input.slice(0, 60)}"`);
+  }
+  const diffs = rows.map((r) => r.diff);
+  const crossed = rows.filter((r) => (r.without >= r.threshold) !== (r.with >= r.threshold));
+  console.log(`\nMean difference ${(diffs.reduce((a, b) => a + b, 0) / diffs.length).toFixed(3)}, largest ${Math.max(...diffs.map(Math.abs)).toFixed(2)}; verdicts that changed: ${crossed.length}`);
+  console.log("\n" + summarize(recorded));
+}
+
+const steps = { coverage, shift, calibrate };
 const step = steps[process.argv[2]];
 if (!step) { console.error(`Usage: node scripts/angles.js ${Object.keys(steps).join("|")} [--dry-run]`); process.exit(1); }
 await step();

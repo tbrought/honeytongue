@@ -92,17 +92,19 @@ The guard only accepts requests shaped like the demo's own, with every free-text
 
 `--dry-run` does steps 1 and 2 only, with no live calls.
 
-Measured on 2026-09-29, `jev-1.13.0`, 5 live calls (24,880 tokens in all):
+Measured on 2026-09-30 for 0.1.0-alpha.14, whose turns carry the clue and angle questions, `jev-1.13.0`, 5 live calls (28,493 tokens in all):
 
 | Request | Bytes | Input tokens | Against a normal turn |
 |---|---|---|---|
-| A normal turn (the Gatehouse, a few turns in) | 4,193 | 1,450 | 1.00× |
-| The largest accepted, padded with ASCII | 7,820 | 4,071 | 2.81× |
-| The largest accepted, padded with emoji | 11,184 | 5,402 | 3.73× |
-| The largest accepted, padded with emoji and Japanese | 12,057 | 6,018 | 4.15× |
-| The largest accepted, padded with Japanese | 14,070 | 7,153 | 4.93× |
+| A normal turn (the Gatehouse, a few turns in) | 6,374 | 2,075 | 1.00× |
+| The largest accepted, padded with ASCII | 9,989 | 4,678 | 2.25× |
+| The largest accepted, padded with emoji | 13,339 | 5,985 | 2.88× |
+| The largest accepted, padded with emoji and Japanese | 14,229 | 6,588 | 3.17× |
+| The largest accepted, padded with Japanese | 16,225 | 7,759 | 3.74× |
 
-**The worst case is Japanese text in every field, at about 5 times a normal turn:** about $0.0003 a request at $0.042 per million input tokens. At Cloudflare's rule (10 requests per 10 seconds per IP), one address sending nothing but worst-case requests could spend about $26 a day. More addresses spend it faster, and the spending cap stops all of it.
+The clue and angle questions made a normal turn about 40% dearer (1,450 input tokens on 2026-09-29), about $0.00009 a turn. They're fixed text, so the worst case grew less, and is now a smaller multiple of a normal turn.
+
+**The worst case is Japanese text in every field, at under 4 times a normal turn:** about $0.0003 a request at $0.042 per million input tokens. At Cloudflare's rule (10 requests per 10 seconds per IP), one address sending nothing but worst-case requests could spend about $28 a day. More addresses spend it faster, and the spending cap stops all of it.
 
 That's within what the limits were designed for, so nothing was changed. If it ever needs lowering, the cheapest lever is the demo characters' `maxInputLength` and `memoryLength`. Lowering them trims what the demo sends, then the Worker needs redeploying.
 
@@ -117,7 +119,7 @@ When the demo page runs on `localhost` or `127.0.0.1` (for example with `npx ser
 - **Limits, all together:**
   - Cloudflare's rule: 10 requests per 10 seconds per IP. Tighten it if the usage graph shows abuse.
   - The Worker's own limit: 20 requests a minute per address, per Worker instance. Cloudflare runs many instances, so this is only a first line of defence.
-  - The request guard: only the demo's own requests, no bigger than the library sends them (a scripted request can cost at most about 5 times a normal turn's tokens: see "How much one request can cost").
+  - The request guard: only the demo's own requests, no bigger than the library sends them (a scripted request can cost at most about 4 times a normal turn's tokens: see "How much one request can cost").
   - 50 live turns per tab. This is a courtesy to players, kept in the browser: a script ignores it.
   - The spending cap behind all of them: the only hard limit on cost. If a script uses it up, the demo switches to the offline stand-in until the next top-up.
 - **If abuse appears:** tighten Cloudflare's rule first. After that, a daily quota per address (Workers KV or a Durable Object) or Cloudflare Turnstile before the first live turn; both are on the roadmap, only if needed.
