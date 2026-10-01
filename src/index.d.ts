@@ -145,7 +145,7 @@ export interface Character {
   secrets?: Secret[];
   /** Lines that teach the player a secret, such as a guess about the character's family. Each attempt asks about them. */
   clues?: Clue[];
-  /** Probability at which a clue counts as matched. Default 0.6. */
+  /** Probability at which a clue counts as matched. Default 0.8. */
   clueAt?: number;
   /**
    * Lets attempt() send `context` through a proxy with allowedCharacters: at most this many characters of it as JSON.

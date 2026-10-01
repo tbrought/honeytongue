@@ -20,7 +20,8 @@ function clueClient({ clue = "none", p = 0.9, ...rest } = {}) {
   client.ask = async (state, questions) => {
     const answers = await ask(state, questions);
     if (questions.clue) {
-      const choice = client.next.clue;
+      // The options are numbered: the scripted clue id picks the first clue's option.
+      const choice = client.next.clue === "none" ? "none" : Object.keys(questions.clue.criteria).find((k) => k !== "none");
       answers.clue = { type: "choice", choice, probabilities: { [choice]: client.next.clueP } };
     }
     return answers;
@@ -32,8 +33,8 @@ test("a character without clues sends exactly what it did before; one with clues
   assert.deepEqual(Object.keys(persuasionQuestions(harry)), ["persuasion", "threats", "insults"]);
   const q = persuasionQuestions(guard).clue;
   assert.equal(q.type, "choice");
-  assert.deepEqual(q.criteria, { none: q.criteria.none, family: "Asks about or guesses at his family" });
-  assert.equal(defineCharacter(harry).clueAt, 0.6);
+  assert.deepEqual(q.criteria, { none: q.criteria.none, clue_1: "Asks about or guesses at his family" }, "numbered, so a line can't name one");
+  assert.equal(defineCharacter(harry).clueAt, 0.8);
 });
 
 test("clues are checked when a character is defined", () => {
@@ -47,10 +48,11 @@ test("clues are checked when a character is defined", () => {
 });
 
 test("a clue is a signal on every result: which clue, what it reveals, how sure, and whether it's news", () => {
-  const answers = { persuasion: { score: 1 }, clue: { type: "choice", choice: "family", probabilities: { family: 0.8 } } };
-  assert.deepEqual(readPersuasion(guard, answers).clue, { id: "family", reveals: "sick_daughter", confidence: 0.8, revealed: true });
+  const answers = { persuasion: { score: 1 }, clue: { type: "choice", choice: "clue_1", probabilities: { clue_1: 0.85 } } };
+  assert.deepEqual(readPersuasion(guard, answers).clue, { id: "family", reveals: "sick_daughter", confidence: 0.85, revealed: true });
   assert.equal(readPersuasion(guard, answers, { knows: ["sick_daughter"] }).clue.revealed, false, "already learned");
-  assert.equal(readPersuasion(guard, { ...answers, clue: { choice: "family", probabilities: { family: 0.5 } } }).clue, null, "below clueAt");
+  assert.equal(readPersuasion(guard, { ...answers, clue: { choice: "clue_1", probabilities: { clue_1: 0.7 } } }).clue, null, "below clueAt");
+  assert.equal(readPersuasion(guard, { ...answers, clue: { choice: "family", probabilities: { family: 0.9 } } }).clue, null, "not an option");
   assert.equal(readPersuasion(guard, { ...answers, clue: { choice: "none", probabilities: { none: 0.9 } } }).clue, null);
   assert.equal(readPersuasion(harry, answers).clue, null, "no clues, no clue");
   assert.equal(readPersuasion(guard, { ...answers, insults: { noul: 0.95 } }).clue.revealed, false, "an insult reveals nothing");

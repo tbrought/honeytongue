@@ -13,6 +13,7 @@
   - A match on a secret the player hasn't learned, in a line that doesn't offend, reveals it: the `Persuadable` learns it, and that attempt costs no patience. Later lines matching the same clue are judged and charged as usual.
   - In stories, `clueReplies` give the character's line for each clue. The engine checks clues on every turn the character is present: on a persuasion attempt the reply replaces the usual reaction, and on another action it comes after the action's own effects (an action that already teaches the secret isn't repeated).
   - Each demo character has a clue. In The Gatehouse, a guess about Harry's son gets his daughter's fever.
+  - Calibrated against live Jev (`docs/live-results.md`): at `clueAt` 0.8, the default, 97% of guesses matched and none of 114 near misses, injection attempts, and plain lines did. The question's options are numbered, so a line can't pick one by typing a clue's id.
 - **The proxy allows 8 questions per request by default** (was 6): an engine turn sends 5 with clues, and 6 with clues and angles.
 
 ### Repository

@@ -75,7 +75,7 @@
           "clues": [
             {
               "id": "crew_shares",
-              "when": "Asks about the crew's shares or the ship's accounts, or suggests someone aboard, such as the captain, is cheating the crew",
+              "when": "Asks whether the crew's shares or the ship's accounts add up, or suggests someone aboard, such as the captain, is cheating the crew",
               "reveals": "suspects_the_captain"
             }
           ],
