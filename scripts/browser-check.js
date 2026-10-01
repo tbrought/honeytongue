@@ -126,6 +126,23 @@ try {
   check(pg.imgs === 0 && pg.scripts === 0 && pg.alerts === 0, "playground: nothing hostile was created or run", JSON.stringify(pg).slice(0, 120));
   check((await violations()).length === 0, "playground: no CSP violations with hostile input", (await violations()).join("; "));
 
+  // Every page's favicons, and /favicon.ico for crawlers, are served as images that decode.
+  for (const [name, path] of PAGES) {
+    await open(path);
+    const icons = JSON.parse(await page.eval(`(async () => {
+      const urls = [...document.querySelectorAll('link[rel="icon"]')].map((l) => l.href).concat(new URL("/favicon.ico", location.href).href);
+      return JSON.stringify(await Promise.all(urls.map(async (url) => {
+        const type = (await fetch(url)).headers.get("content-type") ?? "";
+        const img = new Image();
+        img.src = url;
+        const ok = await img.decode().then(() => img.naturalWidth > 0, () => false);
+        return { url: url.replace(location.origin, ""), type, ok };
+      })));
+    })()`));
+    const bad = icons.filter((i) => !i.type.startsWith("image/") || !i.ok);
+    check(icons.length >= 3 && bad.length === 0, `${name}: its favicons and /favicon.ico are served as images that decode`, JSON.stringify(bad));
+  }
+
   // A Try it link in the home page's grid opens the playground with that preset and line, ready to send.
   await open("/");
   const tryHref = await page.eval(`document.querySelector('tr[data-tactic="Plain truth"] td a.try').getAttribute("href")`);
