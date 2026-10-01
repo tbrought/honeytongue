@@ -21,7 +21,7 @@ const safeJson = (value, ...args) => JSON.stringify(value, ...args)
 // ---- Validation ---------------------------------------------------------------
 
 // Fields the form edits, each checked on its own so every problem shows at once, next to its field.
-export const FIELDS = ["name", "persona", "goal", "difficulty", "patience", "offendedBy", "secrets", "reactions",
+export const FIELDS = ["name", "persona", "goal", "difficulty", "patience", "offendedBy", "secrets", "clues", "reactions",
   "repeatReaction", "levels", "threshold", "hostileAt"]; // levels before threshold, which is checked against them
 const CHECK_NAME = "__playground_check__";
 const BASE = { name: CHECK_NAME, persona: "p", goal: "g" };
@@ -39,7 +39,9 @@ export function fieldErrors(character) {
   };
   for (const field of FIELDS) {
     // A threshold's limit depends on the levels, so it's checked with them when they're valid.
-    check(field, field === "threshold" && !errors.levels ? { levels: character.levels } : {});
+    // A threshold's limit depends on the levels, and a clue must reveal one of the secrets, so each is checked with them.
+    check(field, field === "threshold" && !errors.levels ? { levels: character.levels }
+      : field === "clues" && !errors.secrets ? { secrets: character.secrets } : {});
   }
   if (Object.keys(errors).length === 0) {
     try { defineCharacter(character); }
@@ -61,7 +63,7 @@ function wordFor(threshold, levels) {
 }
 
 // Output order, most important first. Anything else defineCharacter accepts goes after, in its own order.
-const ORDER = ["name", "persona", "goal", "difficulty", "threshold", "offendedBy", "patience", "secrets", "reactions",
+const ORDER = ["name", "persona", "goal", "difficulty", "threshold", "offendedBy", "patience", "secrets", "clues", "reactions",
   "repeatReaction", "levels", "hostileAt"];
 
 /**
@@ -79,6 +81,7 @@ export function minimalCharacter(character) {
   if (!same(c.offendedBy, defaults.offendedBy)) out.offendedBy = c.offendedBy;
   if (c.patience !== Infinity) out.patience = c.patience;
   if (c.secrets.length) out.secrets = c.secrets.map(({ id, fact }) => ({ id, fact }));
+  if (c.clues.length) out.clues = c.clues.map(({ id, when, reveals }) => ({ id, when, reveals }));
   if (c.reactions.length) out.reactions = [...c.reactions].sort((a, b) => a.min - b.min).map(({ min, text }) => ({ min, text }));
   if (c.repeatReaction) out.repeatReaction = c.repeatReaction;
   if (levels) out.levels = levels;
@@ -145,6 +148,7 @@ export const TODO = {
   hostileReaction: "[TODO: what they say or do when the player offends them]",
   outOfPatience: "[TODO: what happens when they run out of patience]",
   success: "[TODO: what happens when they're convinced]",
+  clueReply: "[TODO: what they say when this clue reveals their secret]",
 };
 
 /** A scene's "npc" block for the text adventure engine, with [TODO: ...] text for the story-only parts. */
@@ -159,6 +163,7 @@ export function storyNpc(character, { id } = {}) {
     ...(secrets && { secrets }),
     ...(offendable && { hostileReaction: TODO.hostileReaction }),
     ...(repeatReaction && { repeatReaction }),
+    ...(persuasion.clues && { clueReplies: Object.fromEntries(persuasion.clues.map((k) => [k.id, TODO.clueReply])) }),
     ...(patience !== undefined && { outOfPatience: { text: TODO.outOfPatience } }),
     persuasion: { ...persuasion, success: { text: TODO.success } },
   };
@@ -212,8 +217,10 @@ export function readDraft(value) {
   list("offendedBy", (t) => typeof t === "string", "a list of tells");
   list("levels", (l) => typeof l === "string", "a list of level descriptions");
   list("secrets", (s) => typeof s?.id === "string" && typeof s?.fact === "string", "a list of { id, fact }");
+  list("clues", (k) => ["id", "when", "reveals"].every((f) => typeof k?.[f] === "string"), "a list of { id, when, reveals }");
   list("reactions", (r) => typeof r?.min === "number" && isLines(r?.text), "a list of { min, text }");
   if (character.secrets) character.secrets = character.secrets.map(({ id, fact }) => ({ id, fact }));
+  if (character.clues) character.clues = character.clues.map(({ id, when, reveals }) => ({ id, when, reveals }));
   if (character.reactions) character.reactions = character.reactions.map(({ min, text }) => ({ min, text: copyLines(text) }));
   const knows = value.knows ?? [];
   if (!Array.isArray(knows) || !knows.every((k) => typeof k === "string")) throw damaged('"knows" should be a list of secret ids');

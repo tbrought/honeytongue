@@ -98,6 +98,24 @@ function secretRow({ id = "", fact = "" } = {}, known = false) {
   return row;
 }
 
+function clueRow({ id = "", when = "", reveals = "" } = {}) {
+  const n = ++rowIds;
+  const whenInput = el("textarea", { id: `clue-when-${n}`, rows: 2, value: when });
+  whenInput.dataset.k = "when";
+  const idInput = el("input", { type: "text", id: `clue-id-${n}`, value: id, spellcheck: false });
+  idInput.dataset.k = "id";
+  const revealsInput = el("input", { type: "text", id: `clue-reveals-${n}`, value: reveals, spellcheck: false });
+  revealsInput.dataset.k = "reveals";
+  const remove = removeButton($("clues"), "clue");
+  remove.setAttribute("aria-label", "Remove this clue");
+  return el("li", {},
+    el("label", { className: "vh", htmlFor: whenInput.id, textContent: "What the line does" }), whenInput,
+    el("div", { className: "row-foot" },
+      el("span", { className: "grow" }, el("label", { htmlFor: idInput.id, textContent: "Id" }), idInput),
+      el("span", { className: "grow" }, el("label", { htmlFor: revealsInput.id, textContent: "Reveals (a secret's id)" }), revealsInput),
+      remove));
+}
+
 function reactionRow({ min = "", text = "" } = {}) {
   const n = ++rowIds;
   const textInput = el("textarea", { id: `reaction-text-${n}`, rows: 2, value: linesToText(text) });
@@ -131,6 +149,7 @@ function writeForm({ character: given, knows }) {
   fieldInput("levels").value = (c.levels ?? []).join("\n");
   for (const box of form.querySelectorAll("[data-tell]")) box.checked = (c.offendedBy ?? TELLS).includes(box.dataset.tell);
   $("secrets").replaceChildren(...(c.secrets ?? []).map((s) => secretRow(s, knows.includes(s.id))));
+  $("clues").replaceChildren(...(c.clues ?? []).map((k) => clueRow(k)));
   $("reactions").replaceChildren(...(c.reactions ?? []).map((r) => reactionRow(r)));
   $("advanced").open = [c.threshold, c.levels, c.hostileAt].some((v) => v !== undefined);
 }
@@ -154,6 +173,11 @@ function readForm() {
     return secret;
   }).filter((s) => s.id || s.fact);
   if (secrets.length) c.secrets = secrets;
+  const clues = [...$("clues").children].map((row) => {
+    const get = (k) => row.querySelector(`[data-k="${k}"]`).value.trim();
+    return { id: get("id"), when: get("when"), reveals: get("reveals") };
+  }).filter((k) => k.id || k.when || k.reveals);
+  if (clues.length) c.clues = clues;
   const reactions = [...$("reactions").children].map((row) => {
     const min = row.querySelector('[data-k="min"]').value.trim();
     return { min: min === "" ? 0 : Number(min), text: textToLines(row.querySelector('[data-k="text"]').value) };
@@ -276,6 +300,11 @@ function attemptCard(said, result, character, before) {
   }
   const tells = result.triggered.length ? `triggered ${result.triggered.join(" and ")}` : "no tells triggered";
   card.append(el("p", { className: "readout" }, el("span", {}, tells), el("span", {}, patienceText(result, character))));
+  if (result.clue) {
+    const k = result.clue;
+    card.append(el("p", { className: "readout" }, el("span", {},
+      `clue "${k.id}" matched (${fixed(k.confidence)}): ${k.revealed ? `revealed "${k.reveals}", at no cost in patience` : `"${k.reveals}" was already known`}`)));
+  }
   if (result.level) {
     card.append(el("div", { className: "why" },
       el("p", {}, `Why: level ${result.level.index} of ${max}, the nearest to ${fixed(result.score)}`,
@@ -448,6 +477,12 @@ $("clear-saved").addEventListener("click", () => {
 form.addEventListener("input", changed);
 form.addEventListener("change", changed);
 form.addEventListener("submit", (e) => e.preventDefault());
+$("add-clue").addEventListener("click", () => {
+  const row = clueRow({ id: `clue_${$("clues").children.length + 1}` });
+  $("clues").append(row);
+  row.querySelector("textarea").focus();
+  changed();
+});
 $("add-secret").addEventListener("click", () => {
   const row = secretRow({ id: `secret_${$("secrets").children.length + 1}` });
   $("secrets").append(row);

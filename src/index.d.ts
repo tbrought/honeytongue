@@ -50,6 +50,29 @@ export interface Secret {
   fact: string;
 }
 
+/** Something a line can do that teaches the player a secret, such as guessing at the character's family. */
+export interface Clue {
+  /** Names the clue in results and in a story's clueReplies. Not "none". */
+  id: string;
+  /** What the line does, as Jev is asked it: "Asks about or guesses at his family". At most 255 characters. */
+  when: string;
+  /** The id of the secret it teaches. */
+  reveals: string;
+}
+
+/** A clue a line matched (from the clue question, asked only for characters with clues). */
+export interface ClueMatch {
+  id: string;
+  reveals: string;
+  /** Jev's probability for this clue, at least clueAt. */
+  confidence: number;
+  /**
+   * True when it teaches the player a secret they hadn't learned and the line didn't offend: a Persuadable learns it,
+   * and that attempt costs no patience. After that, lines matching it are judged and charged as usual.
+   */
+  revealed: boolean;
+}
+
 /** Signs of hostility Jev checks every attempt for, each as its own yes/no question. */
 export type Tell = "threats" | "insults";
 
@@ -120,6 +143,10 @@ export interface Character {
   repeatReaction?: Lines;
   /** Facts the player must discover before they help an argument. */
   secrets?: Secret[];
+  /** Lines that teach the player a secret, such as a guess about the character's family. Each attempt asks about them. */
+  clues?: Clue[];
+  /** Probability at which a clue counts as matched. Default 0.6. */
+  clueAt?: number;
   /**
    * Lets attempt() send `context` through a proxy with allowedCharacters: at most this many characters of it as JSON.
    * Without it, such a proxy refuses context. attempt() checks the limit too, so you find out before deploying.
@@ -155,6 +182,8 @@ export interface PersuasionResult {
   confidence: number | null;
   /** Text for unconvinced and repeated verdicts; null otherwise. */
   reaction: string | null;
+  /** The clue the line matched, or null (no clues, no match, or a repeat, which isn't sent to Jev). */
+  clue: ClueMatch | null;
 }
 
 export interface AttemptResult extends PersuasionResult {
@@ -188,7 +217,8 @@ export function persuasionState(
   character: Character, input: string,
   options?: AttemptOptions & { previousAttempts?: Attempt[] },
 ): Record<string, unknown>;
-export function readPersuasion(character: Character, answers: Record<string, any> | null): PersuasionResult;
+/** `knows` (secret ids already learned) only decides whether a matched clue is `revealed`. */
+export function readPersuasion(character: Character, answers: Record<string, any> | null, options?: { knows?: string[] }): PersuasionResult;
 export function judgePersuasion(
   client: JevClient, character: Character, input: string,
   options?: AttemptOptions & { previousAttempts?: Attempt[] },
@@ -213,7 +243,8 @@ export class Persuadable {
    * of patience: check those first if your game shouldn't pay for that.
    */
   attempt(input: string, options?: AttemptOptions): Promise<AttemptResult>;
-  record(input: string, answers: Record<string, any> | null): AttemptResult;
+  /** `knows`: the secrets the state you sent listed, if you passed your own (a clue only reveals what isn't among them). */
+  record(input: string, answers: Record<string, any> | null, options?: { knows?: string[] }): AttemptResult;
   learn(secretId: string): void;
   findRepeat(input: string): Attempt | null;
   /** Exactly the state an attempt with this input would send to Jev. */
@@ -281,6 +312,8 @@ export interface StoryNpc {
   /** Required unless offendedBy is []. One line, or variants used in turn. */
   hostileReaction?: Lines;
   repeatReaction?: Lines;
+  /** What they say when a clue reveals their secret, by clue id. Every clue in persuasion.clues needs one. */
+  clueReplies?: Record<string, Lines>;
   /** Required when patience is finite. Plays once, when patience first runs out. */
   outOfPatience?: Effect & { text: string };
   /** Settings such as difficulty, offendedBy, and threshold go here. decide is only available in stories built in code. */
@@ -464,7 +497,7 @@ interface ProxyHandlerBaseOptions {
    * protect your key.
    */
   allowedOrigins?: string[];
-  /** Questions allowed per request. Default 6; the engine sends 4. */
+  /** Questions allowed per request. Default 8; the engine sends 4 to 6 (5 with clues, 6 with clues and angles). */
   maxQuestions?: number;
   /** Limit on the whole request body, in bytes. Default 16000. */
   maxStateBytes?: number;

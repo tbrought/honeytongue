@@ -8,6 +8,12 @@
   - A character's snapshot covers its memory, patience, learned secrets, and reply rotation; a game's adds the scene, items, flags, recent turns, a pending question, and every character met so far.
   - Snapshots carry a format version. `restore()` checks everything first, and throws a readable `HoneytongueError` (leaving the state as it was) for another character or story, a newer format, or a damaged field.
   - The Twine recipe keeps Harry's snapshot in `$harry`, so SugarCube's saves, loads, and Back button carry his memory and patience.
+- **Clues:** a character's `clues` (`{ id, when, reveals }`) are things a line can do that teach the player a secret, such as guessing at the character's family.
+  - Characters with clues ask Jev one more question per attempt, and every result carries `clue` (`{ id, reveals, confidence, revealed }`, or `null`). Characters without clues send exactly what they did before.
+  - A match on a secret the player hasn't learned, in a line that doesn't offend, reveals it: the `Persuadable` learns it, and that attempt costs no patience. Later lines matching the same clue are judged and charged as usual.
+  - In stories, `clueReplies` give the character's line for each clue. The engine checks clues on every turn the character is present: on a persuasion attempt the reply replaces the usual reaction, and on another action it comes after the action's own effects (an action that already teaches the secret isn't repeated).
+  - Each demo character has a clue. In The Gatehouse, a guess about Harry's son gets his daughter's fever.
+- **The proxy allows 8 questions per request by default** (was 6): an engine turn sends 5 with clues, and 6 with clues and angles.
 
 ### Repository
 

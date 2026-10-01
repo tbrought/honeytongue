@@ -10,7 +10,7 @@ import {
 import type {
   Character, DefinedCharacter, Verdict, Tell, Difficulty, PersuasionResult, AttemptResult, Attempt,
   Story, TurnResult, TurnDebug, JevClient, ProxyHandlerOptions, ProxyEnv, DecideHook, Part, PartKind,
-  PersuadableSnapshot, GameSnapshot,
+  PersuadableSnapshot, GameSnapshot, Clue, ClueMatch,
 } from "honeytongue";
 import * as persuasion from "honeytongue/persuasion";
 import type { Character as SubpathCharacter, JevClient as SubpathClient } from "honeytongue/persuasion";
@@ -91,6 +91,14 @@ async function persuasionApi(client: JevClient) {
   defineCharacter({ ...harry, offendedBy: ["rudeness"] });
   // @ts-expect-error: patience is a number
   defineCharacter({ ...harry, patience: "5" });
+  // Clues: a signal on every result.
+  const withClue = new Persuadable({ ...harry, clues: [{ id: "family", when: "Asks about his family", reveals: "sick_daughter" }] }, { client });
+  const judged = await withClue.attempt("is that your son's?");
+  expectType<ClueMatch | null>(judged.clue);
+  if (judged.clue) expectType<boolean>(judged.clue.revealed);
+  expectType<Clue[]>(defineCharacter(harry).clues);
+  // @ts-expect-error: a clue says which secret it reveals
+  defineCharacter({ ...harry, clues: [{ id: "family", when: "Asks about his family" }] });
   // Save and load: plain JSON in, the same character out.
   const saving = new Persuadable(harry, { client });
   const saved: PersuadableSnapshot = JSON.parse(JSON.stringify(saving.snapshot()));

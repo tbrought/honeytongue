@@ -381,7 +381,7 @@ test("a full engine turn fits within the proxy's default limits", async () => {
   });
   const game = new Game(story, client);
   assert.match((await game.turn("read the letter")).text, /wax seal/);
-  assert.deepEqual(sizes, [4]);
+  assert.deepEqual(sizes, [5], "action, persuasion, two tells, and Harry's clue");
 });
 
 test("when a proxy refuses the page's origin, the error names the exact origin to add", async () => {

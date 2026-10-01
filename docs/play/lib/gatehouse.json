@@ -77,6 +77,13 @@
               ]
             }
           ],
+          "clues": [
+            {
+              "id": "family_at_home",
+              "when": "Asks about or guesses at his children, his family, or someone at home he's worried about",
+              "reveals": "knows_daughter_is_sick"
+            }
+          ],
           "success": {
             "text": "@[Harry] lets out a long breath and lifts the bar. \"Lantern Street. Ask for @[Ilse], and tell her @[Harry] sent you. And if you meant what you said, don't make me regret it.\"",
             "goto": "city_welcome"
@@ -86,7 +93,13 @@
           "\"You said that already,\" @[Harry] says, not unkindly. \"Saying it louder won't open the gate.\"",
           "@[Harry] sighs. \"Same words, same answer.\"",
           "\"I heard you,\" @[Harry] says. \"Tell me something I haven't heard.\""
-        ]
+        ],
+        "clueReplies": {
+          "family_at_home": [
+            "@[Harry] is quiet for a moment, turning the #[toy horse] over in his fingers. \"My girl. She's had a fever three days, and the apothecary won't see anyone after curfew.\"",
+            "@[Harry]'s hand closes round the #[toy horse]. \"It's my daughter's. She's had a fever three days, and the apothecary's shut till dawn.\""
+          ]
+        }
       },
       "actions": {
         "persuade_guard": {

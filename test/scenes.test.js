@@ -18,6 +18,8 @@ const ROUTES = {
     ],
     other: ["search along the wall", "climb the ivy"],
     otherEnding: "You snuck in",
+    // A guess about his family, made while arguing (as in a playtest), reveals his secret; the letter makes the case.
+    clue: ["Harry, let me through and I'll get your son an apprenticeship with the carpenter.", "read the letter"],
   },
   "goblin-camp": {
     talk: [
@@ -26,6 +28,7 @@ const ROUTES = {
     ],
     other: ["examine the cage", "work the loose bar free"],
     otherEnding: "You slipped the cage",
+    clue: ["Nib, please let me out. I bet you'd rather be cooking than guarding."],
   },
   "tidy-profit": {
     talk: [
@@ -35,6 +38,7 @@ const ROUTES = {
     ],
     other: ["examine the crates", "hide in one of the captain's crates"],
     otherEnding: "You stowed away",
+    clue: ["Maude, please take me aboard. I hear the crew's shares keep coming up short.", "look over the cargo"],
   },
   lighthouse: {
     talk: [
@@ -43,6 +47,7 @@ const ROUTES = {
     ],
     other: ["search the stores", "light a beacon on the headland"],
     otherEnding: "You lit the beacon",
+    clue: ["Cobb, please light the lamp. You lost a boat on those rocks years ago, didn't you?", "look through the spyglass", "examine the lamp"],
   },
 };
 
@@ -119,6 +124,18 @@ for (const scene of scenes) {
     assert.ok(last.text.includes(stripMarkup(npc.persuasion.success.text)), last.text);
     assert.equal(game.sceneId, npc.persuasion.success.goto);
     assert.equal(game.over, true);
+  });
+
+  test(`the mock can win ${scene.title} by guessing the secret: the clue reveals it, then the winning line wins`, async () => {
+    const story = load(scene.file);
+    const npc = Object.values(story.scenes).find((s) => s.npc).npc;
+    const [clue] = npc.persuasion.clues;
+    const game = new Game(story, createMockClient());
+    const guessed = await game.turn(routes.clue[0]);
+    assert.ok(game.flags.has(clue.reveals), `${routes.clue[0]} -> ${guessed.text}`);
+    assert.ok([npc.clueReplies[clue.id]].flat().some((r) => guessed.text.includes(stripMarkup(r))), guessed.text);
+    for (const line of [...routes.clue.slice(1), routes.talk.at(-1)]) await game.turn(line);
+    assert.equal(game.sceneId, npc.persuasion.success.goto);
   });
 
   test(`the mock can finish ${scene.title} without talking anyone round`, async () => {

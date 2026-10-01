@@ -67,6 +67,13 @@
               ]
             }
           ],
+          "clues": [
+            {
+              "id": "his_past",
+              "when": "Asks about Cobb's past, a boat lost long ago, or why he never lets the light fail",
+              "reveals": "lost_a_boat"
+            }
+          ],
           "success": {
             "text": "@[Cobb] is quiet for a long moment. Then he turns the brass shutter to face the open sea, and strikes a light. The #[great lamp] flares, and a white beam sweeps out across the waves. Far out, a small lantern swings round toward the harbour mouth.",
             "goto": "light_on"
@@ -76,7 +83,13 @@
           "@[Cobb] smiles tiredly. \"You told me that one already. I'm old, not forgetful.\"",
           "\"Aye, you said,\" @[Cobb] says. \"Tell me something new.\"",
           "@[Cobb] pats your hand. \"Same tale twice. Tell me another.\""
-        ]
+        ],
+        "clueReplies": {
+          "his_past": [
+            "@[Cobb] taps a line in the #[logbook], ringed in black ink. \"The Wren. I let the lamp burn low the once, forty years back. She never came home.\"",
+            "@[Cobb] is quiet a long while. \"Forty years ago I let the light burn low, just the once. The Wren went onto the rocks. I've never let it fail since.\""
+          ]
+        }
       },
       "actions": {
         "persuade_cobb": {

@@ -68,6 +68,8 @@ const DISPLAY_TEXT = [
   ["scenes", "*", "npc", "hostileReaction", "#"],
   ["scenes", "*", "npc", "repeatReaction"],
   ["scenes", "*", "npc", "repeatReaction", "#"],
+  ["scenes", "*", "npc", "clueReplies", "*"],
+  ["scenes", "*", "npc", "clueReplies", "*", "#"],
   ["scenes", "*", "npc", "outOfPatience", "text"],
   ["scenes", "*", "npc", "persuasion", "success", "text"],
   ["scenes", "*", "npc", "persuasion", "reactions", "#", "text"],
@@ -162,6 +164,18 @@ export function validateStory(story) {
         if (npc.hostileReaction !== undefined ? !lines(npc.hostileReaction) : canOffend) {
           problems.push(`${at}: npc needs a "hostileReaction" (the line when threats or insults offend them, or a list of ` +
             "lines to use in turn)");
+        }
+        // Every clue needs the line the character says when it reveals their secret, and nothing else may have one.
+        const clueIds = Array.isArray(npc.persuasion.clues) ? npc.persuasion.clues.map((k) => k?.id) : [];
+        const clueReplies = npc.clueReplies ?? {};
+        if (!isObject(clueReplies)) problems.push(`${at}: npc "clueReplies" must be an object of { clue id: reply }`);
+        else {
+          for (const id of clueIds) {
+            if (!lines(clueReplies[id])) problems.push(`${at}: clue "${id}" needs a reply in "clueReplies" (what ${npc.name} says when it reveals their secret)`);
+          }
+          for (const id of Object.keys(clueReplies)) {
+            if (!clueIds.includes(id)) problems.push(`${at}: "clueReplies" has "${id}", which isn't one of the npc's clues`);
+          }
         }
         if (Number.isFinite(npc.patience)) {
           if (!text(npc.outOfPatience?.text)) problems.push(`${at}: npc has finite patience, so it needs "outOfPatience" with "text"`);
@@ -410,9 +424,30 @@ export class Game {
       const offendedCost = this.npc?.character.offendedCost ?? 0;
       const both = actionCost > 0 && this.isHostile(answers);
       this.react(lines, answers, both && actionCost > offendedCost ? 0 : offendedCost);
+      const sceneBefore = this.sceneId;
       this.apply(action, lines, { skipPatience: both && offendedCost >= actionCost });
+      // A clue in what the player did or said, after the action's own effects (asking about the toy horse already
+      // teaches Harry's secret, so his clue adds nothing), and only while they're still with the character.
+      if (this.sceneId === sceneBefore && !this.over) this.#revealClue(answers, lines);
     }
     return this.finish(lines, input, debug);
+  }
+
+  /** On a turn that isn't a persuasion attempt: a matched clue that teaches a new secret, with its reply. */
+  #revealClue(answers, lines) {
+    const npc = this.npc;
+    if (!npc || !answers || this.isHostile(answers)) return;
+    const { clue } = readPersuasion(npc.character, answers, { knows: [...this.flags] });
+    if (!clue?.revealed) return;
+    npc.learn(clue.reveals);
+    this.flags.add(clue.reveals);
+    lines.push(this.#clueReply(clue));
+  }
+
+  /** What the scene's character says when a clue reveals their secret. */
+  #clueReply(clue) {
+    const npc = this.scene.npc;
+    return this.#nextLine(`${npc.id} clue ${clue.id}`, npc.clueReplies[clue.id]);
   }
 
   finish(lines, input, debug) {
@@ -536,7 +571,9 @@ export class Game {
       return;
     }
 
-    const result = this.npc.record(input, answers);
+    // The engine's flags are the secrets the player has learned (they're what the state sent to Jev).
+    const result = this.npc.record(input, answers, { knows: [...this.flags] });
+    if (result.clue?.revealed) this.flags.add(result.clue.reveals);
     this.#attempt = { ...result, threshold: this.npc.character.threshold };
     if (result.verdict === "convinced") {
       lines.push(npc.persuasion.success.text);
@@ -545,6 +582,9 @@ export class Game {
       // The attempt that uses up the last of their patience gets only the out-of-patience text, not an
       // encouraging reaction followed by the end of the scene.
       this.runOutOfPatience(lines);
+    } else if (result.clue?.revealed) {
+      // A good guess becomes progress: they tell you, instead of turning you down.
+      lines.push(this.#clueReply(result.clue));
     } else {
       lines.push(result.verdict === "offended" ? this.hostileReaction() : result.reaction);
     }

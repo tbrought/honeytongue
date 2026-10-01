@@ -72,6 +72,13 @@
               ]
             }
           ],
+          "clues": [
+            {
+              "id": "crew_shares",
+              "when": "Asks about the crew's shares or the ship's accounts, or suggests someone aboard, such as the captain, is cheating the crew",
+              "reveals": "suspects_the_captain"
+            }
+          ],
           "success": {
             "text": "@[Maude] studies you for a long moment, then holds out an inky hand. \"Show me those #[crates], and you've a berth as far as the far shore. Cross me, and you'll swim the rest.\"",
             "goto": "aboard"
@@ -81,7 +88,13 @@
           "\"Heard it the first time,\" @[Maude] says. \"Saying it twice doesn't double its worth.\"",
           "@[Maude] doesn't look up. \"Already on the books. Next.\"",
           "\"Same offer, same answer,\" @[Maude] says."
-        ]
+        ],
+        "clueReplies": {
+          "crew_shares": [
+            "@[Maude]'s pen stops. \"Shares came up short again this voyage. Third time running.\" She glances toward the captain's cabin. \"The captain says the sea takes its cut.\"",
+            "@[Maude] looks up properly for the first time. \"You've a sharp eye. The crew's shares have been short three voyages running, and the captain blames the sea.\""
+          ]
+        }
       },
       "actions": {
         "persuade_maude": {

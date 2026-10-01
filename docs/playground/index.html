@@ -102,6 +102,13 @@
           <button type="button" class="key" id="add-secret">Add a secret</button>
           <p class="error" id="e-secrets"></p>
         </fieldset>
+        <fieldset aria-describedby="h-clues e-clues">
+          <legend>Clues</legend>
+          <p class="hint" id="h-clues">Things a line can do that teach the player a secret, such as guessing at the character's family. The first match reveals it at no cost in patience.</p>
+          <ul class="rows" id="clues"></ul>
+          <button type="button" class="key" id="add-clue">Add a clue</button>
+          <p class="error" id="e-clues"></p>
+        </fieldset>
         <fieldset aria-describedby="h-reactions e-reactions">
           <legend>Reactions</legend>
           <p class="hint" id="h-reactions">What they say when unconvinced, picked by the highest score reached. Put each variant on its own line, and they're used in turn.</p>

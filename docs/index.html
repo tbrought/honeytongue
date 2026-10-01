@@ -91,6 +91,7 @@
       <li><a href="#characters">Difficulty</a></li>
       <li><a href="#intimidation">Threats, insults</a></li>
       <li><a href="#secrets">Secrets</a></li>
+      <li><a href="#clues">Clues</a></li>
       <li><a href="#reactions">Reactions</a></li>
       <li class="group">Browser games</li>
       <li><a href="#browser">The proxy</a></li>
@@ -274,6 +275,18 @@ result.triggered; <span class="c">// ["threats"], so you can narrate it as intim
 ]</code></pre>
       <p>When the player discovers it in your game, call <code>guard.learn("sick_daughter")</code>, or pass <code>{ knows: ["sick_daughter"] }</code> to <code>attempt()</code>. Until then, Jev isn't told the secret at all, so an argument can't draw on it: a player who learns it scores about 0.5 to 1 higher with the same words.</p>
       <p class="note">Secrets stop replay exploits, but they can't prevent a lucky guess. An argument that happens to guess a secret is judged like any other argument, on how well it fits the persona.</p>
+    </section>
+
+    <section id="clues">
+      <h2>Clues</h2>
+      <p>Secrets have to be found, and a player who guesses well shouldn't hit a dead end. A clue is something a line can do that teaches the player a secret, such as guessing at the character's family. Give the character <code>clues</code>, each with an <code>id</code>, <code>when</code> (what the line does, as Jev is asked it, in at most 255 characters), and <code>reveals</code> (the secret it teaches):</p>
+<pre data-lang="JavaScript"><code>clues: [{
+  id: <span class="s">"family"</span>,
+  when: <span class="s">"Asks about or guesses at his children, his family, or someone at home he's worried about"</span>,
+  reveals: <span class="s">"sick_daughter"</span>,
+}],</code></pre>
+      <p>Each attempt then asks Jev one more question, and every result carries <code>clue</code>: <code>{ id, reveals, confidence, revealed }</code>, or <code>null</code>. When a line matches a clue whose secret the player hasn't learned, and doesn't offend, <code>revealed</code> is true: the character learns that the player knows the secret, and that attempt costs no patience. What the character says about it is up to your game. After that, lines matching the same clue are judged and charged as usual, so a player can't keep guessing for free. A clue counts as matched at a probability of <code>clueAt</code> (0.6). Characters without clues send exactly what they did before.</p>
+      <p>In a story, give the npc <code>clueReplies</code>: what they say when each clue reveals their secret (a list of variants is fine). The engine checks clues on every turn the character is present, in the same request. On a persuasion attempt, the clue's reply replaces the usual reaction. On any other action, the clue is checked after the action's own effects, so an action that already teaches the secret (like asking Harry about the toy horse) isn't repeated, and a clue doesn't apply once the action has taken the player elsewhere. In <a href="play/#gatehouse">The Gatehouse</a>, offering to find Harry's son an apprenticeship gets: "My girl. She's had a fever three days, and the apothecary won't see anyone after curfew."</p>
     </section>
 
     <section id="reactions">
@@ -564,6 +577,7 @@ loaded.<span class="f">restore</span>(JSON.<span class="f">parse</span>(localSto
           <tr><td><code>patience</code></td><td>Unlimited</td><td>How much failure they'll put up with, above 0 (<a href="#patience">Patience</a>)</td></tr>
           <tr><td><code>failCost</code>, <code>offendedCost</code></td><td>1, 2</td><td>Patience lost per unconvinced or repeated attempt, and per offensive one</td></tr>
           <tr><td><code>secrets</code></td><td>None</td><td><code>[{ id, fact }]</code>: facts Jev is only told once the player learns them (<a href="#secrets">Secrets</a>)</td></tr>
+          <tr><td><code>clues</code>, <code>clueAt</code></td><td>None, 0.6</td><td><code>[{ id, when, reveals }]</code>: lines that teach the player a secret, and the probability at which one counts as matched (<a href="#clues">Clues</a>)</td></tr>
           <tr><td><code>reactions</code></td><td>A generic line</td><td><code>[{ min, text }]</code>: lines for unconvinced attempts, by the highest <code>min</code> reached; each <code>text</code> may be a list of variants used in turn (<a href="#reactions">Reactions</a>)</td></tr>
           <tr><td><code>repeatReaction</code></td><td>A generic line</td><td>What they say when the player repeats themselves: one line, or a list used in turn</td></tr>
           <tr><td><code>levels</code></td><td><code>DEFAULT_LEVELS</code></td><td>Your own rubric: 2 to 10 descriptions, weakest first (<a href="#control">Rubrics</a>)</td></tr>
@@ -601,6 +615,7 @@ loaded.<span class="f">restore</span>(JSON.<span class="f">parse</span>(localSto
           <tr><td><code>score</code>, <code>maxScore</code>, <code>confidence</code></td><td>Jev's score (fractional, 0 to <code>maxScore</code>) and confidence; <code>null</code> for a repeat, which isn't sent to Jev</td></tr>
           <tr><td><code>tells</code>, <code>triggered</code></td><td>Each tell's probability, and the tells at or above <code>hostileAt</code></td></tr>
           <tr><td><code>reaction</code></td><td>Text for unconvinced and repeated verdicts; <code>null</code> otherwise</td></tr>
+          <tr><td><code>clue</code></td><td>The clue the line matched, <code>{ id, reveals, confidence, revealed }</code>, or <code>null</code> (<a href="#clues">Clues</a>)</td></tr>
           <tr><td><code>patienceLeft</code>, <code>outOfPatience</code></td><td>From <code>attempt()</code> and <code>record()</code> only</td></tr>
         </tbody>
       </table></div>
@@ -654,7 +669,7 @@ loaded.<span class="f">restore</span>(JSON.<span class="f">parse</span>(localSto
           <tr><td><code>allowedCharacters</code>, <code>allowedStories</code></td><td>Required (one or both)</td><td><code>createProxyHandler</code>: only judge Honeytongue's own requests for these characters, or these stories' scenes (<a href="#browser">Browser games</a>)</td></tr>
           <tr><td><code>dangerouslyAllowAnyRequest</code></td><td><code>false</code></td><td><code>createProxyHandler</code>: forward any well-formed request instead, for local tools only, never a public proxy</td></tr>
           <tr><td><code>client</code></td><td>Jev</td><td><code>createProxyHandler</code>: another client to answer with, such as the mock</td></tr>
-          <tr><td><code>maxQuestions</code>, <code>maxStateBytes</code>, <code>maxInputLength</code></td><td>6, 16000, 500</td><td><code>createProxyHandler</code>: questions per request (the engine sends 4), request body size in bytes, input length</td></tr>
+          <tr><td><code>maxQuestions</code>, <code>maxStateBytes</code>, <code>maxInputLength</code></td><td>8, 16000, 500</td><td><code>createProxyHandler</code>: questions per request (the engine sends 4 to 6, depending on the character's clues and angles), request body size in bytes, input length</td></tr>
           <tr><td><code>rateLimit</code></td><td><code>{ requests: 30, windowMs: 60000 }</code></td><td><code>createProxyHandler</code>: per client address, per server instance; <code>false</code> turns it off</td></tr>
           <tr><td><code>clientIp</code></td><td><code>CF-Connecting-IP</code>, else the last <code>X-Forwarded-For</code></td><td><code>createProxyHandler</code>: <code>(request, env) =&gt; address</code>, for the rate limit</td></tr>
         </tbody>

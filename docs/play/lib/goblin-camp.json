@@ -70,6 +70,13 @@
               ]
             }
           ],
+          "clues": [
+            {
+              "id": "his_own_dream",
+              "when": "Asks about or guesses at what Nib would rather be doing than guarding, or his love of food and cooking",
+              "reveals": "wants_to_be_a_cook"
+            }
+          ],
           "success": {
             "text": "@[Nib] looks at the war chief's empty tent, then back at you. With trembling claws, he fumbles the key into the lock. \"Quick, before I change my mind!\" He scoops up his #[bedroll] and scurries after you into the trees.",
             "goto": "talked_out"
@@ -79,7 +86,13 @@
           "\"You said that one,\" @[Nib] mutters. \"Say a different thing.\"",
           "@[Nib] counts on his claws. \"That's the same one again.\"",
           "\"Already heard that one,\" @[Nib] says, a bit proud he noticed."
-        ]
+        ],
+        "clueReplies": {
+          "his_own_dream": [
+            "@[Nib] glances at his #[bedroll], then leans close to the #[bars]. \"Don't tell the big ones. I want to be a cook. A real one, in a town kitchen.\"",
+            "@[Nib]'s ears go pink. \"How did you know?\" he whispers. \"I want to cook. In a town, with a proper kitchen. Not slop for the big ones.\""
+          ]
+        }
       },
       "actions": {
         "persuade_nib": {

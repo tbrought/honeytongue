@@ -20,6 +20,8 @@ export type {
   DecideHook,
   DecideContext,
   Secret,
+  Clue,
+  ClueMatch,
   Verdict,
   PersuasionResult,
   AttemptResult,

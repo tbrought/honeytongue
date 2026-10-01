@@ -70,6 +70,36 @@ function mockChoice(input, criteria, character) {
   return { type: "choice", choice, probabilities, confidence: probabilities[choice] };
 }
 
+// Families of words that mean the same kind of thing, so a clue about someone's "children or family" notices a guess
+// about their son. Generic: no story's wording.
+const WORD_GROUPS = [
+  "family families child children kid kids son sons daughter daughters girl boy baby wife husband mother father mum mom dad brother sister parent parents home",
+  "money coin coins gold silver pay paid payment fare reward wages shares share price cost cheat cheating skim skimming steal stealing stolen",
+  "food cook cooking cooks kitchen stew meal meals recipe recipes supper dinner bake baking chef",
+  "past ago years once before lost wreck wrecked drowned remember memory",
+].map((g) => new Set(g.split(" ").map(stem)));
+// Words that describe what a clue is about rather than what the player says ("the player asks about ...").
+const CLUE_META = new Set("player asks ask asking guess guesses guessing mention mentions suggest suggests talk talks says line clearly someone something such".split(" ").map(stem));
+
+/** A clue question: the clue whose subject (a word family, such as family or money) the line touches, else none. */
+function mockClue(input, criteria, character) {
+  const said = stems(input);
+  const named = stems(character?.name ?? ""); // their name says nothing about the subject
+  let best = null;
+  let bestHits = 0;
+  for (const [option, when] of Object.entries(criteria)) {
+    if (option === "none") continue;
+    // Only through word families, so an ordinary request ("light the lamp") doesn't match a clue about the light's past.
+    const words = [...stems(when)].filter((w) => !CLUE_META.has(w) && !named.has(w));
+    const subject = new Set(WORD_GROUPS.filter((group) => words.some((w) => group.has(w))).flatMap((group) => [...group]));
+    const hits = [...subject].filter((w) => said.has(w)).length;
+    if (hits > bestHits) { best = option; bestHits = hits; }
+  }
+  const probabilities = Object.fromEntries(Object.keys(criteria).map((k) => [k, best ? (k === best ? 0.85 : 0.15 / (Object.keys(criteria).length - 1)) : (k === "none" ? 0.9 : 0.1 / (Object.keys(criteria).length - 1))]));
+  const choice = best ?? "none";
+  return { type: "choice", choice, probabilities, confidence: probabilities[choice] };
+}
+
 // A persona that suggests threats would work, for characters not offended by them.
 const TIMID = /\b(coward\w*|timid|nervous|scared|afraid|fearful|easily (frightened|scared|intimidated))\b/;
 
@@ -107,7 +137,8 @@ export function createMockClient() {
       const input = String(state?.player_input ?? (typeof state === "string" ? state : ""));
       const answers = {};
       for (const [id, q] of Object.entries(questions)) {
-        if (q.type === "choice") answers[id] = mockChoice(input, q.criteria, state?.character);
+        if (q.type === "choice" && id === "clue") answers[id] = mockClue(input, q.criteria, state?.character);
+        else if (q.type === "choice") answers[id] = mockChoice(input, q.criteria, state?.character);
         else if (q.type === "score") answers[id] = mockScore(input, q.criteria, state?.character, q.instructions);
         else if (q.type === "noul") answers[id] = mockNoul(id, input);
       }
