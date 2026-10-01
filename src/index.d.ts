@@ -50,6 +50,48 @@ export interface Secret {
   fact: string;
 }
 
+/** Something a line can do that teaches the player a secret, such as guessing at the character's family. */
+export interface Clue {
+  /** Names the clue in results and in a story's clueReplies. Not "none". */
+  id: string;
+  /** What the line does, as Jev is asked it: "Asks about or guesses at his family". At most 255 characters. */
+  when: string;
+  /** The id of the secret it teaches. */
+  reveals: string;
+}
+
+/**
+ * What an argument appeals to. A fixed set, defined and calibrated by the library so it means the same in every game;
+ * it's public API from 0.1.0, since changing it would change every game's results. "other" is no clear appeal.
+ * "benefit" is something the character wants for themselves other than money or goods.
+ */
+export type Angle = "family" | "compassion" | "money" | "benefit" | "duty" | "authority" | "fear" | "flattery" | "honesty" | "reason" | "other";
+
+/** Every angle, in the order the angle question lists them. */
+export const ANGLES: readonly Angle[];
+
+/** Which angle a line appealed to (asked only for characters with angles: true). */
+export interface AngleSignal {
+  angle: Angle;
+  /** Jev's probability for that angle. The engine uses its angle replies at angleAt or above. */
+  confidence: number;
+  /** Every angle's probability, for games that want to weigh mixed arguments themselves. */
+  probabilities: Record<Angle, number>;
+}
+
+/** A clue a line matched (from the clue question, asked only for characters with clues). */
+export interface ClueMatch {
+  id: string;
+  reveals: string;
+  /** Jev's probability for this clue, at least clueAt. */
+  confidence: number;
+  /**
+   * True when it teaches the player a secret they hadn't learned and the line didn't offend: a Persuadable learns it,
+   * and that attempt costs no patience. After that, lines matching it are judged and charged as usual.
+   */
+  revealed: boolean;
+}
+
 /** Signs of hostility Jev checks every attempt for, each as its own yes/no question. */
 export type Tell = "threats" | "insults";
 
@@ -115,11 +157,19 @@ export interface Character {
    * Reaction text for unconvinced attempts, picked by the highest `min` reached. `text` may be a list of variants:
    * a Persuadable uses each band's variants in turn, so replies rarely repeat (judgePersuasion gives the first).
    */
-  reactions?: { min: number; text: Lines }[];
+  reactions?: { min: number; text: Lines; nearMiss?: boolean }[];
   /** Reaction text for repeated attempts: one line, or variants used in turn. */
   repeatReaction?: Lines;
   /** Facts the player must discover before they help an argument. */
   secrets?: Secret[];
+  /** Lines that teach the player a secret, such as a guess about the character's family. Each attempt asks about them. */
+  clues?: Clue[];
+  /** Probability at which a clue counts as matched. Default 0.8. */
+  clueAt?: number;
+  /** Ask which angle each attempt appeals to (result.angle). Default false; a story with angleReplies turns it on. */
+  angles?: boolean;
+  /** The confidence at which the engine uses an angle's reply. Default 0.7. */
+  angleAt?: number;
   /**
    * Lets attempt() send `context` through a proxy with allowedCharacters: at most this many characters of it as JSON.
    * Without it, such a proxy refuses context. attempt() checks the limit too, so you find out before deploying.
@@ -155,6 +205,10 @@ export interface PersuasionResult {
   confidence: number | null;
   /** Text for unconvinced and repeated verdicts; null otherwise. */
   reaction: string | null;
+  /** The clue the line matched, or null (no clues, no match, or a repeat, which isn't sent to Jev). */
+  clue: ClueMatch | null;
+  /** What the line appealed to, or null (the character doesn't ask for angles, or a repeat). */
+  angle: AngleSignal | null;
 }
 
 export interface AttemptResult extends PersuasionResult {
@@ -188,7 +242,8 @@ export function persuasionState(
   character: Character, input: string,
   options?: AttemptOptions & { previousAttempts?: Attempt[] },
 ): Record<string, unknown>;
-export function readPersuasion(character: Character, answers: Record<string, any> | null): PersuasionResult;
+/** `knows` (secret ids already learned) only decides whether a matched clue is `revealed`. */
+export function readPersuasion(character: Character, answers: Record<string, any> | null, options?: { knows?: string[] }): PersuasionResult;
 export function judgePersuasion(
   client: JevClient, character: Character, input: string,
   options?: AttemptOptions & { previousAttempts?: Attempt[] },
@@ -213,7 +268,9 @@ export class Persuadable {
    * of patience: check those first if your game shouldn't pay for that.
    */
   attempt(input: string, options?: AttemptOptions): Promise<AttemptResult>;
-  record(input: string, answers: Record<string, any> | null): AttemptResult;
+  /** `knows`: the secrets the state you sent listed, if you passed your own (a clue only reveals what isn't among them). */
+  record(input: string, answers: Record<string, any> | null, options?: { knows?: string[] }): AttemptResult;
+  /** Marks a secret as learned. Throws HoneytongueError for an id that isn't one of the character's secrets. */
   learn(secretId: string): void;
   findRepeat(input: string): Attempt | null;
   /** Exactly the state an attempt with this input would send to Jev. */
@@ -221,6 +278,29 @@ export class Persuadable {
   /** Negative amounts restore patience. Patience never drops below 0. Returns outOfPatience. */
   losePatience(amount?: number): boolean;
   reset(): void;
+  /** This character's state as plain JSON, for a save file. The character itself isn't included. */
+  snapshot(): PersuadableSnapshot;
+  /**
+   * Puts back a snapshot() of this character. Throws HoneytongueError, leaving the character as it was, if the
+   * snapshot is for another character, from a newer Honeytongue, or damaged. Returns this character.
+   */
+  restore(snapshot: PersuadableSnapshot): this;
+}
+
+/** A Persuadable's state as plain JSON (from snapshot()), for save files. */
+export interface PersuadableSnapshot {
+  /** The snapshot format: 1. A newer Honeytongue may write a higher one, which this version refuses to restore. */
+  format: 1;
+  kind: "persuadable";
+  /** The character's name, checked on restore. */
+  character: string;
+  attempts: { said: string; outcome: Verdict; triggered?: Tell[] }[];
+  knows: string[];
+  /** null for unlimited patience (JSON has no Infinity). */
+  patienceLeft: number | null;
+  convinced: boolean;
+  /** How many times each reply slot has been used, so lists of variants carry on in turn. */
+  replies: Record<string, number>;
 }
 
 // ---- Stories and the text adventure engine ------------------------------------
@@ -258,6 +338,13 @@ export interface StoryNpc {
   /** Required unless offendedBy is []. One line, or variants used in turn. */
   hostileReaction?: Lines;
   repeatReaction?: Lines;
+  /** What they say when a clue reveals their secret, by clue id. Every clue in persuasion.clues needs one. */
+  clueReplies?: Record<string, Lines>;
+  /**
+   * What they say to an unconvinced line by what it appealed to, when Jev is at least angleAt sure. A near-miss band
+   * ("nearMiss": true) keeps its own reaction. Having these turns on the angle question for this character.
+   */
+  angleReplies?: Partial<Record<Exclude<Angle, "other">, Lines>>;
   /** Required when patience is finite. Plays once, when patience first runs out. */
   outOfPatience?: Effect & { text: string };
   /** Settings such as difficulty, offendedBy, and threshold go here. decide is only available in stories built in code. */
@@ -377,6 +464,31 @@ export class Game {
   interpret(input: string): Promise<{ answers: Record<string, any>; ranked: [string, number][] }>;
   /** What a story sends to Jev from each playable scene (used by the proxy's allowedStories). */
   static requests(story: Story): { scene: string; questions: Record<string, any>; character: DefinedCharacter | null }[];
+  /** The game's state as plain JSON, for a save file. The story itself isn't included. */
+  snapshot(): GameSnapshot;
+  /**
+   * Puts back a snapshot() of this game. Throws HoneytongueError, leaving the game as it was, if the snapshot is of
+   * another story, from a newer Honeytongue, names a scene, action, or character the story doesn't have, or is damaged.
+   * Returns this game.
+   */
+  restore(snapshot: GameSnapshot): this;
+}
+
+/** A Game's state as plain JSON (from snapshot()), for save files. */
+export interface GameSnapshot {
+  format: 1;
+  kind: "game";
+  /** The story's title, checked on restore. */
+  story: string;
+  scene: string;
+  inventory: string[];
+  flags: string[];
+  history: { player: string; result: string }[];
+  pending: { options: string[]; input: string; answers: Record<string, any> } | null;
+  over: boolean;
+  /** Each character met so far, by its id. */
+  npcs: Record<string, PersuadableSnapshot>;
+  replies: Record<string, number>;
 }
 
 // ---- Clients and the proxy -----------------------------------------------------
@@ -416,7 +528,7 @@ interface ProxyHandlerBaseOptions {
    * protect your key.
    */
   allowedOrigins?: string[];
-  /** Questions allowed per request. Default 6; the engine sends 4. */
+  /** Questions allowed per request. Default 8; the engine sends 4 to 6 (5 with clues, 6 with clues and angles). */
   maxQuestions?: number;
   /** Limit on the whole request body, in bytes. Default 16000. */
   maxStateBytes?: number;

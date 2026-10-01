@@ -84,7 +84,7 @@ test("the demo Worker reads at most MAX_BYTES, which fits the largest request th
     assert.equal((await send(JSON.stringify(japanese))).status, 200, "the largest real request is judged");
     const huge = await send("x".repeat(worker.MAX_BYTES + 1));
     assert.equal(huge.status, 413);
-    assert.match((await huge.json()).error, /maxStateBytes of 15000 bytes/);
+    assert.match((await huge.json()).error, new RegExp(`maxStateBytes of ${worker.MAX_BYTES} bytes`));
     // Padding a field past what the library sends is refused, even when it fits in the byte limit.
     const padded = largest((n) => "a".repeat(n));
     padded.state.previous_attempts = Array.from({ length: 4 }, () => ({ said: "a".repeat(450), outcome: "unconvinced" }));

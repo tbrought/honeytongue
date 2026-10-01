@@ -28,6 +28,7 @@ const FILES = {
   "/style.css": "docs/style.css",
   "/theme.js": "docs/theme.js",
   "/play/lib/persuasion.js": "src/persuasion.js",
+  "/play/lib/snapshot.js": "src/snapshot.js",
   "/play/lib/jev.js": "src/jev.js",
   "/play/lib/mock.js": "src/mock.js",
   "/play/lib/markup.js": "src/markup.js",

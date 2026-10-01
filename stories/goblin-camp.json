@@ -67,7 +67,15 @@
                 "@[Nib]'s ears twitch up, just a little. \"Ooh. But what happens to Nib, after?\"",
                 "@[Nib] glances at his #[bedroll], then away again, quickly. \"Maybe. Maybe maybe. But what's in it for me?\"",
                 "@[Nib] stirs the #[stew pot] slower and slower. \"If I went... where would I even go?\""
-              ]
+              ],
+              "nearMiss": true
+            }
+          ],
+          "clues": [
+            {
+              "id": "his_own_dream",
+              "when": "Asks about or guesses at what Nib would rather be doing than guarding, or his love of food and cooking",
+              "reveals": "wants_to_be_a_cook"
             }
           ],
           "success": {
@@ -79,7 +87,35 @@
           "\"You said that one,\" @[Nib] mutters. \"Say a different thing.\"",
           "@[Nib] counts on his claws. \"That's the same one again.\"",
           "\"Already heard that one,\" @[Nib] says, a bit proud he noticed."
-        ]
+        ],
+        "clueReplies": {
+          "his_own_dream": [
+            "@[Nib] glances at his #[bedroll], then leans close to the #[bars]. \"Don't tell the big ones. I want to be a cook. A real one, in a town kitchen.\"",
+            "@[Nib]'s ears go pink. \"How did you know?\" he whispers. \"I want to cook. In a town, with a proper kitchen. Not slop for the big ones.\""
+          ]
+        },
+        "angleReplies": {
+          "benefit": [
+            "@[Nib] stops stirring. \"For me? Nobody ever offers Nib anything.\" He thinks about it, very hard.",
+            "@[Nib]'s ears perk up, then droop again. \"Sounds nice. Too nice. What's the catch?\""
+          ],
+          "fear": [
+            "@[Nib] glances at the dark trees and shivers. \"Don't say that. I'm scared enough already.\"",
+            "@[Nib]'s spear wobbles. \"You're trying to frighten me. It's working. Stop it.\""
+          ],
+          "flattery": [
+            "@[Nib] goes pink to the tips of his ears. \"Nobody's ever said that about me.\" He still doesn't open the cage.",
+            "\"Really?\" @[Nib] says, puffing up. Then he remembers where he is. \"Still can't let you out.\""
+          ],
+          "money": [
+            "@[Nib] squints at you. \"What would I even buy? The big ones take everything anyway.\"",
+            "\"Shiny,\" @[Nib] admits. \"But you can't eat shiny.\""
+          ],
+          "authority": [
+            "@[Nib] cringes. \"The war chief's the boss of me. Not you.\"",
+            "\"You're not the war chief,\" @[Nib] says, then, less sure: \"Are you?\""
+          ]
+        }
       },
       "actions": {
         "persuade_nib": {

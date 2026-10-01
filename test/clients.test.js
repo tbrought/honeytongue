@@ -257,7 +257,8 @@ test("a worst-case Gatehouse turn fits the proxy's default size limit, with the 
   assert.equal(state.previous_attempts.length, 3, "only the latest 1,500 characters of attempts are sent");
   const body = JSON.stringify(stripMarkupDeep({ state, questions: game.buildQuestions() }));
   const bytes = new TextEncoder().encode(body).length;
-  assert.ok(bytes < 8_000, `worst case is ${bytes} bytes`);
+  // With the clue and angle questions; still well under the proxy's 16,000-byte default.
+  assert.ok(bytes < 10_000, `worst case is ${bytes} bytes`);
 });
 
 test("the mock answers threats and insults separately", async () => {
@@ -381,7 +382,7 @@ test("a full engine turn fits within the proxy's default limits", async () => {
   });
   const game = new Game(story, client);
   assert.match((await game.turn("read the letter")).text, /wax seal/);
-  assert.deepEqual(sizes, [4]);
+  assert.deepEqual(sizes, [6], "action, persuasion, two tells, Harry's clue, and the angle");
 });
 
 test("when a proxy refuses the page's origin, the error names the exact origin to add", async () => {

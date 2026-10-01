@@ -5,6 +5,7 @@ export const DEMO_FILES = [
   "src/engine.js",
   "src/markup.js",
   "src/persuasion.js",
+  "src/snapshot.js",
   "src/jev.js",
   "src/mock.js",
   "src/transcript.js",

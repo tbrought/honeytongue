@@ -28,7 +28,7 @@ export const PATH = "/judge";
 // The largest request body it reads, in bytes: the biggest request the library can send for these scenes, with every
 // field a player controls at its limit in a script like Japanese (3 bytes a character), plus a margin
 // (test/demo-worker.test.js checks it). What limits cost is the guard's per-field character caps; this stops huge uploads.
-export const MAX_BYTES = 15_000;
+export const MAX_BYTES = 18_000; // 15,000 until 0.1.0-alpha.14, whose clue and angle questions made requests longer
 
 /** "https://a.example, https://b.example" -> ["https://a.example", "https://b.example"] */
 export const parseOrigins = (value) => String(value ?? "").split(",").map((s) => s.trim().replace(/\/+$/, "")).filter(Boolean);

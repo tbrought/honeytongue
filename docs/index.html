@@ -91,6 +91,8 @@
       <li><a href="#characters">Difficulty</a></li>
       <li><a href="#intimidation">Threats, insults</a></li>
       <li><a href="#secrets">Secrets</a></li>
+      <li><a href="#clues">Clues</a></li>
+      <li><a href="#angles">Angles</a></li>
       <li><a href="#reactions">Reactions</a></li>
       <li class="group">Browser games</li>
       <li><a href="#browser">The proxy</a></li>
@@ -101,6 +103,7 @@
       <li><a href="#decide">Your own rule</a></li>
       <li><a href="#costs">Cost and speed</a></li>
       <li><a href="#merging">Merging requests</a></li>
+      <li><a href="#saving">Save and load</a></li>
       <li><a href="#engine">Text adventures</a></li>
       <li><a href="#models">Choosing a model</a></li>
       <li><a href="#tuning">Testing and tuning</a></li>
@@ -275,6 +278,41 @@ result.triggered; <span class="c">// ["threats"], so you can narrate it as intim
       <p class="note">Secrets stop replay exploits, but they can't prevent a lucky guess. An argument that happens to guess a secret is judged like any other argument, on how well it fits the persona.</p>
     </section>
 
+    <section id="clues">
+      <h2>Clues</h2>
+      <p>Secrets have to be found, and a player who guesses well shouldn't hit a dead end. A clue is something a line can do that teaches the player a secret, such as guessing at the character's family. Give the character <code>clues</code>, each with an <code>id</code>, <code>when</code> (what the line does, as Jev is asked it, in at most 255 characters), and <code>reveals</code> (the secret it teaches):</p>
+<pre data-lang="JavaScript"><code>clues: [{
+  id: <span class="s">"family"</span>,
+  when: <span class="s">"Asks about or guesses at his children, his family, or someone at home he's worried about"</span>,
+  reveals: <span class="s">"sick_daughter"</span>,
+}],</code></pre>
+      <p>Each attempt then asks Jev one more question, and every result carries <code>clue</code>: <code>{ id, reveals, confidence, revealed }</code>, or <code>null</code>. When a line matches a clue whose secret the player hasn't learned, and doesn't offend, <code>revealed</code> is true: the character learns that the player knows the secret, and that attempt costs no patience. What the character says about it is up to your game. After that, lines matching the same clue are judged and charged as usual, so a player can't keep guessing for free. A clue counts as matched at a probability of <code>clueAt</code> (0.8). Characters without clues send exactly what they did before.</p>
+      <p>In a story, give the npc <code>clueReplies</code>: what they say when each clue reveals their secret (a list of variants is fine). The engine checks clues on every turn the character is present, in the same request. On a persuasion attempt, the clue's reply replaces the usual reaction. On any other action, the clue is checked after the action's own effects, so an action that already teaches the secret (like asking Harry about the toy horse) isn't repeated, and a clue doesn't apply once the action has taken the player elsewhere. In <a href="play/#gatehouse">The Gatehouse</a>, offering to find Harry's son an apprenticeship gets: "My girl. She's had a fever three days, and the apothecary won't see anyone after curfew."</p>
+    </section>
+
+    <section id="angles">
+      <h2>Angles</h2>
+      <p>Set <code>angles: true</code>, and every judged result also says what the line appealed to: <code>angle</code> is <code>{ angle, confidence, probabilities }</code>. Honeytongue doesn't pick a reply for it. Your dialogue system can, so a bribe offered to an honest guard gets a different line from a plea for a sick child. The angles are a fixed set, the same in every game, exported as <code>ANGLES</code>:</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Angle</th><th>What the line appeals to</th></tr></thead>
+        <tbody>
+          <tr><td><code>family</code></td><td>Relationships and loyalty: family, friends, or loved ones, theirs or the player's</td></tr>
+          <tr><td><code>compassion</code></td><td>Suffering and need: someone sick, hurt, in danger, or whose life depends on it</td></tr>
+          <tr><td><code>money</code></td><td>Money or goods: payment, a bribe, a fare, a reward, or a trade</td></tr>
+          <tr><td><code>benefit</code></td><td>Something the character wants for themselves other than money: their own hopes, a chance, a favour, a way out</td></tr>
+          <tr><td><code>duty</code></td><td>The character's own obligations: their job, oath, or rules</td></tr>
+          <tr><td><code>authority</code></td><td>Someone else's rank or power over them, including orders from above</td></tr>
+          <tr><td><code>fear</code></td><td>Danger if they refuse, from people or nature, such as raiders or a storm; a threat from the player is the <a href="#intimidation">threats tell</a> instead</td></tr>
+          <tr><td><code>flattery</code></td><td>Praise of them</td></tr>
+          <tr><td><code>honesty</code></td><td>Plain truth, being straight with them, or a sincere promise</td></tr>
+          <tr><td><code>reason</code></td><td>Reasons to agree, not warnings: facts, a plan, proof, or a safeguard (such as a way to check up on the player) that makes agreeing safe or sensible</td></tr>
+          <tr><td><code>other</code></td><td>No clear appeal: a bare request, a command, small talk, or an insult</td></tr>
+        </tbody>
+      </table></div>
+      <p>The set is public API: changing it would change every game's results, so from 0.1.0 any change counts as a breaking change. A mixed argument, such as a heartfelt plea that also offers money, spreads Jev's probability, so check <code>confidence</code> before replying to the angle. In calibration, at 0.7 no clear or mixed line got a confident wrong angle, and 95% of clear lines got the right one. Asking costs one more question per attempt; characters that don't ask send exactly what they did before.</p>
+      <p>In a story, the npc's <code>angleReplies</code> give a line per angle (a list of variants is fine), and turn the question on. The engine uses one for an unconvinced attempt when Jev is at least <code>angleAt</code> sure (0.7), and otherwise, or for an angle with no reply, the score band's reaction. Mark the band just below the threshold <code>"nearMiss": true</code>, and its hint wins over an angle reply: telling a close player what's missing matters more.</p>
+    </section>
+
     <section id="reactions">
       <h2>Reactions</h2>
       <p>Give characters their own lines for failed attempts. <code>reactions</code> is a list of <code>{ min, text }</code>, and an unconvinced attempt gets the line with the highest <code>min</code> its score reached, so a near miss can sound different from a flat refusal. <code>repeatReaction</code> is what they say when the player repeats themselves. Without them, Honeytongue uses a generic line.</p>
@@ -324,7 +362,7 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
       <p>The proxy only judges your own stories' and characters' requests (it won't start without <code>allowedStories</code> or <code>allowedCharacters</code>), accepts browser requests only from its own origin and the ones you list, caps input and request size, and rate-limits each player's address. If you're not sure of your game's origin (itch.io games, for example, run in a frame on itch's own domain), try it once: the error names the exact origin to add. See <code>examples/browser.html</code> for a complete page, and <code>examples/cloudflare-worker.js</code> for the Worker.</p>
       <ul class="points">
         <li><strong>Only your characters.</strong> With <code>allowedCharacters</code> (for <code>Persuadable</code> and <code>judgePersuasion</code>) or <code>allowedStories</code> (for the text adventure engine), the proxy only judges requests that match what Honeytongue sends for them: exactly its questions, your characters as you wrote them, and the parts players control (what they typed, earlier attempts, recent turns, items and knowledge) no longer than the library sends them, using each character's and story's own settings. Without them, anyone who finds your proxy's address could use your key for their own Jev questions, so the proxy won't start without one (a local tool that must forward anything can pass <code>dangerouslyAllowAnyRequest: true</code>). A refusal is a 403 whose <code>reason</code> is <code>"not-allowed"</code>, <code>"state"</code>, or <code>"version"</code>, and whose message names the limit that was exceeded: the client sends its Honeytongue version, and when it differs from the proxy's, the error names both. A different version alone isn't refused: only the questions and state count. To pass extra game state in <code>attempt(input, { context })</code> through the proxy, give the character a <code>maxContextLength</code> (the most characters of it, as JSON); <code>attempt()</code> checks it too, so you find out before you deploy. Deploy the proxy again whenever you change a character, a story, or the Honeytongue version.</li>
-        <li><strong>Nothing players type is logged.</strong> When Jev can't answer, the proxy logs only the status, and replies 502 with a <code>reason</code>: <code>"busy"</code> (try again soon), <code>"error"</code>, or <code>"unavailable"</code> (a bad key or no credit left, which won't fix itself). <code>createProxyClient()</code> keeps the <code>reason</code> on the error it throws, so your game can decide whether to wait or give up.</li>
+        <li><strong>Nothing players type is logged.</strong> When Jev can't answer, the proxy logs only the status, and replies 502 with a <code>reason</code>: <code>"busy"</code> (try again soon), <code>"error"</code>, or <code>"unavailable"</code> (a bad key, or no prepaid credit left, which TypeSafe reports as a 402 <code>billing_error</code>; neither fixes itself, so neither is retried). <code>createProxyClient()</code> keeps the <code>reason</code> on the error it throws, so your game can decide whether to wait or give up.</li>
         <li><strong>Local development.</strong> <code>npm run proxy</code> in a clone of the repository serves the proxy on <code>http://127.0.0.1:8787</code> (this machine only), using the offline mock until you set a key. It judges the demo scenes and the character in <code>examples/browser.html</code> (see <code>examples/node-proxy.js</code>). The proxy only uses the mock when it's passed in as <code>client</code>, as that example does; a deployed proxy with no key returns an error rather than falling back. Every reply says which one answered, <code>"source": "jev"</code> or <code>"mock"</code> beside <code>answers</code>, and the engine passes it on as <code>debug.source</code>.</li>
         <li><strong><code>allowedOrigins</code> only controls browsers.</strong> Scripts and servers send no <code>Origin</code>, so they aren't affected: <code>allowedStories</code> and <code>allowedCharacters</code> are what protect your key, and your TypeSafe spending limit is what caps the cost.</li>
         <li><strong>Other hosts.</strong> On Cloudflare the proxy trusts <code>CF-Connecting-IP</code>; elsewhere it uses the last <code>X-Forwarded-For</code> entry, which is the one most hosts' own proxies add (check your host's documentation). Clients whose address can't be found share one <code>"unknown"</code> address, so one busy client could rate-limit everyone. If your server is reachable directly, or your host reports the address another way, pass <code>clientIp: (request, env) =&gt; ...</code>, so the rate limit sees each player and can't be dodged with a forged header. The rate limit is kept in memory, per server instance: on platforms that run many instances, add your host's own rate limiting too.</li>
@@ -345,9 +383,21 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
       <p>Behind a reverse proxy, leave out <code>clientIp</code> so the last <code>X-Forwarded-For</code> entry is used. <code>examples/node-proxy.js</code> is a complete one, which <code>npm run proxy</code> runs.</p>
     </section>
 
+    <section id="saving">
+      <h2>Save and load</h2>
+      <p>A character's memory, patience, and learned secrets live in its <code>Persuadable</code>. To keep them in a save file, <code>snapshot()</code> gives them as plain JSON, and <code>restore(snapshot)</code> puts them back into a <code>Persuadable</code> made from the same character. A story's <code>Game</code> has the same pair, covering the scene, items, flags, recent turns, a question waiting for an answer, and every character met so far.</p>
+<pre data-lang="JavaScript"><code><span class="c">// Saving</span>
+localStorage.<span class="f">setItem</span>(<span class="s">"harry"</span>, JSON.<span class="f">stringify</span>(guard.<span class="f">snapshot</span>()));
+
+<span class="c">// Loading, into a Persuadable made from the same character</span>
+<span class="k">const</span> loaded = <span class="k">new</span> <span class="f">Persuadable</span>(character, { client });
+loaded.<span class="f">restore</span>(JSON.<span class="f">parse</span>(localStorage.<span class="f">getItem</span>(<span class="s">"harry"</span>)));</code></pre>
+      <p>A snapshot holds state, not the character or story, which stay in your code. It carries a format version, and <code>restore()</code> checks everything before changing anything: a snapshot for another character or story, from a newer version of Honeytongue, or with a damaged field throws a <code>HoneytongueError</code> that says which, and leaves the character or game as it was. Lists of reply variants carry on where they left off. Don't restore while an attempt is waiting for Jev. The <a href="#twine">Twine recipe</a> keeps a snapshot in a story variable, so SugarCube's saves and Back button carry it.</p>
+    </section>
+
     <section id="twine">
       <h2>Twine</h2>
-      <p>For SugarCube 2, load Honeytongue in your Story JavaScript and keep the character on <code>setup</code>. This recipe is tested in Twine 2.12.0 with SugarCube 2.37.3, using the offline stand-in:</p>
+      <p>For SugarCube 2, load Honeytongue in your Story JavaScript and keep the character on <code>setup</code>, with its state in a story variable so saves carry it. This recipe is tested in Twine 2.12.0 with SugarCube 2.37.3, using the offline stand-in, apart from its save and load part (new in 0.1.0-alpha.14), which hasn't been tested inside Twine yet:</p>
 <pre data-lang="JavaScript"><code>setup.ready = <span class="k">import</span>(<span class="s">"https://cdn.jsdelivr.net/npm/honeytongue@alpha/src/index.js"</span>)
   .<span class="f">then</span>(<span class="k">function</span> (hon) {
     setup.harry = <span class="k">new</span> hon.<span class="f">Persuadable</span>({
@@ -356,7 +406,15 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
       goal: <span class="s">"Open the gate after curfew"</span>,
       patience: <span class="n">4</span>,
     }, { client: hon.<span class="f">createMockClient</span>() });
-  });</code></pre>
+  });
+
+<span class="c">// Harry's memory and patience are kept in $harry, so saves, loads, and Back carry them.</span>
+<span class="f">$</span>(document).<span class="f">on</span>(<span class="s">":passagestart"</span>, <span class="k">function</span> () {
+  setup.ready.<span class="f">then</span>(<span class="k">function</span> () {
+    <span class="k">if</span> (State.variables.harry) setup.harry.<span class="f">restore</span>(State.variables.harry);
+    <span class="k">else</span> setup.harry.<span class="f">reset</span>();
+  });
+});</code></pre>
       <p>Then a button calls <code>setup.harry.attempt(_plea)</code> once <code>setup.ready</code> has finished, and sends the player to a passage based on the verdict. The full recipe in <code>examples/twine-sugarcube.md</code> has the passages, including an empty line and running out of patience.</p>
       <p class="note">To judge with Jev, swap <code>hon.createMockClient()</code> for <code>hon.createProxyClient({ url: "https://your-proxy.workers.dev" })</code>, with a <a href="#browser">proxy</a> that allows your story's origin (the error names it) and your character. That part hasn't been tested inside Twine yet.</p>
     </section>
@@ -425,14 +483,21 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
 
     <section id="costs">
       <h2>Cost and speed</h2>
-      <p>Jev charges about $0.042 per million input tokens and nothing for output. The figures below are our own measurements, on <code>jev-1.13.0</code> in September 2026, over about 2,600 live calls. Results vary: speed depends on your network, your region, and how busy the service is.</p>
+      <p>Jev charges about $0.042 per million input tokens and nothing for output. <a href="#clues">Clues</a> and <a href="#angles">angles</a> each add a question to every request, so they add to the cost; characters without them cost what they always did. The figures below are our own measurements, on <code>jev-1.13.0</code> on 2026-09-30, at the start of a conversation, with the four demo characters and scenes:</p>
       <div class="table-wrap"><table>
-        <thead><tr><th>Call</th><th>Tokens (median)</th><th>Latency (median, 95th percentile)</th><th>10,000 calls</th></tr></thead>
+        <thead><tr><th>Call</th><th>Input tokens (median)</th><th>10,000 calls</th></tr></thead>
         <tbody>
-          <tr><td><code>attempt()</code> or <code>judgePersuasion()</code></td><td>About 700 to 850</td><td>100 ms, 150 ms</td><td>About 30 cents</td></tr>
-          <tr><td>A text adventure turn</td><td>About 1,350 to 1,500</td><td>100 ms, 150 ms</td><td>About 50 cents</td></tr>
+          <tr><td><code>attempt()</code> or <code>judgePersuasion()</code></td><td>About 720</td><td>About 30 cents</td></tr>
+          <tr><td>The same, with clues</td><td>About 890</td><td>About 37 cents</td></tr>
+          <tr><td>The same, with angles</td><td>About 1,180</td><td>About 50 cents</td></tr>
+          <tr><td>The same, with clues and angles</td><td>About 1,350</td><td>About 57 cents</td></tr>
+          <tr><td>A text adventure turn</td><td>About 1,250</td><td>About 53 cents</td></tr>
+          <tr><td>The same, with clues</td><td>About 1,330</td><td>About 56 cents</td></tr>
+          <tr><td>The same, with angles</td><td>About 1,620</td><td>About 68 cents</td></tr>
+          <tr><td>The same, with clues and angles (as in the demo scenes)</td><td>About 1,890</td><td>About 79 cents</td></tr>
         </tbody>
       </table></div>
+      <p>In these measurements, a clue question with one clue added about 80 to 170 input tokens, and each further clue adds its own description. The angle question added about 370 to 470, since it lists every angle's definition. Speed is the same either way: about 100 ms at the median, and 100 to 200 ms at the 95th percentile, though it depends on your network, your region, and how busy the service is.</p>
       <p>Repeats are caught locally and cost nothing. To cut tokens further, lower <code>memory</code> or <code>memoryLength</code> (each remembered attempt adds about 40 tokens for a short line, so the default 10 adds up to about 400 once a conversation is that long) or <code>maxInputLength</code>.</p>
     </section>
 
@@ -543,7 +608,9 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
           <tr><td><code>patience</code></td><td>Unlimited</td><td>How much failure they'll put up with, above 0 (<a href="#patience">Patience</a>)</td></tr>
           <tr><td><code>failCost</code>, <code>offendedCost</code></td><td>1, 2</td><td>Patience lost per unconvinced or repeated attempt, and per offensive one</td></tr>
           <tr><td><code>secrets</code></td><td>None</td><td><code>[{ id, fact }]</code>: facts Jev is only told once the player learns them (<a href="#secrets">Secrets</a>)</td></tr>
-          <tr><td><code>reactions</code></td><td>A generic line</td><td><code>[{ min, text }]</code>: lines for unconvinced attempts, by the highest <code>min</code> reached; each <code>text</code> may be a list of variants used in turn (<a href="#reactions">Reactions</a>)</td></tr>
+          <tr><td><code>clues</code>, <code>clueAt</code></td><td>None, 0.8</td><td><code>[{ id, when, reveals }]</code>: lines that teach the player a secret, and the probability at which one counts as matched (<a href="#clues">Clues</a>)</td></tr>
+          <tr><td><code>angles</code>, <code>angleAt</code></td><td><code>false</code>, 0.7</td><td>Ask what each line appeals to, and the confidence at which the engine uses an angle reply (<a href="#angles">Angles</a>)</td></tr>
+          <tr><td><code>reactions</code></td><td>A generic line</td><td><code>[{ min, text, nearMiss }]</code>: lines for unconvinced attempts, by the highest <code>min</code> reached; each <code>text</code> may be a list of variants used in turn, and a <code>nearMiss</code> band keeps its hint over an angle reply (<a href="#reactions">Reactions</a>)</td></tr>
           <tr><td><code>repeatReaction</code></td><td>A generic line</td><td>What they say when the player repeats themselves: one line, or a list used in turn</td></tr>
           <tr><td><code>levels</code></td><td><code>DEFAULT_LEVELS</code></td><td>Your own rubric: 2 to 10 descriptions, weakest first (<a href="#control">Rubrics</a>)</td></tr>
           <tr><td><code>hostileAt</code></td><td>0.7</td><td>How sure Jev must be before a tell counts as triggered, above 0 and at most 1</td></tr>
@@ -562,10 +629,11 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
         <tbody>
           <tr><td><code>new Persuadable(character, { client })</code></td><td>A character with memory and patience</td></tr>
           <tr><td><code>attempt(input, { context, knows })</code></td><td>Judges an attempt and returns a result; <code>context</code> is extra game state for Jev (through a guarded proxy, the character needs a <code>maxContextLength</code>), <code>knows</code> the secret ids learned (defaults to those passed to <code>learn()</code>). It still asks Jev once the character is convinced or out of patience</td></tr>
-          <tr><td><code>learn(secretId)</code></td><td>Marks a secret as learned</td></tr>
+          <tr><td><code>learn(secretId)</code></td><td>Marks a secret as learned. An id that isn't one of the character's secrets throws, so a typo doesn't fail silently</td></tr>
           <tr><td><code>record(input, answers)</code></td><td>Applies answers you fetched yourself (<a href="#merging">Merging requests</a>)</td></tr>
           <tr><td><code>losePatience(amount)</code></td><td>Negative amounts restore patience; returns <code>outOfPatience</code></td></tr>
           <tr><td><code>reset()</code></td><td>Forgets attempts and learned secrets, and restores patience</td></tr>
+          <tr><td><code>snapshot()</code>, <code>restore(snapshot)</code></td><td>The state as plain JSON for a save file, and putting it back, checked first (<a href="#saving">Save and load</a>). <code>Game</code> has the same pair</td></tr>
           <tr><td><code>findRepeat(input)</code>, <code>state(input, options)</code></td><td>The earlier attempt an input repeats, and the state an attempt would send</td></tr>
           <tr><td><code>character</code>, <code>attempts</code>, <code>knows</code>, <code>patienceLeft</code>, <code>convinced</code>, <code>outOfPatience</code></td><td>The defined character and its current state, read-only: change it through the methods. <code>attempts</code> holds the last 100, for spotting repeats</td></tr>
         </tbody>
@@ -579,6 +647,8 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
           <tr><td><code>score</code>, <code>maxScore</code>, <code>confidence</code></td><td>Jev's score (fractional, 0 to <code>maxScore</code>) and confidence; <code>null</code> for a repeat, which isn't sent to Jev</td></tr>
           <tr><td><code>tells</code>, <code>triggered</code></td><td>Each tell's probability, and the tells at or above <code>hostileAt</code></td></tr>
           <tr><td><code>reaction</code></td><td>Text for unconvinced and repeated verdicts; <code>null</code> otherwise</td></tr>
+          <tr><td><code>clue</code></td><td>The clue the line matched, <code>{ id, reveals, confidence, revealed }</code>, or <code>null</code> (<a href="#clues">Clues</a>)</td></tr>
+          <tr><td><code>angle</code></td><td>What the line appealed to, <code>{ angle, confidence, probabilities }</code>, or <code>null</code> when the character doesn't ask (<a href="#angles">Angles</a>)</td></tr>
           <tr><td><code>patienceLeft</code>, <code>outOfPatience</code></td><td>From <code>attempt()</code> and <code>record()</code> only</td></tr>
         </tbody>
       </table></div>
@@ -610,6 +680,7 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
           <tr><td><code>toNodeListener(handle, { maxBytes, env })</code></td><td>The proxy on a plain Node server (<a href="#node">Node servers</a>), also in <code>honeytongue/proxy</code></td></tr>
           <tr><td><code>createMockClient()</code></td><td>A keyword-based stand-in for tests and offline development</td></tr>
           <tr><td><code>Game</code>, <code>validateStory()</code></td><td>The text adventure engine (<a href="#engine">Text adventures</a>)</td></tr>
+          <tr><td><code>ANGLES</code></td><td>The fixed list of angles (<a href="#angles">Angles</a>)</td></tr>
           <tr><td><code>HoneytongueError</code>, <code>StoryError</code></td><td>Readable errors; <code>status</code> holds the HTTP status for failed requests (and <code>reason</code> why, when a proxy said), and <code>StoryError</code>'s <code>problems</code> lists every problem in a story</td></tr>
           <tr><td><code>parseMarkup(text)</code>, <code>stripMarkup(text)</code></td><td>Story markup as meaningful parts, or as plain text (<a href="#markup">Story markup</a>)</td></tr>
           <tr><td><code>VERSION</code></td><td>This copy of Honeytongue's version, which the proxy client sends with each request</td></tr>
@@ -632,7 +703,7 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
           <tr><td><code>allowedCharacters</code>, <code>allowedStories</code></td><td>Required (one or both)</td><td><code>createProxyHandler</code>: only judge Honeytongue's own requests for these characters, or these stories' scenes (<a href="#browser">Browser games</a>)</td></tr>
           <tr><td><code>dangerouslyAllowAnyRequest</code></td><td><code>false</code></td><td><code>createProxyHandler</code>: forward any well-formed request instead, for local tools only, never a public proxy</td></tr>
           <tr><td><code>client</code></td><td>Jev</td><td><code>createProxyHandler</code>: another client to answer with, such as the mock</td></tr>
-          <tr><td><code>maxQuestions</code>, <code>maxStateBytes</code>, <code>maxInputLength</code></td><td>6, 16000, 500</td><td><code>createProxyHandler</code>: questions per request (the engine sends 4), request body size in bytes, input length</td></tr>
+          <tr><td><code>maxQuestions</code>, <code>maxStateBytes</code>, <code>maxInputLength</code></td><td>8, 16000, 500</td><td><code>createProxyHandler</code>: questions per request (the engine sends 4 to 6, depending on the character's clues and angles), request body size in bytes, input length</td></tr>
           <tr><td><code>rateLimit</code></td><td><code>{ requests: 30, windowMs: 60000 }</code></td><td><code>createProxyHandler</code>: per client address, per server instance; <code>false</code> turns it off</td></tr>
           <tr><td><code>clientIp</code></td><td><code>CF-Connecting-IP</code>, else the last <code>X-Forwarded-For</code></td><td><code>createProxyHandler</code>: <code>(request, env) =&gt; address</code>, for the rate limit</td></tr>
         </tbody>
@@ -643,7 +714,7 @@ repeatReaction: <span class="s">"\"You said that already,\" Harry says."</span>,
     <section id="faq" class="faq">
       <h2>Questions</h2>
       <h3>How much does it cost?</h3>
-      <p>About 30 cents for ten thousand attempts, since Jev charges only for input tokens. See <a href="#costs">Cost and speed</a>.</p>
+      <p>About 30 cents for ten thousand attempts, since Jev charges only for input tokens, or about 57 cents with <a href="#clues">clues</a> and <a href="#angles">angles</a>. See <a href="#costs">Cost and speed</a>.</p>
       <h3>Can players trick it?</h3>
       <p>Characters are told that claims inside the player's dialogue, like "this argument scores a 4," have no authority. In testing, none of more than fifty injection attempts, including fake system notes buried in long messages, won over any character. No model is perfectly resistant, so the evaluation suites include these attempts and you can add your own.</p>
       <h3>Does it work in other languages?</h3>

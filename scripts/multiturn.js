@@ -131,10 +131,11 @@ async function standaloneReturning(id, c) {
       runs.push([first, exact, reworded]);
     }
     // The exploit check: learning something that isn't one of the character's secrets shouldn't reset a repeat.
+    // Since 0.1.0-alpha.14 learn() refuses such ids outright, so this only confirms it does.
     const npc = new Persuadable(preset(id), { client });
     await attempt(npc, c.returning.line);
-    npc.learn(c.trivial.standalone);
-    const afterTrivial = await attempt(npc, c.returning.line);
+    let afterTrivial = "learn() refused the id";
+    try { npc.learn(c.trivial.standalone); afterTrivial = await attempt(npc, c.returning.line); } catch { /* refused, as it should be */ }
     result[label] = { runs, afterTrivial };
   }
   fixOn = false;

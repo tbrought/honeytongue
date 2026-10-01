@@ -3,8 +3,9 @@
 // persuasion.js, how convincing they were (a Score). All state changes
 // and narration come from the author's story file.
 
-import { Persuadable, persuasionQuestions, readPersuasion, cleanInput, defineCharacter, HoneytongueError } from "./persuasion.js";
+import { Persuadable, persuasionQuestions, readPersuasion, cleanInput, defineCharacter, HoneytongueError, ANGLES } from "./persuasion.js";
 import { SOURCE } from "./jev.js";
+import { SNAPSHOT_FORMAT, snapshotChecker, isCounts, isStrings } from "./snapshot.js";
 import { parseMarkup, stripMarkup, stripMarkupDeep, markupProblems, hasMarkup } from "./markup.js";
 
 const ACT_AT = 0.6;      // top option probability needed to act immediately
@@ -52,6 +53,8 @@ const toCharacter = (npc) => ({
   patience: npc.patience,
   secrets: npc.secrets,
   repeatReaction: npc.repeatReaction,
+  // A story with angle replies needs the angle asked; one without asks only if its persuasion block says so.
+  ...(npc.angleReplies !== undefined && { angles: true }),
 });
 
 // Story text players read, where markup (@[name], #[thing]) is allowed. "*" matches any scene or action id, and "#"
@@ -67,6 +70,10 @@ const DISPLAY_TEXT = [
   ["scenes", "*", "npc", "hostileReaction", "#"],
   ["scenes", "*", "npc", "repeatReaction"],
   ["scenes", "*", "npc", "repeatReaction", "#"],
+  ["scenes", "*", "npc", "clueReplies", "*"],
+  ["scenes", "*", "npc", "clueReplies", "*", "#"],
+  ["scenes", "*", "npc", "angleReplies", "*"],
+  ["scenes", "*", "npc", "angleReplies", "*", "#"],
   ["scenes", "*", "npc", "outOfPatience", "text"],
   ["scenes", "*", "npc", "persuasion", "success", "text"],
   ["scenes", "*", "npc", "persuasion", "reactions", "#", "text"],
@@ -162,6 +169,29 @@ export function validateStory(story) {
           problems.push(`${at}: npc needs a "hostileReaction" (the line when threats or insults offend them, or a list of ` +
             "lines to use in turn)");
         }
+        // Every clue needs the line the character says when it reveals their secret, and nothing else may have one.
+        const clueIds = Array.isArray(npc.persuasion.clues) ? npc.persuasion.clues.map((k) => k?.id) : [];
+        const clueReplies = npc.clueReplies ?? {};
+        if (!isObject(clueReplies)) problems.push(`${at}: npc "clueReplies" must be an object of { clue id: reply }`);
+        else {
+          for (const id of clueIds) {
+            if (!lines(clueReplies[id])) problems.push(`${at}: clue "${id}" needs a reply in "clueReplies" (what ${npc.name} says when it reveals their secret)`);
+          }
+          for (const id of Object.keys(clueReplies)) {
+            if (!clueIds.includes(id)) problems.push(`${at}: "clueReplies" has "${id}", which isn't one of the npc's clues`);
+          }
+        }
+        // Angle replies: by the library's angles ("other" means no clear appeal, so the score band's reaction is used).
+        if (npc.angleReplies !== undefined) {
+          if (!isObject(npc.angleReplies)) problems.push(`${at}: npc "angleReplies" must be an object of { angle: reply }`);
+          else {
+            for (const [angle, reply] of Object.entries(npc.angleReplies)) {
+              if (!ANGLES.includes(angle) || angle === "other") {
+                problems.push(`${at}: "angleReplies" has "${angle}", which isn't an angle: use ${ANGLES.filter((a) => a !== "other").map((a) => `"${a}"`).join(", ")}`);
+              } else if (!lines(reply)) problems.push(`${at}: angle reply "${angle}" must be a non-empty string, or a list of them`);
+            }
+          }
+        }
         if (Number.isFinite(npc.patience)) {
           if (!text(npc.outOfPatience?.text)) problems.push(`${at}: npc has finite patience, so it needs "outOfPatience" with "text"`);
           else checkEffect(npc.outOfPatience, `${at} npc outOfPatience`);
@@ -209,7 +239,7 @@ export class Game {
   #attempt = null; // this turn's judgement by the scene's character: result.attempt (an attempt result plus threshold)
   #turnNpc = null; // the scene's character when the turn began (a success may move the player on)
   #queue = Promise.resolve(); // turns, one at a time
-  #offences = new Map(); // npc id -> how many hostile reactions they've given, so variants come in turn
+  #replies = new Map(); // "<npc id> <slot>" -> how many times the engine has used that reply, so variants come in turn
 
   constructor(story, jev) {
     if (typeof jev?.ask !== "function") {
@@ -409,9 +439,30 @@ export class Game {
       const offendedCost = this.npc?.character.offendedCost ?? 0;
       const both = actionCost > 0 && this.isHostile(answers);
       this.react(lines, answers, both && actionCost > offendedCost ? 0 : offendedCost);
+      const sceneBefore = this.sceneId;
       this.apply(action, lines, { skipPatience: both && offendedCost >= actionCost });
+      // A clue in what the player did or said, after the action's own effects (asking about the toy horse already
+      // teaches Harry's secret, so his clue adds nothing), and only while they're still with the character.
+      if (this.sceneId === sceneBefore && !this.over) this.#revealClue(answers, lines);
     }
     return this.finish(lines, input, debug);
+  }
+
+  /** On a turn that isn't a persuasion attempt: a matched clue that teaches a new secret, with its reply. */
+  #revealClue(answers, lines) {
+    const npc = this.npc;
+    if (!npc || !answers || this.isHostile(answers)) return;
+    const { clue } = readPersuasion(npc.character, answers, { knows: [...this.flags] });
+    if (!clue?.revealed) return;
+    npc.learn(clue.reveals);
+    this.flags.add(clue.reveals);
+    lines.push(this.#clueReply(clue));
+  }
+
+  /** What the scene's character says when a clue reveals their secret. */
+  #clueReply(clue) {
+    const npc = this.scene.npc;
+    return this.#nextLine(`${npc.id} clue ${clue.id}`, npc.clueReplies[clue.id]);
   }
 
   finish(lines, input, debug) {
@@ -448,9 +499,81 @@ export class Game {
   hostileReaction() {
     const npc = this.scene.npc;
     if (npc.hostileReaction === undefined) return system(`${npc.name} takes offence.`);
-    const used = this.#offences.get(npc.id) ?? 0;
-    this.#offences.set(npc.id, used + 1);
-    return Array.isArray(npc.hostileReaction) ? npc.hostileReaction[used % npc.hostileReaction.length] : npc.hostileReaction;
+    return this.#nextLine(`${npc.id} hostile`, npc.hostileReaction);
+  }
+
+  /** One line of a story reply: the reply itself, or its variants in turn (counted per character and slot). */
+  #nextLine(slot, lines) {
+    const used = this.#replies.get(slot) ?? 0;
+    this.#replies.set(slot, used + 1);
+    return Array.isArray(lines) ? lines[used % lines.length] : lines;
+  }
+
+  // ---- Save and load ----------------------------------------------------------
+
+  /**
+   * The game's state as plain JSON, for a save file: the scene, items, flags, recent turns, a question waiting
+   * for an answer, whether it's over, each character's state, and where each list of reply variants is up to.
+   * The story isn't included: restore() puts the state back into a Game made with the same story.
+   */
+  snapshot() {
+    return {
+      format: SNAPSHOT_FORMAT,
+      kind: "game",
+      story: this.story.title,
+      scene: this.sceneId,
+      inventory: [...this.inventory],
+      flags: [...this.flags],
+      history: this.history.map((h) => ({ ...h })),
+      pending: this.pending && structuredClone(this.pending),
+      over: this.over,
+      npcs: Object.fromEntries([...this.npcs].map(([id, npc]) => [id, npc.snapshot()])),
+      replies: Object.fromEntries(this.#replies),
+    };
+  }
+
+  /**
+   * Put back a snapshot() of this game, for example from a save file. It's checked first: a snapshot of another
+   * story, from a newer Honeytongue, naming a scene, action, or character this story doesn't have, or with a
+   * damaged field throws a HoneytongueError saying which, and leaves the game as it was.
+   */
+  restore(snapshot) {
+    const fail = (message) => { throw new HoneytongueError(`Can't restore this game: ${message}.`); };
+    const { field, isObject } = snapshotChecker(snapshot, "game", fail);
+    if (snapshot.story !== this.story.title) {
+      fail(`this snapshot is of the story ${JSON.stringify(snapshot.story)}, not ${JSON.stringify(this.story.title)}`);
+    }
+    const scenes = this.story.scenes;
+    const scene = field("scene", (v) => typeof v === "string" && Object.hasOwn(scenes, v), "the id of a scene in this story");
+    const inventory = field("inventory", isStrings, "a list of item names");
+    const flags = field("flags", isStrings, "a list of flag names");
+    const history = field("history", (v) => Array.isArray(v) && v.length <= HISTORY &&
+      v.every((h) => isObject(h) && typeof h.player === "string" && typeof h.result === "string"),
+      `a list of at most ${HISTORY} { player, result } turns`);
+    const actions = scenes[scene].actions ?? {};
+    const pending = field("pending", (v) => v === null || (isObject(v) && typeof v.input === "string" && isObject(v.answers) &&
+      Array.isArray(v.options) && v.options.every((o) => typeof o === "string" && Object.hasOwn(actions, o))),
+      `null, or a question waiting for an answer about actions in scene "${scene}"`);
+    const over = field("over", (v) => typeof v === "boolean", "true or false");
+    const definitions = new Map(Object.values(scenes).filter((s) => s.npc?.persuasion).map((s) => [s.npc.id, s.npc]));
+    const saved = field("npcs", (v) => isObject(v) && Object.keys(v).every((id) => definitions.has(id)),
+      `the characters' snapshots, by the ids of characters in this story (${[...definitions.keys()].join(", ") || "none"})`);
+    const replies = field("replies", isCounts, "counts of how often each reply has been used");
+    // Each character is restored into a new Persuadable first, so a bad one leaves the game untouched.
+    const npcs = new Map(Object.entries(saved).map(([id, state]) =>
+      [id, new Persuadable(toCharacter(definitions.get(id)), { client: this.jev }).restore(state)]));
+
+    this.sceneId = scene;
+    this.inventory = [...inventory];
+    this.flags = new Set(flags);
+    this.history = history.map((h) => ({ player: h.player, result: h.result }));
+    this.pending = pending && structuredClone(pending);
+    this.over = over;
+    this.npcs = npcs;
+    this.#replies = new Map(Object.entries(replies));
+    this.#attempt = null;
+    this.#turnNpc = null;
+    return this;
   }
 
   // ---- Persuasion: the module judges, the story narrates --------------------
@@ -463,7 +586,9 @@ export class Game {
       return;
     }
 
-    const result = this.npc.record(input, answers);
+    // The engine's flags are the secrets the player has learned (they're what the state sent to Jev).
+    const result = this.npc.record(input, answers, { knows: [...this.flags] });
+    if (result.clue?.revealed) this.flags.add(result.clue.reveals);
     this.#attempt = { ...result, threshold: this.npc.character.threshold };
     if (result.verdict === "convinced") {
       lines.push(npc.persuasion.success.text);
@@ -472,9 +597,30 @@ export class Game {
       // The attempt that uses up the last of their patience gets only the out-of-patience text, not an
       // encouraging reaction followed by the end of the scene.
       this.runOutOfPatience(lines);
+    } else if (result.clue?.revealed) {
+      // A good guess becomes progress: they tell you, instead of turning you down.
+      lines.push(this.#clueReply(result.clue));
+    } else if (result.verdict === "offended") {
+      lines.push(this.hostileReaction());
     } else {
-      lines.push(result.verdict === "offended" ? this.hostileReaction() : result.reaction);
+      lines.push(this.#angleReply(result) ?? result.reaction);
     }
+  }
+
+  /**
+   * The reply to what an unconvinced line appealed to, when the story has one and Jev is sure enough (angleAt).
+   * A near-miss band ("nearMiss": true) keeps its own reaction: hints matter more than a reply to the angle.
+   */
+  #angleReply(result) {
+    const npc = this.scene.npc;
+    const c = this.npc.character;
+    const { angle } = result;
+    if (result.verdict !== "unconvinced" || !angle || angle.confidence < c.angleAt) return null;
+    const reply = npc.angleReplies?.[angle.angle];
+    if (reply === undefined) return null;
+    const band = [...c.reactions].sort((a, b) => b.min - a.min).find((r) => (result.score ?? 0) >= r.min);
+    if (band?.nearMiss) return null;
+    return this.#nextLine(`${npc.id} angle ${angle.angle}`, reply);
   }
 
   /** Change the NPC's patience. Running out plays their outOfPatience effect, once. */

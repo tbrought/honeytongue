@@ -276,3 +276,32 @@ test("a share link may name a preset instead of copying it, and carry a line to 
   assert.throws(() => readDraft({ preset: "harry", line: 5 }), /"line"/);
   assert.equal(readDraft({ preset: "harry", line: "x".repeat(600) }).line.length, 500, "no longer than the playground sends");
 });
+
+test("clues: kept in drafts, share links, generated code, and story JSON, where each gets a reply placeholder", () => {
+  const character = { name: "Harry", persona: "A guard.", goal: "Open the gate",
+    secrets: [{ id: "sick_daughter", fact: "His daughter is ill." }],
+    clues: [{ id: "family", when: "Asks about his family", reveals: "sick_daughter" }] };
+  assert.deepEqual(readDraft({ character }).character.clues, character.clues);
+  assert.deepEqual(decodeShare(encodeShare({ character, knows: [] })).character.clues, character.clues);
+  assert.deepEqual(minimalCharacter(character).clues, character.clues);
+  const npc = JSON.parse(storyJson(character, { id: "harry" }));
+  assert.deepEqual(npc.persuasion.clues, character.clues);
+  assert.deepEqual(npc.clueReplies, { family: TODO.clueReply });
+  assert.match(fieldErrors({ ...character, clues: [{ id: "family", when: "x", reveals: "nope" }] }).clues, /isn't one of its secrets/);
+  assert.throws(() => readDraft({ character: { ...character, clues: [{ id: 1 }] } }), /"clues"/);
+});
+
+test("angles and near-miss bands survive drafts, share links, and generated code", () => {
+  const character = { name: "Maude", persona: "A quartermaster.", goal: "Take me aboard", angles: true, angleAt: 0.7,
+    reactions: [{ min: 0, text: "Next." }, { min: 3, text: "Close.", nearMiss: true }] };
+  const back = decodeShare(encodeShare({ character, knows: [] })).character;
+  assert.equal(back.angles, true);
+  assert.equal(back.angleAt, 0.7);
+  assert.deepEqual(back.reactions, character.reactions);
+  const smallest = minimalCharacter(character);
+  assert.equal(smallest.angles, true);
+  assert.deepEqual(smallest.reactions, character.reactions);
+  assert.equal(minimalCharacter({ ...character, angles: false }).angles, undefined, "false is the default, so it's left out");
+  assert.throws(() => readDraft({ character: { ...character, angles: "yes" } }), /"angles"/);
+});
+

@@ -9,6 +9,7 @@ export {
   similarity,
   HoneytongueError,
   DEFAULT_LEVELS,
+  ANGLES,
 } from "./persuasion.js";
 export { Game, validateStory, StoryError } from "./engine.js";
 export { createJevClient, createProxyClient } from "./jev.js";

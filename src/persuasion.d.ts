@@ -9,6 +9,7 @@ export {
   similarity,
   HoneytongueError,
   DEFAULT_LEVELS,
+  ANGLES,
 } from "./index.js";
 export type {
   Character,
@@ -16,9 +17,14 @@ export type {
   Tell,
   Difficulty,
   Lines,
+  PersuadableSnapshot,
   DecideHook,
   DecideContext,
   Secret,
+  Clue,
+  ClueMatch,
+  Angle,
+  AngleSignal,
   Verdict,
   PersuasionResult,
   AttemptResult,

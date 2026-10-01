@@ -70,6 +70,60 @@ function mockChoice(input, criteria, character) {
   return { type: "choice", choice, probabilities, confidence: probabilities[choice] };
 }
 
+// Families of words that mean the same kind of thing, so a clue about someone's "children or family" notices a guess
+// about their son. Generic: no story's wording.
+const WORD_GROUPS = [
+  "family families child children kid kids son sons daughter daughters girl boy baby wife husband mother father mum mom dad brother sister parent parents home",
+  "money coin coins gold silver pay paid payment fare reward wages shares share price cost cheat cheating skim skimming steal stealing stolen",
+  "food cook cooking cooks kitchen stew meal meals recipe recipes supper dinner bake baking chef",
+  "past ago years once before lost wreck wrecked drowned remember memory",
+].map((g) => new Set(g.split(" ").map(stem)));
+// Words that describe what a clue is about rather than what the player says ("the player asks about ...").
+const CLUE_META = new Set("player asks ask asking guess guesses guessing mention mentions suggest suggests talk talks says line clearly someone something such".split(" ").map(stem));
+
+/** A clue question: the clue whose subject (a word family, such as family or money) the line touches, else none. */
+function mockClue(input, criteria, character) {
+  const said = stems(input);
+  const named = stems(character?.name ?? ""); // their name says nothing about the subject
+  let best = null;
+  let bestHits = 0;
+  for (const [option, when] of Object.entries(criteria)) {
+    if (option === "none") continue;
+    // Only through word families, so an ordinary request ("light the lamp") doesn't match a clue about the light's past.
+    const words = [...stems(when)].filter((w) => !CLUE_META.has(w) && !named.has(w));
+    const subject = new Set(WORD_GROUPS.filter((group) => words.some((w) => group.has(w))).flatMap((group) => [...group]));
+    const hits = [...subject].filter((w) => said.has(w)).length;
+    if (hits > bestHits) { best = option; bestHits = hits; }
+  }
+  const probabilities = Object.fromEntries(Object.keys(criteria).map((k) => [k, best ? (k === best ? 0.85 : 0.15 / (Object.keys(criteria).length - 1)) : (k === "none" ? 0.9 : 0.1 / (Object.keys(criteria).length - 1))]));
+  const choice = best ?? "none";
+  return { type: "choice", choice, probabilities, confidence: probabilities[choice] };
+}
+
+// The angle question: which appeal a line leans on, by word families. Generic: no story's wording.
+const ANGLE_WORDS = {
+  family: /\b(family|families|son|sons|daughter|daughters|child|children|kids?|wife|husband|mother|father|mum|mom|dad|brother|sister|friends?|loyal\w*|loved ones?)\b/,
+  compassion: /\b(sick|ill|fever|dying|die|dies|death|hurt|suffer\w*|mercy|pity|starving|drown\w*|life depends|lives|in danger|desperate)\b/,
+  money: /\b(coins?|gold|silver|pay|paid|payment|money|fare|reward|bribe|price|wages?)\b/,
+  benefit: /\b(your (own )?(dream|chance|future|freedom)|you could (be|become|have)|a real kitchen|cook|apprentice\w*|favou?r|a way out)\b/,
+  duty: /\b(duty|oath|your job|your post|your rules|responsib\w*|sworn)\b/,
+  authority: /\b(knight|lord|lady|captain of|i order|i command|by order|rank|cousin of|friend of the|important person)\b/,
+  fear: /\b(raiders?|bounty hunters?|war chief|they'?ll (find|catch|punish)|punish\w*|disaster|before it'?s too late)\b/,
+  flattery: /\b(finest|greatest|cleverest|wisest|bravest|kindest|smartest|best \w+ (in|on))\b/,
+  honesty: /\b(honest(ly)?|truth|truly|swear|promise|my word|i won'?t lie|straight with you)\b/,
+  reason: /\b(because|proof|prove|evidence|a plan|it'?s safe|makes sense|won'?t sail|no risk)\b/,
+};
+function mockAngle(input, criteria) {
+  const t = lower(input);
+  const hits = Object.keys(criteria).filter((a) => ANGLE_WORDS[a]?.test(t));
+  // One clear appeal is confident; several are a mixed argument, so the confidence is split; none is "other".
+  const choice = hits[0] ?? "other";
+  const top = hits.length > 1 ? 0.5 : 0.8;
+  const rest = (1 - top) / (Object.keys(criteria).length - 1);
+  const probabilities = Object.fromEntries(Object.keys(criteria).map((a) => [a, a === choice ? top : rest]));
+  return { type: "choice", choice, probabilities, confidence: top };
+}
+
 // A persona that suggests threats would work, for characters not offended by them.
 const TIMID = /\b(coward\w*|timid|nervous|scared|afraid|fearful|easily (frightened|scared|intimidated))\b/;
 
@@ -107,7 +161,9 @@ export function createMockClient() {
       const input = String(state?.player_input ?? (typeof state === "string" ? state : ""));
       const answers = {};
       for (const [id, q] of Object.entries(questions)) {
-        if (q.type === "choice") answers[id] = mockChoice(input, q.criteria, state?.character);
+        if (q.type === "choice" && id === "clue") answers[id] = mockClue(input, q.criteria, state?.character);
+        else if (q.type === "choice" && id === "angle") answers[id] = mockAngle(input, q.criteria);
+        else if (q.type === "choice") answers[id] = mockChoice(input, q.criteria, state?.character);
         else if (q.type === "score") answers[id] = mockScore(input, q.criteria, state?.character, q.instructions);
         else if (q.type === "noul") answers[id] = mockNoul(id, input);
       }

@@ -10,6 +10,7 @@
 // 2,100 tokens). The refusals cost nothing: they never reach Jev.
 import { readFileSync } from "node:fs";
 import { Game, Persuadable, createProxyClient, persuasionQuestions, persuasionState, VERSION } from "../src/index.js";
+import { MAX_BYTES } from "../examples/demo-worker.js";
 import { troll } from "../examples/phaser/character.js";
 
 const args = process.argv.slice(2);
@@ -47,10 +48,10 @@ for (const site of ["https://elsewhere.example", "https://tbrought.github.io"]) 
   report(other.status === 403, `pages on ${site} are refused`, String(other.status));
 }
 
-// Its limits: a body over 15,000 bytes, and more remembered attempts than the library sends (Tolly's memoryLength is
-// 1,500 characters). Neither reaches Jev.
-const huge = await fetch(url, { method: "POST", headers: { ...json, Origin: origin }, body: "x".repeat(15_001) });
-report(huge.status === 413, "bodies over 15,000 bytes are refused", String(huge.status));
+// Its limits: a body over MAX_BYTES (this checkout's, which the deployed Worker should match), and more remembered
+// attempts than the library sends (Tolly's memoryLength is 1,500 characters). Neither reaches Jev.
+const huge = await fetch(url, { method: "POST", headers: { ...json, Origin: origin }, body: "x".repeat(MAX_BYTES + 1) });
+report(huge.status === 413, `bodies over ${MAX_BYTES.toLocaleString("en")} bytes are refused`, String(huge.status));
 const padded = { state: { ...persuasionState(troll, "Let me cross."), previous_attempts: Array.from({ length: 4 }, (_, i) => ({ said: `${i}`.repeat(450), outcome: "unconvinced" })) },
   questions: persuasionQuestions(troll), honeytongue: VERSION };
 const long = await fetch(url, { method: "POST", headers: { ...json, Origin: origin }, body: JSON.stringify(padded) });

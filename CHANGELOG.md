@@ -1,9 +1,35 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-alpha.14 (2026-10-01)
+
+### Added
+
+- **Save and load:** `snapshot()` gives a `Persuadable`'s or a `Game`'s state as plain JSON for a save file, and `restore(snapshot)` puts it back.
+  - A character's snapshot covers its memory, patience, learned secrets, and reply rotation; a game's adds the scene, items, flags, recent turns, a pending question, and every character met so far.
+  - Snapshots carry a format version. `restore()` checks everything first, and throws a readable `HoneytongueError` (leaving the state as it was) for another character or story, a newer format, or a damaged field.
+  - The Twine recipe keeps Harry's snapshot in `$harry`, so SugarCube's saves, loads, and Back button carry his memory and patience. That part hasn't been tested inside Twine yet, and the recipe says so.
+- **Clues:** a character's `clues` (`{ id, when, reveals }`) are things a line can do that teach the player a secret, such as guessing at the character's family.
+  - Characters with clues ask Jev one more question per attempt, and every result carries `clue` (`{ id, reveals, confidence, revealed }`, or `null`). Characters without clues send exactly what they did before.
+  - A match on a secret the player hasn't learned, in a line that doesn't offend, reveals it: the `Persuadable` learns it, and that attempt costs no patience. Later lines matching the same clue are judged and charged as usual.
+  - In stories, `clueReplies` give the character's line for each clue. The engine checks clues on every turn the character is present: on a persuasion attempt the reply replaces the usual reaction, and on another action it comes after the action's own effects (an action that already teaches the secret isn't repeated).
+  - Each demo character has a clue. In The Gatehouse, a guess about Harry's son gets his daughter's fever.
+  - Calibrated against live Jev (`docs/live-results.md`): at `clueAt` 0.8, the default, 97% of guesses matched and none of 114 near misses, injection attempts, and plain lines did. The question's options are numbered, so a line can't pick one by typing a clue's id.
+- **Angles:** with `angles: true`, every judged result carries `angle` (`{ angle, confidence, probabilities }`): what the line appealed to, from a fixed set exported as `ANGLES`. The angles are family, compassion, money, benefit (something the character wants other than money), duty, authority, fear, flattery, honesty, reason, and other.
+  - The set is public API, chosen from the appeals 171 real lines make (`docs/live-results.md`), and changing it will count as a breaking change.
+  - Honeytongue doesn't pick a reply; your game can. In stories, `angleReplies` give the character's line per angle and turn the question on. The engine uses one for an unconvinced attempt at `angleAt` (0.7) or above, and a reaction band marked `"nearMiss": true` keeps its hint instead.
+  - Calibrated against live Jev (`docs/live-results.md`): at 0.7, 95% of 396 clear lines got the right angle and none got a confident wrong one, and mixed arguments either got an acceptable angle or fell back to the score band's reaction. Fear and reason were reworded after the first run (fear covers danger from people or nature; reason covers reasons to agree, including safeguards), which ended every confusion between them.
+  - Every demo character replies to five or six angles in their own voice. Characters that don't ask send exactly what they did before.
+- **The proxy allows 8 questions per request by default** (was 6): an engine turn sends 5 with clues, and 6 with clues and angles. The demo Worker's body limit is 18,000 bytes (was 15,000), since the fixed questions make the largest request longer.
+- **Costs, measured and documented by whether a character uses clues and angles** (`scripts/costs.js`, in "Cost and speed"): an attempt costs about 720 input tokens without them and about 1,350 with both (about 30 and 57 cents per 10,000), and a text adventure turn about 1,250 and 1,890. Characters without clues or angles cost what they did before.
+
+### Changed
+
+- **Running out of TypeSafe credit is confirmed:** TypeSafe answers HTTP 402 with a `billing_error`. The Jev client's error now says the prepaid credit has run out, and isn't retried; the proxy reports it as `unavailable`; and the web demo judges with the offline stand-in for the rest of the session. A test plays it through, and `docs/demo-proxy.md` no longer calls it an assumption.
+- **`learn()` rejects secret ids the character doesn't have**, with an error naming their secrets, so a typo (`learn("sick_daugter")`) no longer fails silently. `restore()` checks a snapshot's learned secrets the same way. The `knows` option of `attempt()` is unchanged: ids that aren't secrets are ignored there, as the engine passes all its flags.
 
 ### Repository
 
+- **Live calibration scripts:** `scripts/clues.js` (clue matches, near misses, and injections) and `scripts/angles.js` (`coverage`, `calibrate` with a confusion matrix, and `shift`, which checks the extra questions don't move scores). `live.js routes` also checks each scene's guess at its secret. Results are in `docs/live-results.md`, and the live runs' token guard is 5.5M for this phase.
 - **Favicons search results can show:** every page also declares the 192x192 logo as a favicon, since Google only shows square favicons whose size is a multiple of 48px. `docs/favicon.ico` holds the 32x32 and 192x192 logos unchanged, for crawlers that ask for `/favicon.ico` (written by `npm run build:demo`). The page tests and the browser checks cover both.
 
 ## 0.1.0-alpha.13 (2026-09-30)

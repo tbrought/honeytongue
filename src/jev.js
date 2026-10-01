@@ -121,6 +121,7 @@ function readAnswers(data, questions, url) {
 
 const JEV_HINTS = {
   401: "TypeSafe rejected the API key. Check TYPESAFE_API_KEY (or the apiKey option).",
+  402: "Your TypeSafe prepaid credit has run out (a billing_error). Top up your balance, then try again.",
   422: "TypeSafe says the request is invalid.",
   429: "TypeSafe's rate limit was hit. Slow down, or try again shortly.",
   529: "TypeSafe is overloaded right now. Try again shortly.",
