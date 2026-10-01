@@ -27,6 +27,7 @@
 
 ### Repository
 
+- **Live calibration scripts:** `scripts/clues.js` (clue matches, near misses, and injections) and `scripts/angles.js` (`coverage`, `calibrate` with a confusion matrix, and `shift`, which checks the extra questions don't move scores). `live.js routes` also checks each scene's guess at its secret. Results are in `docs/live-results.md`, and the live runs' token guard is 4M for this phase.
 - **Favicons search results can show:** every page also declares the 192x192 logo as a favicon, since Google only shows square favicons whose size is a multiple of 48px. `docs/favicon.ico` holds the 32x32 and 192x192 logos unchanged, for crawlers that ask for `/favicon.ico` (written by `npm run build:demo`). The page tests and the browser checks cover both.
 
 ## 0.1.0-alpha.13 (2026-09-30)

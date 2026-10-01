@@ -241,6 +241,35 @@ Do the extra questions change how a line scores? The showcase grid's 24 cells, e
 - **The largest was 0.17:** Nib and the showcase's threat, 2.71 to 2.88, which convinces him either way.
 - **No verdict changed.**
 
+## The full rerun for 0.1.0-alpha.14 (2026-09-30)
+
+With every demo character's clue and angle questions in each request (`eval --all --repeats 10`, then `live.js routes --repeats 10`). 684 calls, 1,371,791 tokens.
+
+| Check | Result |
+|---|---|
+| Verdicts | 58/58 |
+| Reliable scripted lines | 45/45 |
+| Scores in range | 18/18 |
+| Threats | 12/12 |
+| Insults | 8/8 |
+| Actions | 86/88 (the same two long-standing parser cases) |
+| Route winning lines | 8/8 reliable |
+| Clue routes | 4/4 |
+| Endings | every route reached its intended one |
+
+**The clue routes:** each scene's guess at the secret, made while arguing, as the first line, revealed it 10 times out of 10, with a probability of 0.90 to 0.99. That includes the playtester's "is that your son? ... I will have the town carpenter take him as an apprentice", which Harry now answers with "My girl. She's had a fever three days...".
+
+The whole alpha.14 phase took 1,906 calls and 2,916,941 tokens, about $0.12:
+
+| Run | Calls |
+|---|---|
+| Clue calibration | 470 |
+| Angle coverage | 171 |
+| Angle calibration | 456 |
+| Score shift | 120 |
+| Headroom | 5 |
+| This rerun | 684 |
+
 ## Reproducing
 
 With `TYPESAFE_API_KEY` set:

@@ -95,23 +95,28 @@ const ROUTES = {
       "Harry, I have an urgent letter for Ilse the apothecary. It details an urgent fever remedy. If you let me pass, I will give the remedy to your daughter."],
     plain: ["Harry, this letter has a fever remedy for the apothecary. Let me through and I'll send her to your daughter."],
     other: ["search along the wall", "climb the ivy"],
+    // A guess at the secret, made while arguing (as in a playtest): the clue should reveal it.
+    clue: "That wooden horse is good work, is that your son? If you let me through, I will have the town carpenter take him as an apprentice.",
   },
   "goblin-camp": {
     talk: ["ask Nib about his stew", "Nib, please let me out. Come with me to town and I'll help you become a cook in a real kitchen."],
     plain: ["Nib, let me out and I'll get you a job as a cook in town."],
     other: ["examine the cage", "work the loose bar free"],
+    clue: "Nib, please let me out. I bet you'd rather be cooking than guarding.",
   },
   "tidy-profit": {
     talk: ["ask Maude about the voyage", "look over the cargo",
       "Maude, honestly: the captain is skimming the crew's shares. Six of his crates aren't on your manifest. Take me aboard and I'll give you the proof."],
     plain: ["I can prove the captain is stealing the crew's shares. Give me passage and I'll open his crates in front of you."],
     other: ["examine the crates", "hide in one of the captain's crates"],
+    clue: "Maude, please take me aboard. I hear the crew's shares keep coming up short.",
   },
   lighthouse: {
     talk: ["look through the spyglass", "examine the lamp", "ask Cobb about himself",
       "Cobb, the raiders are anchored behind the island and won't sail in this storm, and the shutter can send the beam out to sea only. You know what a dark night cost the Wren. Please light it for my sister."],
     plain: ["Cobb, please light the lamp. The raiders are anchored behind the island and won't sail in this storm, and the shutter can turn the beam out to sea. You know what a dark night on the rocks cost the Wren. Don't let my sister's fishing boat be lost the same way."],
     other: ["search the stores", "light a beacon on the headland"],
+    clue: "Cobb, please light the lamp. You lost a boat on those rocks years ago, didn't you?",
   },
 };
 
@@ -167,11 +172,38 @@ async function routes() {
     await playRoute(id, r.plain, r.talk.slice(0, -1), "plain winning line");
     say(`== ${id}: non-talking route`);
     await playRoute(id, r.other);
+    say(`== ${id}: a guess at the secret, as the first line`);
+    await clueRoute(id, r.clue);
   }
   if (ROUTE_REPEATS > 1) {
     say(`\nReliable winning lines: ${routeResults.filter((r) => r.ok).length}/${routeResults.length}`);
     for (const r of routeResults) say(`  ${r.ok ? "ok        " : "UNRELIABLE"} ${r.id}, ${r.label}: ${r.wins}/${ROUTE_REPEATS} wins, average ${fmt(r.average)} against ${r.threshold}`);
+    say(`Reliable clue reveals: ${clueResults.filter((r) => r.ok).length}/${clueResults.length}`);
+    for (const r of clueResults) say(`  ${r.ok ? "ok        " : "UNRELIABLE"} ${r.id}: revealed ${r.reveals}/${ROUTE_REPEATS}, clue probability ${fmt(r.average)}`);
   }
+}
+
+// A clue's reveal, the way a player meets it: the scene's first line, a guess at the secret made while arguing. With
+// --repeats N it's tried N times and must reveal every time; then it's played once, with the reply shown.
+const clueResults = [];
+async function clueRoute(id, line) {
+  const game = new Game(story(id), client);
+  const clue = game.npc.character.clues[0];
+  if (ROUTE_REPEATS > 1) {
+    const found = [];
+    for (let n = 0; n < ROUTE_REPEATS; n++) {
+      const { answers } = await copyGame(game).interpret(line);
+      found.push(readPersuasion(game.npc.character, answers, { knows: [...game.flags] }).clue);
+    }
+    const reveals = found.filter((k) => k?.revealed).length;
+    const average = mean(found.map((k) => k?.confidence ?? 0));
+    clueResults.push({ id, reveals, average, ok: reveals === ROUTE_REPEATS });
+    say(`    repeated ${ROUTE_REPEATS} times: revealed ${reveals}/${ROUTE_REPEATS}, clue probability ${fmt(average)}`);
+  }
+  const r = await game.turn(line);
+  say(`  > ${line}`);
+  say(`    ${r.text.replace(/\n+/g, " / ").slice(0, 240)}`);
+  say(`  => ${game.flags.has(clue.reveals) ? `learned ${clue.reveals}` : "nothing learned"}`);
 }
 
 // ---- Step 3: consistency -------------------------------------------------------
