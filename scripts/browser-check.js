@@ -102,6 +102,24 @@ try {
     }
   }
 
+  // The home page's main links each fit on one line, even on a narrow phone (360px), so the list's spacing stays even.
+  await open("/", { width: 360 });
+  const wrapped = JSON.parse(await page.eval(`JSON.stringify((() => {
+    const items = [...document.querySelectorAll(".commands li")];
+    const line = items[0].getBoundingClientRect().height;
+    return items.filter((li) => li.getBoundingClientRect().height > line * 1.5).map((li) => li.textContent.trim());
+  })())`));
+  check(wrapped.length === 0, "home, 360px: each of the main links fits on one line", wrapped.join(" | "));
+
+  // The guide's checklist copies as a Markdown task list (the clipboard is stood in for, as headless browsers lack one).
+  await open("/guide/");
+  await page.eval(`(() => { navigator.clipboard.writeText = async (text) => { window.__copied = text; }; document.getElementById("copy-checklist").click(); return true; })()`);
+  await page.waitFor("window.__copied", { what: "the checklist to be copied" });
+  const copied = JSON.parse(await page.eval(`JSON.stringify({ text: window.__copied, items: document.querySelectorAll(".checklist li").length })`));
+  const tasks = copied.text.split("\n").filter((line) => line.startsWith("- [ ] "));
+  check(tasks.length === copied.items && copied.text.startsWith("Before you ship a character (https://honeytongue.dev/guide/#checklist):")
+    && copied.text.includes("`when`") && !copied.text.includes("<"), "guide: the checklist copies as a Markdown task list", copied.text.slice(0, 160));
+
   // ---- Hostile text is shown as text ----
   const IMG = "<img src=x onerror=alert(1)>";
   const CLOSE = "</textarea><script>alert(1)</script>";
