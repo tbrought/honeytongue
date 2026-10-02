@@ -124,6 +124,7 @@
   --fg: #2b2216;
   --bright: #0f0b05;
   --dim: #6a583a;
+  --faint: #636b78;         /* the release line: a cool grey, just above AA contrast */
   --line: #cbbd9c;
   --link: #8a4600;
   --lit: #2b2216;           /* lit meter segments */
@@ -153,6 +154,7 @@
     --fg: #f2b34d;
     --bright: #ffe0a3;
     --dim: #b88b45;
+    --faint: #6f7a8a;
     --line: #3d2e15;
     --link: #ffd07a;
     --lit: #f2b34d;
@@ -185,6 +187,7 @@
   --fg: #f2b34d;
   --bright: #ffe0a3;
   --dim: #b88b45;
+  --faint: #6f7a8a;
   --line: #3d2e15;
   --link: #ffd07a;
   --lit: #f2b34d;
@@ -232,9 +235,11 @@ a:focus-visible { background: var(--fg); color: var(--bg); text-shadow: none; ou
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .skip { position: absolute; left: -999px; z-index: 60; }
 .nowrap { white-space: nowrap; }
-/* The release line on the home page and the demo, set by npm run build:demo: a stamp in the pixel font, smaller and
-   spaced out. It stays in the dim colour, the faintest that still meets WCAG AA contrast (the browser checks enforce it). */
-.serial { font-family: var(--pixel); font-size: 1.05rem; letter-spacing: 0.08em; color: var(--dim); }
+/* The release line on the home page and the demo, set by npm run build:demo: a stamp in the pixel font, smaller,
+   spaced out, and in a cool grey without the glow, so it sits back from the amber. --faint is as faint as WCAG AA
+   contrast allows (the browser checks enforce it). */
+.serial { font-family: var(--pixel); font-size: 1.05rem; letter-spacing: 0.08em; color: var(--faint); text-shadow: none; }
+.serial a { color: inherit; }
 .skip:focus { left: 1rem; top: 3rem; background: var(--bg); padding: 0.5rem 1rem; }
 
 /* ---- Status line: inverse video, like the top of an Infocom screen ---- */
