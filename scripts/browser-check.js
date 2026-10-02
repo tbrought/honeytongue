@@ -13,7 +13,7 @@ import { openBrowser, serveFolder, sleep } from "./browser.js";
 import { encodeShare } from "../docs/playground/designer.js";
 import { startPlayground } from "../src/playground-server.js";
 
-const PAGES = [["home", "/"], ["demo picker", "/play/"], ["demo scene", "/play/#goblin-camp"], ["playground", "/playground/"], ["Phaser game", "/phaser/"]];
+const PAGES = [["home", "/"], ["guide", "/guide/"], ["demo picker", "/play/"], ["demo scene", "/play/#goblin-camp"], ["playground", "/playground/"], ["Phaser game", "/phaser/"]];
 const THEMES = ["dark", "light"];
 const WIDTHS = [390, 1280];
 

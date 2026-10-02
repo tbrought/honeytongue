@@ -109,4 +109,4 @@ export function highlightPage(page) {
 }
 
 /** The pages it highlights. */
-export const HIGHLIGHTED = ["docs/index.html"];
+export const HIGHLIGHTED = ["docs/index.html", "docs/guide/index.html"];

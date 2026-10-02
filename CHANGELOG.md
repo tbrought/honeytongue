@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+### Added
+
+- **The "Designing persuasion" guide** at honeytongue.dev/guide/: practical rules for writing characters players can win over fairly. It covers:
+  - reading the signals in your own dialogue system, and the engine's reply order;
+  - personas that say what moves a character;
+  - several ways to win, and clues;
+  - readable feedback;
+  - difficulty and patience;
+  - how scene context shifts scores;
+  - testing.
+
+  Each section has examples from the demo scenes and a collapsible Evidence box with the live measurements behind its rule. The docs' Personas and Testing sections are shorter and link to it.
+
 ### Changed
 
 - **The Twine recipe's save and load is tested** (the recipe ships in the package, under `examples/`) in Twine 2.12.0 with SugarCube 2.37.3, with `honeytongue@0.1.0-alpha.14`:

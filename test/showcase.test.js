@@ -58,3 +58,16 @@ test("each grid cell's Try it link opens the playground with that column's prese
   }
   assert.equal(linkShowcase(html), html, "the links are current: run npm run build:demo");
 });
+
+test("every grid cell has the same three lines (verdict, score or a dash, Try it), so a row's links line up", () => {
+  const html = read("docs/index.html");
+  const table = html.slice(html.indexOf('<table class="grid">'), html.indexOf("</table>", html.indexOf('<table class="grid">')));
+  const cells = [...table.matchAll(/<td data-verdict="([^"]+)">([\s\S]*?)<\/td>/g)];
+  assert.equal(cells.length, suite.lines.length * Object.keys(characters).length);
+  for (const [, verdict, cell] of cells) {
+    const parts = [...cell.matchAll(/<(span|a) class="([^"]+)"/g)].map((m) => m[2]).filter((c) => c !== "vh");
+    const score = verdict === "offended" ? "dim no-score" : "dim";
+    assert.deepEqual(parts, [`chip v-${verdict}`, score, "try"], `${verdict}: ${cell.slice(0, 80)}`);
+  }
+});
+
