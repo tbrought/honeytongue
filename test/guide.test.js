@@ -54,3 +54,12 @@ test("the guide's links into the docs land on sections that exist, and the docs 
   const hero = docs.slice(docs.indexOf('<ul class="commands">'), docs.indexOf("</ul>", docs.indexOf('<ul class="commands">')));
   assert.ok(hero.includes('href="guide/"'), "the home page's main links, on its first screen, include the guide");
 });
+
+test("the checklist is a plain list with a button that copies it as a Markdown task list", () => {
+  const list = guide.slice(guide.indexOf('<ul class="checklist">'), guide.indexOf("</ul>", guide.indexOf('<ul class="checklist">')));
+  const items = [...list.matchAll(/<li>([\s\S]*?)<\/li>/g)];
+  assert.ok(items.length >= 10, `${items.length} items`);
+  assert.doesNotMatch(list, /<input/, "no live checkboxes: ticks wouldn't survive a reload, and the list is for each character");
+  assert.match(guide, /<button type="button" class="button" id="copy-checklist">Copy as task list<\/button>/);
+  assert.match(read("docs/home.js"), /getElementById\("copy-checklist"\)/);
+});

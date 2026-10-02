@@ -128,6 +128,11 @@ footer::before {
 .guide-head .lede { max-width: none; margin-bottom: 1rem; }
 .rule { font-size: 1.1rem; }
 .brief li, .checklist li { margin-bottom: 0.5rem; }
+/* The checklist's empty boxes, for the eye only: screen readers hear the list as a list. */
+.checklist { list-style: none; padding-left: 0; }
+.checklist li { position: relative; padding-left: 4ch; }
+.checklist li::before { content: "[ ]"; content: "[ ]" / ""; position: absolute; left: 0; color: var(--dim); }
+.copy-list { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem 0.75rem; }
 blockquote.from-story { margin: 0.5rem 0 1rem; padding-left: 0.9rem; border-left: 3px solid var(--line); color: var(--bright); }
 details.evidence { border: 1px dashed var(--line); padding: 0.6rem 0.9rem; margin: 1.25rem 0; }
 details.evidence > summary { cursor: pointer; font-weight: 600; color: var(--bright); }

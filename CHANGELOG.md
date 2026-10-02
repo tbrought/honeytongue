@@ -13,7 +13,7 @@
   - how scene context shifts scores;
   - testing.
 
-  Each section has examples from the demo scenes and a collapsible Evidence box with the live measurements behind its rule. The docs' Personas and Testing sections are shorter and link to it.
+  Each section has examples from the demo scenes and a collapsible Evidence box with the live measurements behind its rule. The docs' Personas and Testing sections are shorter and link to it. Its closing checklist copies as a Markdown task list, for an issue or a pull request.
 
 ### Changed
 
