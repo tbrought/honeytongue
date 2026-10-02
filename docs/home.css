@@ -10,7 +10,7 @@
 .lede { font-size: 1.15rem; color: var(--bright); max-width: 34ch; margin: 0 0 1.75rem; }
 /* No lone word on a line of its own: short lines (ledes, rules, headings) are balanced, and longer paragraphs avoid a
    one-word last line. Browsers without text-wrap support simply wrap as before. */
-.lede, .rule, main h2, main h3, .guide-head h1 { text-wrap: balance; }
+.lede, .credits, .rule, main h2, main h3, .guide-head h1 { text-wrap: balance; }
 main p, main li { text-wrap: pretty; }
 .install { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; border: 3px double var(--dim); padding: 0.55rem 0.7rem 0.55rem 0.9rem; max-width: 100%; }
 .install code { background: none; border: 0; padding: 0; font-size: 0.95rem; }
