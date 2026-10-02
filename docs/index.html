@@ -397,7 +397,7 @@ loaded.<span class="f">restore</span>(JSON.<span class="f">parse</span>(localSto
 
     <section id="twine">
       <h2>Twine</h2>
-      <p>For SugarCube 2, load Honeytongue in your Story JavaScript and keep the character on <code>setup</code>, with its state in a story variable so saves carry it. This recipe is tested in Twine 2.12.0 with SugarCube 2.37.3, using the offline stand-in, apart from its save and load part (new in 0.1.0-alpha.14), which hasn't been tested inside Twine yet:</p>
+      <p>For SugarCube 2, load Honeytongue in your Story JavaScript and keep the character on <code>setup</code>, with its state in a story variable so saves carry it. This recipe is tested in Twine 2.12.0 with SugarCube 2.37.3, using the offline stand-in, including saving, loading, and SugarCube's Back button:</p>
 <pre data-lang="JavaScript"><code>setup.ready = <span class="k">import</span>(<span class="s">"https://cdn.jsdelivr.net/npm/honeytongue@alpha/src/index.js"</span>)
   .<span class="f">then</span>(<span class="k">function</span> (hon) {
     setup.harry = <span class="k">new</span> hon.<span class="f">Persuadable</span>({
