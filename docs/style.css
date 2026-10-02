@@ -231,6 +231,10 @@ a:hover { background: var(--fg); color: var(--bg); text-decoration: none; text-s
 a:focus-visible { background: var(--fg); color: var(--bg); text-shadow: none; outline: none; }
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .skip { position: absolute; left: -999px; z-index: 60; }
+.nowrap { white-space: nowrap; }
+/* The release line on the home page and the demo, set by npm run build:demo: a stamp in the pixel font, smaller and
+   spaced out. It stays in the dim colour, the faintest that still meets WCAG AA contrast (the browser checks enforce it). */
+.serial { font-family: var(--pixel); font-size: 1.05rem; letter-spacing: 0.08em; color: var(--dim); }
 .skip:focus { left: 1rem; top: 3rem; background: var(--bg); padding: 0.5rem 1rem; }
 
 /* ---- Status line: inverse video, like the top of an Infocom screen ---- */

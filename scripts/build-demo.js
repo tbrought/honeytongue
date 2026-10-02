@@ -2,14 +2,16 @@
 // example's game into docs/phaser/lib and its sprites into docs/phaser/assets, because GitHub Pages only serves the
 // docs folder. Run it after changing src/, stories/, or examples/phaser/: npm run build:demo
 // It also highlights the docs' code blocks (scripts/highlight-docs.js), writes the showcase grid's "Try it" links
-// (scripts/showcase-links.js), and writes docs/favicon.ico from the logos (scripts/favicon.js).
-// (test/demo.test.js fails if the copies are out of date, test/highlight.test.js if the highlighting is, and
-// test/showcase.test.js if the links are.)
+// (scripts/showcase-links.js), writes docs/favicon.ico from the logos (scripts/favicon.js), and writes the version and
+// its release date into the credits (scripts/release-stamp.js).
+// (test/demo.test.js fails if the copies are out of date, test/highlight.test.js if the highlighting is,
+// test/showcase.test.js if the links are, and test/version.test.js if the credits are.)
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { DEMO_FILES } from "./demo-files.js";
 import { HIGHLIGHTED, highlightPage } from "./highlight-docs.js";
 import { linkShowcase } from "./showcase-links.js";
 import { ICON_SOURCES, buildIco } from "./favicon.js";
+import { STAMPED, serialNumber, stampRelease } from "./release-stamp.js";
 
 const root = new URL("../", import.meta.url);
 for (const [source, copy] of DEMO_FILES) {
@@ -28,3 +30,10 @@ console.log("Wrote the showcase grid's Try it links in docs/index.html");
 const icons = await Promise.all(ICON_SOURCES.map(async ([path, size]) => [await readFile(new URL(path, root)), size]));
 await writeFile(new URL("docs/favicon.ico", root), buildIco(icons));
 console.log(`Wrote docs/favicon.ico (${ICON_SOURCES.map(([, size]) => `${size}x${size}`).join(" and ")})`);
+const { version } = JSON.parse(await readFile(new URL("package.json", root), "utf8"));
+const serial = serialNumber(await readFile(new URL("CHANGELOG.md", root), "utf8"), version);
+for (const page of STAMPED) {
+  const url = new URL(page, root);
+  await writeFile(url, stampRelease(await readFile(url, "utf8"), version, serial, page));
+}
+console.log(`Wrote Release ${version} / Serial number ${serial} into ${STAMPED.join(" and ")}`);

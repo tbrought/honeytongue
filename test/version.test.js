@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { VERSION } from "../src/index.js";
+import { STAMPED, serialNumber, stampRelease } from "../scripts/release-stamp.js";
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 
@@ -25,4 +26,23 @@ test("the version is the same everywhere it appears, so a release can't miss a f
   const named = [...read("README.md").matchAll(/\b\d+\.\d+\.\d+-[0-9A-Za-z.-]+\b/g)].map((m) => m[0]);
   for (const v of named) assert.equal(v, version, `README.md names ${v}: change it to ${version}`);
   if (version.includes("-")) assert.ok(named.includes(version), `README.md's alpha notice should name ${version}`);
+});
+
+test("the docs' credits name the version and its release date, Infocom style", () => {
+  const { version } = JSON.parse(read("package.json"));
+  const serial = serialNumber(read("CHANGELOG.md"), version);
+  assert.match(serial, /^\d{6}$/);
+  for (const page of STAMPED) {
+    const html = read(page);
+    assert.equal(stampRelease(html, version, serial, page), html, `${page}'s release line is stale: run npm run build:demo`);
+  }
+});
+
+test("the release stamp explains a missing CHANGELOG heading or a reworded credits line", () => {
+  const changelog = "## Unreleased\n\n## 1.2.0-alpha.3 (2027-01-09)\n\n## 1.2.0-alpha.30 (2027-02-01)\n";
+  assert.equal(serialNumber(changelog, "1.2.0-alpha.3"), "270109");
+  assert.throws(() => serialNumber(changelog, "1.2.0"), /no heading for 1\.2\.0\. Move the Unreleased entries/);
+  assert.equal(stampRelease("<p>Release 0.1&nbsp;/ Serial number 260101</p>", "0.2.0", "270109"),
+    "<p>Release 0.2.0&nbsp;/ Serial number 270109</p>");
+  assert.throws(() => stampRelease("<p>Release 0.1</p>", "0.2.0", "270109", "x.html"), /x\.html should have one "Release <version> \/"/);
 });

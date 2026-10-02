@@ -5,6 +5,7 @@
 .banner { margin: 0 0 1.5rem; }
 .banner h1 { font-size: clamp(2.6rem, 11vw, 4rem); line-height: 0.85; margin: 0 0 0.5rem; }
 .banner p { color: var(--dim); margin: 0; }
+.banner .serial { margin-top: 0.3rem; }
 .mode { border: 1px dashed var(--dim); color: var(--dim); padding: 0.5rem 0.8rem; margin: 0 0 1.5rem; font-size: 0.9rem; }
 .mode strong { color: var(--bright); }
 

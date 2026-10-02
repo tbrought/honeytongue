@@ -6,7 +6,8 @@
 .title { display: flex; align-items: center; gap: 0.15em; font-size: clamp(2.8rem, 13vw, 5.6rem); line-height: 0.8; margin: 0 0 1rem; }
 /* Two columns from 960px: the title (logo and name, on one line) sizes to its column, about 45% of the screen. */
 @media (min-width: 960px) { .title { font-size: min(5.2rem, 6.4vw); } }
-.credits { color: var(--dim); margin: 0 0 1.5rem; }
+.credits { color: var(--dim); margin: 0 0 0.4rem; }
+.serial { margin: 0 0 1.5rem; }
 .lede { font-size: 1.15rem; color: var(--bright); max-width: 34ch; margin: 0 0 1.75rem; }
 /* No lone word on a line of its own: short lines (ledes, rules, headings) are balanced, and longer paragraphs avoid a
    one-word last line. Browsers without text-wrap support simply wrap as before. */
@@ -21,7 +22,6 @@ main p, main li { text-wrap: pretty; }
 .install button:hover, .button:hover { background: var(--fg); color: var(--bg); text-shadow: none; }
 .commands { list-style: none; padding: 0; margin: 1.5rem 0 0; display: grid; gap: 0.3rem; }
 .commands a::before { content: "> "; }
-.nowrap { white-space: nowrap; }
 
 .transcript { margin: 0; }
 /* The scene's name as a title card, and replies as the demo shows them */
