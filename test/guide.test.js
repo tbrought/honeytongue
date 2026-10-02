@@ -51,4 +51,6 @@ test("the guide's links into the docs land on sections that exist, and the docs 
   for (const [, id] of guide.matchAll(/href="\.\.\/#([^"]+)"/g)) assert.ok(docs.includes(`id="${id}"`), `the docs have #${id}`);
   for (const [, id] of guide.matchAll(/href="#([^"]+)"/g)) assert.ok(guide.includes(`id="${id}"`), `the guide has #${id}`);
   assert.ok(docs.includes('href="guide/"'), "the docs link to the guide");
+  const hero = docs.slice(docs.indexOf('<ul class="commands">'), docs.indexOf("</ul>", docs.indexOf('<ul class="commands">')));
+  assert.ok(hero.includes('href="guide/"'), "the home page's main links, on its first screen, include the guide");
 });
