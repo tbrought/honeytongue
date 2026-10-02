@@ -1,6 +1,15 @@
 # Honeytongue in Twine (SugarCube 2)
 
-Tested in the Twine web app, Twine 2.12.0 with SugarCube 2.37.3, using the offline stand-in (`createMockClient()`): winning, an empty line, and running out of patience all work, with no console errors. Two parts haven't been tested inside Twine yet: saving and loading (the `:passagestart` handler and `$harry`, added in 0.1.0-alpha.14), and judging with Jev through a proxy.
+Tested in the Twine web app, Twine 2.12.0 with SugarCube 2.37.3, using the offline stand-in (`createMockClient()`), with no console errors:
+
+- Winning, an empty line, and running out of patience.
+- Saving and loading, with 0.1.0-alpha.14:
+  - failed attempts, saved, then the page reloaded and the save loaded;
+  - Harry's patience carried over;
+  - an earlier line still counted as a repeat;
+  - SugarCube's Back button.
+
+Judging with Jev through a proxy hasn't been tested inside Twine yet.
 
 ## 1. Story JavaScript
 
@@ -26,9 +35,9 @@ $(document).on(":passagestart", function () {
 
 `setup.ready` finishes once Honeytongue has loaded, a moment after the story starts, so the button waits for it.
 
-Harry's state is a plain object from `setup.harry.snapshot()`, kept in the story variable `$harry` after each attempt. At the start of every passage, `setup.harry.restore()` puts it back, so SugarCube's saves, loads, and Back button all carry his memory and patience. With no `$harry` yet, he starts fresh.
+> **Tip:** the CDN can take a while to serve a new release under `@alpha`. If you need the newest one straight away, pin the exact version instead, such as `honeytongue@0.1.0-alpha.14`.
 
-> The save and load part hasn't been tested inside Twine yet. If something doesn't work, please open an issue.
+Harry's state is a plain object from `setup.harry.snapshot()`, kept in the story variable `$harry` after each attempt. At the start of every passage, `setup.harry.restore()` puts it back, so SugarCube's saves, loads, and Back button all carry his memory and patience. With no `$harry` yet, he starts fresh.
 
 ## 2. A passage called "At the gate" (the start passage)
 

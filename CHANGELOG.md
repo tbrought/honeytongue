@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- **The Twine recipe's save and load is tested** (the recipe ships in the package, under `examples/`) in Twine 2.12.0 with SugarCube 2.37.3, with `honeytongue@0.1.0-alpha.14`:
+  - failed attempts, saving, reloading the page, and loading the save;
+  - Harry's patience carrying over, and an earlier line still counting as a repeat;
+  - SugarCube's Back button.
+
+  The recipe and the docs say so. The recipe also has a tip: the CDN can take a while to serve a new release under `@alpha`, so pin an exact version if you need it at once.
+
 ## 0.1.0-alpha.14 (2026-10-01)
 
 ### Added
