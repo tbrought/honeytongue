@@ -102,6 +102,15 @@ try {
     }
   }
 
+  // The home page's main links each fit on one line, even on a narrow phone (360px), so the list's spacing stays even.
+  await open("/", { width: 360 });
+  const wrapped = JSON.parse(await page.eval(`JSON.stringify((() => {
+    const items = [...document.querySelectorAll(".commands li")];
+    const line = items[0].getBoundingClientRect().height;
+    return items.filter((li) => li.getBoundingClientRect().height > line * 1.5).map((li) => li.textContent.trim());
+  })())`));
+  check(wrapped.length === 0, "home, 360px: each of the main links fits on one line", wrapped.join(" | "));
+
   // ---- Hostile text is shown as text ----
   const IMG = "<img src=x onerror=alert(1)>";
   const CLOSE = "</textarea><script>alert(1)</script>";
