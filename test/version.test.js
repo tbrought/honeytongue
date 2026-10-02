@@ -42,7 +42,8 @@ test("the release stamp explains a missing CHANGELOG heading or a reworded credi
   const changelog = "## Unreleased\n\n## 1.2.0-alpha.3 (2027-01-09)\n\n## 1.2.0-alpha.30 (2027-02-01)\n";
   assert.equal(serialNumber(changelog, "1.2.0-alpha.3"), "270109");
   assert.throws(() => serialNumber(changelog, "1.2.0"), /no heading for 1\.2\.0\. Move the Unreleased entries/);
-  assert.equal(stampRelease("<p>Release 0.1&nbsp;/ Serial number 260101</p>", "0.2.0", "270109"),
-    "<p>Release 0.2.0&nbsp;/ Serial number 270109</p>");
+  const stamped = '<p>Release <a href="https://www.npmjs.com/package/honeytongue/v/0.2.0">0.2.0</a>&nbsp;/ Serial number 270109</p>';
+  assert.equal(stampRelease("<p>Release 0.1&nbsp;/ Serial number 260101</p>", "0.2.0", "270109"), stamped);
+  assert.equal(stampRelease(stamped, "0.2.0", "270109"), stamped, "stamping twice changes nothing");
   assert.throws(() => stampRelease("<p>Release 0.1</p>", "0.2.0", "270109", "x.html"), /x\.html should have one "Release <version> \/"/);
 });
