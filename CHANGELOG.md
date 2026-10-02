@@ -4,7 +4,7 @@
 
 ### Added
 
-- **The "Designing persuasion" guide** at honeytongue.dev/guide/: practical rules for writing characters players can win over fairly. It covers:
+- **The "Designing persuasion" guide** at honeytongue.dev/guide/: practical rules for writing characters players can win over with a good argument. It covers:
   - reading the signals in your own dialogue system, and the engine's reply order;
   - personas that say what moves a character;
   - several ways to win, and clues;
