@@ -1,6 +1,6 @@
-// The documentation home page: the copy button, and the status line that names the section you're in.
-// (Moved out of index.html so the page needs no inline script.)
-document.getElementById("copy").addEventListener("click", async (event) => {
+// The documentation pages (the home page and the guide): the home page's copy button, and the status line that names
+// the section you're in. (Moved out of index.html so the pages need no inline script.)
+document.getElementById("copy")?.addEventListener("click", async (event) => {
   const button = event.currentTarget;
   try {
     await navigator.clipboard.writeText(document.getElementById("cmd").textContent);

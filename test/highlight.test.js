@@ -12,7 +12,8 @@ test("the docs' code highlighting is up to date", () => {
   for (const page of HIGHLIGHTED) {
     const html = read(page);
     assert.ok(highlightPage(html) === html, `${page}'s code highlighting is out of date. Run: npm run build:demo`);
-    assert.ok(blocks(html).length > 10 && blocks(html).every((b) => b.includes('<span class="')), `every block in ${page} is highlighted`);
+    const minimum = page === "docs/index.html" ? 10 : 1; // the docs have many blocks; the guide a few
+    assert.ok(blocks(html).length >= minimum && blocks(html).every((b) => b.includes('<span class="')), `every block in ${page} is highlighted`);
   }
 });
 

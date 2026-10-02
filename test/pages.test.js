@@ -6,6 +6,7 @@ import { ICON_SOURCES, readIco } from "../scripts/favicon.js";
 
 const PAGES = {
   "docs/index.html": "https://honeytongue.dev/",
+  "docs/guide/index.html": "https://honeytongue.dev/guide/",
   "docs/play/index.html": "https://honeytongue.dev/play/",
   "docs/playground/index.html": "https://honeytongue.dev/playground/",
   "docs/phaser/index.html": "https://honeytongue.dev/phaser/",

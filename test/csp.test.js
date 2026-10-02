@@ -4,7 +4,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { request } from "node:http";
 import { startPlayground } from "../src/playground-server.js";
 
-const PAGES = ["docs/index.html", "docs/play/index.html", "docs/playground/index.html", "docs/phaser/index.html"];
+const PAGES = ["docs/index.html", "docs/guide/index.html", "docs/play/index.html", "docs/playground/index.html", "docs/phaser/index.html"];
 // Phaser builds its default textures from data: images, so its page allows those; images can't run code.
 const IMAGES = { "docs/phaser/index.html": ["'self'", "data:"] };
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");

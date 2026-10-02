@@ -82,6 +82,7 @@
     <ol>
       <li><a href="#start">Get started</a></li>
       <li><a href="#playground">Playground</a></li>
+      <li><a href="guide/">Designing persuasion</a></li>
       <li class="group">Core ideas</li>
       <li><a href="#personas">Personas</a></li>
       <li><a href="#showcase">Same words</a></li>
@@ -167,12 +168,12 @@ console.<span class="f">log</span>(result.verdict, result.score);</code></pre>
       <h2>Personas</h2>
       <p>The persona does most of the work. Jev judges each attempt by the values the persona describes, not by general politeness, so the same argument lands differently with different people. Live testing showed what makes a persona work:</p>
       <ul class="points">
-        <li><strong>Say what moves them, not just what they dislike.</strong> "A proud bouncer who can't stand being disrespected" gave Jev nothing to reward, and good arguments scored 1.3 to 2.7 out of 4. One line is enough when it names what drives the character: "A greedy corner-shop owner who'll do almost anything for money."</li>
-        <li><strong>If a tactic should work on them, say so plainly.</strong> Jev judges flattery, bribes, and threats only by the persona, so a coward needs "a firm threat makes him give in", a vain character needs to love praise, and a greedy one needs to want money. A merely "nervous" troll moved under a threat, but not far enough to agree.</li>
-        <li><strong>Not being offended isn't the same as being impressed.</strong> Leaving insults out of <code>offendedBy</code>, or writing a persona who takes them as banter, stops a character being offended by them, but rough language still won't strengthen an argument unless the persona says plainly that it impresses them. Maude takes insults as banter, and an insult in front of a good argument still cost it about 0.25.</li>
-        <li><strong>If they'd want evidence, pass it in.</strong> Without it, a player's claims are just claims: a detective who "trusts only evidence" scored the best arguments below 2.5. Use <a href="#secrets">secrets</a> for what the player has discovered, or the <code>context</code> option of <code>attempt()</code> for other game state.</li>
+        <li><strong>Say what moves them, not just what they dislike.</strong> A persona that only lists dislikes gives Jev nothing to reward.</li>
+        <li><strong>If a tactic should work on them, say so plainly:</strong> a coward needs "a firm threat makes him give in", a vain character needs to love praise, and a greedy one needs to want money.</li>
+        <li><strong>Not being offended isn't the same as being impressed,</strong> and a character who'd want evidence needs it passed in, through <a href="#secrets">secrets</a> or the <code>context</code> option of <code>attempt()</code>.</li>
         <li><strong>Keep hidden motivations out of the persona.</strong> Put them in <a href="#secrets">secrets</a>, so a player on their second playthrough can't open with them.</li>
       </ul>
+      <p>The <a href="guide/">Designing persuasion</a> guide has examples from the demo scenes and the measurements behind each rule, with more on clues, feedback, difficulty, and testing.</p>
       <p>Players can write in any language Jev reads. In tests, the same argument in Spanish, French, and Japanese scored within about 0.2 of the English, and threats and insults were caught in each. Very short inputs, like "pls" or "ok fine", never won.</p>
       <p id="spoken"><strong>Spoken input</strong> works once your game turns speech into text. In tests, the five lines in the grid below, written the way speech recognition writes them (lowercase, with no punctuation), got the same verdicts as the typed lines every time (20 of 20), with scores within 0.25. Long, carefully argued lines lose a little more: each scene's winning line scored 0.03 to 0.59 lower when spoken or misheard, and two of eight such versions fell just short of the threshold (one where "shutter" was heard as "shudder"). If voice matters to your game, clean up transcripts before judging them (restore punctuation, and correct the names and key words your scenes use), and leave winning lines a little room above the threshold.</p>
     </section>
@@ -577,7 +578,7 @@ loaded.<span class="f">restore</span>(JSON.<span class="f">parse</span>(localSto
 
     <section id="tuning">
       <h2>Testing and tuning</h2>
-      <p>Persuasion lives or dies by the persona and threshold, so test them with real phrasings. The quickest way is the <a href="#playground">playground</a>. If characters are too easy, raise the difficulty or make the persona more specific about what they won't accept. If they're too hard, describe more clearly what would move them.</p>
+      <p>Persuasion lives or dies by the persona and threshold, so test them with real phrasings. The quickest way is the <a href="#playground">playground</a>, and the guide's <a href="guide/#testing">Testing</a> section has a ten-repeat check you can copy into your own game. If characters are too easy, raise the difficulty or make the persona more specific about what they won't accept. If they're too hard, describe more clearly what would move them.</p>
       <p>The repository's evaluation suites cover each demo scene (parsing, persuasion score ranges, tactics that should work and ones that should backfire, prompt-injection attempts, and a bare opening plea that must not win) and the <a href="#showcase">same words, different people</a> grid:</p>
 <pre data-lang="Shell"><code><span class="f">npm</span> test                                  <span class="c"># unit tests, no key needed</span>
 <span class="f">npm</span> run eval                              <span class="c"># The Gatehouse's suite, against Jev</span>
