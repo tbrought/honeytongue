@@ -289,6 +289,14 @@ try {
     return true;
   })()`);
   const talking = () => page.eval(`__game.scene.getScene("bridge").talking`);
+  /** A real key press, as a keyboard sends it: it types its character and presses a focused button, which page.key's
+   * synthetic events never do. */
+  const realKey = async (key) => {
+    const [code, keyCode, text] = { e: ["KeyE", 69, "e"], " ": ["Space", 32, " "], Enter: ["Enter", 13, "\r"] }[key];
+    await page.send("Input.dispatchKeyEvent", { type: "keyDown", key, code, text, windowsVirtualKeyCode: keyCode });
+    await sleep(80);
+    await page.send("Input.dispatchKeyEvent", { type: "keyUp", key, code, windowsVirtualKeyCode: keyCode });
+  };
 
   await phaserAt(115, 92); // next to the sign
   await oneFrame(`press("e", "KeyE", 69);`);
@@ -307,10 +315,24 @@ try {
   await sleep(200);
   check(opened && !(await talking()), "Phaser: a letter typed in the box and Escape, in one frame, leave the box closed");
 
+  // The press that opens a box does nothing else: E or Space by the troll doesn't type into his box, and Enter by the
+  // sign doesn't press its Leave button.
+  for (const key of ["e", " "]) {
+    await phaserAt(182, 135); // next to the troll
+    await realKey(key);
+    await page.waitFor(`document.activeElement?.id === "dialogue-input"`, { what: "the troll's box, ready to type in" }).catch(() => {});
+    const box = JSON.parse(await page.eval(`JSON.stringify({ value: document.getElementById("dialogue-input").value, focused: document.activeElement?.id })`));
+    check(box.value === "" && box.focused === "dialogue-input", `Phaser: ${key === " " ? "Space" : "E"} opens the troll's box without typing into it`, JSON.stringify(box));
+  }
+  await phaserAt(115, 92); // next to the sign
+  await realKey("Enter");
+  await sleep(300);
+  check(await talking(), "Phaser: Enter opens the sign without pressing its Leave button");
+
   // Typing to the troll with real keystrokes: E, R, spaces, and capitals appear in the box, and Enter says the line,
   // without reading the sign again, restarting, or moving the player.
   await phaserAt(182, 135); // next to the troll
-  await page.key("e", true); await sleep(100); await page.key("e", false);
+  await realKey("e");
   await page.waitFor(`__game.scene.getScene("bridge").talking && document.activeElement?.id === "dialogue-input"`, { what: "the troll's box, ready to type in" });
   await page.eval(`window.__player = __game.scene.getScene("bridge").player; true`);
   const typed = "Rest here, Tolly. Everyone needs a friend, eh? Enter";
