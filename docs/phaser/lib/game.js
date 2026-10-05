@@ -177,6 +177,8 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
       log.replaceChildren();
       this.addLine(speaker, text);
       form.hidden = !canReply;
+      // The box is the page's, not the scene's, so it outlives a restart (R): set it from this game every time.
+      input.disabled = !canReply;
       box.hidden = false;
       (canReply ? input : document.getElementById("dialogue-close")).focus();
     }

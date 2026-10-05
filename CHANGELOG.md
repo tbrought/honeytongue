@@ -24,6 +24,10 @@
 
   The recipe and the docs say so. The recipe also has a tip: the CDN can take a while to serve a new release under `@alpha`, so pin an exact version if you need it at once.
 
+### Fixed
+
+- **The Phaser example's restart.** After crossing the bridge, or after Tolly ran out of patience, pressing R started a new game, but his dialogue box stayed disabled, so nothing could be typed in it. The box now takes its state from the current game each time it opens (`examples/phaser/game.js`, and the playable copy at honeytongue.dev/phaser/), and the browser checks restart the game both ways and type to him again.
+
 ## 0.1.0-alpha.14 (2026-10-01)
 
 ### Added

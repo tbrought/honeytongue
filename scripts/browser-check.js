@@ -342,6 +342,30 @@ try {
     imgs: document.querySelectorAll("#dialogue img, #dialogue script").length, alerts: window.__alerts })`));
   check(phaserHostile.shown && phaserHostile.imgs === 0 && phaserHostile.alerts === 0, "Phaser: hostile text said to the troll is shown literally, and nothing runs", JSON.stringify(phaserHostile));
 
+  // Pressing R starts a new game, and the troll's box takes typing again: after a win, and after he runs out of
+  // patience. (The box is the page's, not the scene's, so it outlives the scene.)
+  const replyAfterRestart = async (end) => {
+    await phaserAt(115, 92);
+    await page.eval(`(() => { const s = __game.scene.getScene("bridge"); s.interact(); s.closeDialogue(); s.player.setPosition(182, 135); s.interact(); return true; })()`);
+    for (const [i, line] of end.entries()) {
+      await page.eval(`(() => { const i = document.getElementById("dialogue-input"); i.value = ${JSON.stringify(line)}; document.getElementById("dialogue-form").requestSubmit(); return true; })()`);
+      await page.waitFor(`document.querySelectorAll("#dialogue-log p[data-verdict]").length >= ${i + 1}`, { what: `Tolly's answer to "${line}"` });
+    }
+    await page.eval(`(() => { const s = __game.scene.getScene("bridge"); s.closeDialogue(); if (s.passed) s.win(); window.__before = s; return true; })()`);
+    await page.key("r", true); await sleep(100); await page.key("r", false);
+    await page.waitFor(`__game.scene.getScene("bridge").player && !__game.scene.getScene("bridge").ended && __game.scene.getScene("bridge").player.x < 100`, { what: "the game to restart" });
+    await page.eval(`(() => { const s = __game.scene.getScene("bridge"); s.player.setPosition(182, 135); s.interact(); return true; })()`);
+    await page.waitFor(`document.activeElement?.id === "dialogue-input"`, { what: "the troll's box, ready to type in" }).catch(() => {});
+    return JSON.parse(await page.eval(`JSON.stringify({ disabled: document.getElementById("dialogue-input").disabled, focused: document.activeElement?.id,
+      formHidden: document.getElementById("dialogue-form").hidden, log: document.getElementById("dialogue-log").textContent })`));
+  };
+  const afterWin = await replyAfterRestart(["Please let me cross, and I'll come back and visit you."]);
+  check(!afterWin.disabled && afterWin.focused === "dialogue-input" && !afterWin.formHidden,
+    "Phaser: after crossing and pressing R, the troll's box takes typing again", JSON.stringify(afterWin));
+  const afterNoPatience = await replyAfterRestart(Array.from({ length: 5 }, (_, i) => `Let me cross, please (${i + 1}).`));
+  check(!afterNoPatience.disabled && afterNoPatience.focused === "dialogue-input" && !afterNoPatience.formHidden,
+    "Phaser: after Tolly runs out of patience and R, his box takes typing again", JSON.stringify(afterNoPatience));
+
   // ---- The local playground server ----
   const local = await startPlayground({ port: 0, apiKey: "", mock: true });
   try {
