@@ -19,6 +19,34 @@ const TOP = 1000;                                         // depth for text over
 const FEET = { left: -12, right: 14, top: 6, bottom: 24 };
 const SPRITES = { player: "phaser-demo-player-32.png", troll: "phaser-demo-troll-32.png", sign: "phaser-demo-sign-32.png" };
 
+// Tolly's own lines. Honeytongue judges what the player said; the game picks what he says back.
+export const LINES = {
+  convinced: "Tolly heaves a sigh and steps aside. \"Go on, then. And come back, mind.\"",
+  offended: "Tolly's face darkens. \"Say that again and you'll swim.\"",
+  outOfPatience: "Tolly turns his back on you. The talking's over.",
+  // Threats don't move him (his persona says they make him laugh), but Jev still notices them: result.triggered
+  // names the threat, so he laughs at it instead of quoting the toll. Used in turn, so a second threat sounds new.
+  laughs: [
+    "Tolly throws back his head and laughs until the bridge shakes. \"You? You'd need a ladder first.\"",
+    "Tolly wipes a tear from his eye. \"Oh, that's a good one. Still one gold crown, mind.\"",
+    "Tolly leans down until his nose nearly touches yours. \"Boo.\" Then he chuckles all the way back up.",
+  ],
+};
+
+/**
+ * What Tolly says to a judged line, and whether he laughs. A turn that ends the talking or changes the game comes
+ * first, then a laugh at a threat that didn't offend him, then his reaction for how close the line came. `laughed`
+ * counts his laughs so far, to take the next line in turn.
+ */
+export function tollyReply(result, laughed = 0) {
+  if (result.outOfPatience) return { text: LINES.outOfPatience, laugh: false };
+  if (result.verdict === "convinced" || result.verdict === "offended") return { text: LINES[result.verdict], laugh: false };
+  if (result.verdict === "unconvinced" && result.triggered.includes("threats")) {
+    return { text: LINES.laughs[laughed % LINES.laughs.length], laugh: true };
+  }
+  return { text: result.reaction, laugh: false };
+}
+
 export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
   const box = document.getElementById("dialogue");
   const log = document.getElementById("dialogue-log");
@@ -36,6 +64,7 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
       this.talking = false;            // is the dialogue box open?
       this.ended = false;              // has the player crossed?
       this.target = null;              // where a tap asked the player to walk
+      this.laughed = 0;                // how many threats he's laughed at
 
       // The world: grass, the river, the bridge's deck and planks, and the far bank's flag.
       const deckY = (BRIDGE.top + BRIDGE.bottom) / 2, deckHeight = BRIDGE.bottom - BRIDGE.top;
@@ -144,11 +173,9 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
       try {
         // The one Honeytongue call: judge what the player said, as Tolly.
         const result = await this.npc.attempt(line);
-        const reply = {
-          convinced: "Tolly heaves a sigh and steps aside. \"Go on, then. And come back, mind.\"",
-          offended: "Tolly's face darkens. \"Say that again and you'll swim.\"",
-        }[result.verdict] ?? result.reaction;
-        this.addLine("Tolly", result.outOfPatience ? "Tolly turns his back on you. The talking's over." : reply, result.verdict);
+        const reply = tollyReply(result, this.laughed);
+        this.addLine("Tolly", reply.text, result.verdict);
+        if (reply.laugh) { this.laughed++; this.laugh(); }
         if (result.verdict === "convinced") this.stepAside();
       } catch (err) {
         this.addLine("", `(Couldn't reach the judge: ${err.message})`);
@@ -156,6 +183,15 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
         input.disabled = this.npc.outOfPatience || this.passed;
         if (!input.disabled) input.focus();
       }
+    }
+
+    /** He shakes with laughter, and so does the bridge. Not under reduced motion: the reply says it anyway. */
+    laugh() {
+      if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      this.tweens.killTweensOf(this.troll);
+      this.troll.y = (BRIDGE.top + BRIDGE.bottom) / 2; // back on his spot, if he was still laughing at the last one
+      this.tweens.add({ targets: this.troll, y: this.troll.y - 4, duration: 90, yoyo: true, repeat: 3, ease: "Sine.easeOut" });
+      this.cameras.main.shake(250, 0.004);
     }
 
     stepAside() {
