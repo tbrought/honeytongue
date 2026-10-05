@@ -67,7 +67,9 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
         if (handled.has(event)) return;
         handled.add(event);
         if (this.talking) return;
-        if (["e", " ", "Enter"].includes(event.key)) this.interact();
+        // A press that opens the box moves focus into it while the browser is still handling that press, so cancel
+        // its default action: otherwise E or Space would type into the box, and Enter would press its Leave button.
+        if (["e", " ", "Enter"].includes(event.key) && this.interact()) event.preventDefault();
         if (event.key === "r" && (this.ended || this.npc.outOfPatience)) this.scene.restart();
       });
       // On a phone, tap where to walk, or tap the sign or the troll when you're next to them.
@@ -121,6 +123,7 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
       return !inWater || (this.passed && onDeck);
     }
 
+    /** Read the sign or talk to the troll, if the player is next to one. True if it opened the dialogue box. */
     interact() {
       const near = this.nearby();
       if (near?.thing === "sign") {
@@ -130,6 +133,7 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
       } else if (near?.thing === "troll") {
         this.openDialogue("Tolly Underarch", this.npc.outOfPatience ? "Tolly has turned his back on you. (Press R to start again.)" : "\"Toll's one gold crown. Can't pay? Then you'd best talk.\"", !this.npc.outOfPatience);
       }
+      return Boolean(near);
     }
 
     async say(line) {
@@ -177,6 +181,8 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
       log.replaceChildren();
       this.addLine(speaker, text);
       form.hidden = !canReply;
+      // The box is the page's, not the scene's, so it outlives a restart (R): set it from this game every time.
+      input.disabled = !canReply;
       box.hidden = false;
       (canReply ? input : document.getElementById("dialogue-close")).focus();
     }
