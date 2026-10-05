@@ -27,7 +27,7 @@ export const LINES = {
   // Threats don't move him (his persona says they make him laugh), but Jev still notices them: result.triggered
   // names the threat, so he laughs at it instead of quoting the toll. Used in turn, so a second threat sounds new.
   laughs: [
-    "Tolly throws back his head and laughs until the bridge shakes. \"You? You'd need a ladder first.\"",
+    "Tolly throws back his head and laughs until the bridge shakes. \"You? You couldn't reach my knees without a ladder.\"",
     "Tolly wipes a tear from his eye. \"Oh, that's a good one. Still one gold crown, mind.\"",
     "Tolly leans down until his nose nearly touches yours. \"Boo.\" Then he chuckles all the way back up.",
   ],
