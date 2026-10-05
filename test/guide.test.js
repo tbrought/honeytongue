@@ -2,6 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { stripMarkup } from "../src/markup.js";
+import { Persuadable } from "../src/persuasion.js";
+import { fakeClient, harry } from "./helpers.js";
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const guide = read("docs/guide/index.html");
@@ -62,4 +64,23 @@ test("the checklist is a plain list with a button that copies it as a Markdown t
   assert.doesNotMatch(list, /<input/, "no live checkboxes: ticks wouldn't survive a reload, and the list is for each character");
   assert.match(guide, /<button type="button" class="button" id="copy-checklist">Copy as task list<\/button>/);
   assert.match(read("docs/home.js"), /getElementById\("copy-checklist"\)/);
+});
+
+test("the guide's grudge recipe works as printed: no win for the two lines after an insult, then as usual", async () => {
+  const at = guide.indexOf("<pre", guide.indexOf('id="grudges"')); // the code block, not the inline decide() before it
+  const code = unescape(guide.slice(guide.indexOf("<code>", at), guide.indexOf("</code>", at)));
+  const { decide } = new Function(`return {
+${code}
+};`)();
+  const client = fakeClient();
+  const npc = new Persuadable({ ...harry, decide }, { client });
+  const say = async (next) => { client.next = { ...client.next, score: 0, insults: 0.01, ...next }; return (await npc.attempt(`Line ${npc.attempts.length + 1}`)).verdict; };
+
+  assert.equal(await say({ insults: 0.95 }), "offended");
+  assert.equal(await say({ score: 4 }), "unconvinced", "the first line after the insult can't win");
+  assert.equal(await say({ score: 4 }), "unconvinced", "nor the second");
+  assert.equal(await say({ score: 4 }), "convinced", "the third can");
+  const fresh = new Persuadable({ ...harry, decide }, { client });
+  client.next = { ...client.next, score: 4, insults: 0.01 };
+  assert.equal((await fresh.attempt("A good line")).verdict, "convinced", "without an insult, a good line wins as usual");
 });

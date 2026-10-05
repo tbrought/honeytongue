@@ -326,6 +326,21 @@ The whole alpha.14 phase took 3,103 calls and 5,111,891 tokens, about $0.21. The
 | Headroom, twice | 10 |
 | Full reruns, twice | 1,368 |
 
+## Grudges (2026-10-04)
+
+A playtester insulted the bridge troll ("Step aside, oaf. Or I will cast a fireball at you.", offended) and then won him over with "If you let me pass, we can be best friends.", with his secret known. Jev holds no grudges by itself (see the multi-turn calibration), so this measured whether one sentence in the persona adds one: "He holds a grudge: after an insult, it takes more than kind words to win him back." Three repeats each on `jev-1.13.0`, standalone attempts, threshold 3.2 (`node scripts/grudges.js`):
+
+| Persona | The line on its own | Straight after the insult | Change |
+|---|---|---|---|
+| As he is | 3.06 (3.02 to 3.09), unconvinced 3/3 | 3.20 (3.19 to 3.21), convinced 2/3 | +0.14 |
+| With the grudge sentence | 2.96 (2.91 to 3.03), unconvinced 3/3 | 2.86 (2.75 to 2.96), unconvinced 3/3 | -0.10 |
+
+- **No grudge by default, confirmed.** The insult didn't lower the line; it scored slightly higher after it. The playtester's win sat right on the threshold.
+- **The persona sentence is a nudge.** After an insult, the line scored 0.34 lower than without the sentence, and on its own 0.10 lower: a grudge effect of about 0.24. Enough to tip a line on the threshold, not to stop a strong one (his scripted winning line scores 3.98). For a dependable grudge, the guide recommends a `decide()` rule.
+- One character, one pair of lines, three repeats: a direction, not a calibration.
+
+18 calls, 15,222 tokens.
+
 ## Reproducing
 
 With `TYPESAFE_API_KEY` set:
