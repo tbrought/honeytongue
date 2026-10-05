@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { Persuadable, createMockClient, defineCharacter } from "../src/index.js";
 import { troll } from "../examples/phaser/character.js";
+import { LINES, tollyReply } from "../examples/phaser/game.js";
 
 const attempt = async (line, { knows = false } = {}) => {
   const npc = new Persuadable(troll, { client: createMockClient() });
@@ -40,4 +41,28 @@ test("the Phaser example draws its own 32x32 sprites, crisp, at a whole-number s
   assert.match(game, /imageLoadType: "HTMLImageElement"/, "no blob: URLs, so the page's CSP needs no blob: images");
   assert.match(game, /setFlipX\(dx < 0\)/, "the player faces the way they walk");
   assert.match(game, /Sprites \(assets\/\*\.png\) by Tristan Broughton, under the project's MIT license/);
+});
+
+test("Tolly laughs at threats, in turn, after the turns that end the talking or change the game", async () => {
+  const npc = new Persuadable(troll, { client: createMockClient() });
+  const threat = await npc.attempt("I will kill you");
+  assert.equal(threat.verdict, "unconvinced", "threats don't offend him or win");
+  assert.deepEqual(threat.triggered, ["threats"]);
+  assert.deepEqual(tollyReply(threat, 0), { text: LINES.laughs[0], laugh: true });
+  assert.equal(tollyReply(threat, 1).text, LINES.laughs[1], "the next laugh is a different line");
+  assert.equal(tollyReply(threat, LINES.laughs.length).text, LINES.laughs[0], "and they come round again");
+
+  const again = await npc.attempt("I will kill you");
+  assert.equal(again.verdict, "repeated");
+  assert.deepEqual(tollyReply(again, 1), { text: troll.repeatReaction, laugh: false }, "a repeated threat is just a repeat");
+
+  const rude = await npc.attempt("Move, you stupid lump, or I will kill you.");
+  assert.deepEqual(rude.triggered, ["threats", "insults"]);
+  assert.deepEqual(tollyReply(rude, 1), { text: LINES.offended, laugh: false }, "an insulting threat still offends");
+
+  const plain = await attempt("Please let me cross the bridge.");
+  assert.deepEqual(tollyReply(plain, 0), { text: plain.reaction, laugh: false }, "an ordinary line gets his reaction");
+  const won = await attempt("Please let me cross, and I'll come back and visit you.", { knows: true });
+  assert.deepEqual(tollyReply(won, 0), { text: LINES.convinced, laugh: false });
+  assert.deepEqual(tollyReply({ ...threat, outOfPatience: true }, 0), { text: LINES.outOfPatience, laugh: false }, "the last word ends the talking");
 });

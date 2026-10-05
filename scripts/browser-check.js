@@ -388,6 +388,24 @@ try {
   check(!afterNoPatience.disabled && afterNoPatience.focused === "dialogue-input" && !afterNoPatience.formHidden,
     "Phaser: after Tolly runs out of patience and R, his box takes typing again", JSON.stringify(afterNoPatience));
 
+  // Tolly laughs at threats: a new line for each, and the laugh plays (here with motion on) without errors.
+  await phaserAt(182, 135);
+  await page.media({ scheme: "dark", reducedMotion: "no-preference" });
+  await page.eval(`__game.scene.getScene("bridge").interact(); true`);
+  const { LINES } = await import("../examples/phaser/game.js");
+  const laughs = [], moving = [];
+  for (const [i, line] of ["I will kill you.", "I'll hurt you if you don't move."].entries()) {
+    await page.eval(`(() => { const i = document.getElementById("dialogue-input"); i.value = ${JSON.stringify(line)}; document.getElementById("dialogue-form").requestSubmit(); return true; })()`);
+    await page.waitFor(`document.querySelectorAll("#dialogue-log p[data-verdict]").length >= ${i + 1}`, { what: `Tolly's answer to "${line}"` });
+    laughs.push(await page.eval(`[...document.querySelectorAll("#dialogue-log p[data-verdict]")].pop().textContent`));
+    moving.push(await page.eval(`(() => { const s = __game.scene.getScene("bridge"); return s.tweens.isTweening(s.troll) && s.cameras.main.shakeEffect.isRunning; })()`));
+  }
+  await sleep(800); // the laugh plays out
+  const laughed = JSON.parse(await page.eval(`JSON.stringify({ y: __game.scene.getScene("bridge").troll.y })`));
+  check(laughs[0] === `Tolly: ${LINES.laughs[0]}` && laughs[1] === `Tolly: ${LINES.laughs[1]}` && moving.every(Boolean) && laughed.y === 135
+    && (await violations()).length === 0, "Phaser: Tolly laughs at each threat with a new line, and ends up back on his spot", JSON.stringify({ laughs, moving, ...laughed }));
+  await page.media({ scheme: "dark" });
+
   // ---- The local playground server ----
   const local = await startPlayground({ port: 0, apiKey: "", mock: true });
   try {

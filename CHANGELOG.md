@@ -15,6 +15,8 @@
 
   Each section has examples from the demo scenes and a collapsible Evidence box with the live measurements behind its rule. The docs' Personas and Testing sections are shorter and link to it. Its closing checklist copies as a Markdown task list, for an issue or a pull request.
 
+- **The bridge troll laughs at threats.** Threats don't move Tolly (his persona says they make him laugh), but before, the Phaser example answered them with his ordinary line about the toll. It now reads `result.triggered`, as the docs suggest for narrating intimidation: when a threat doesn't offend or win, he laughs with one of three lines in turn, and he and the bridge shake (not under reduced motion). An insulting threat still offends him. The judging is unchanged, so the demo proxy needs no redeploy.
+
 ### Changed
 
 - **The Twine recipe's save and load is tested** (the recipe ships in the package, under `examples/`) in Twine 2.12.0 with SugarCube 2.37.3, with `honeytongue@0.1.0-alpha.14`:
