@@ -32,6 +32,7 @@
 
 - **The Phaser example's restart.** After crossing the bridge, or after Tolly ran out of patience, pressing R started a new game, but his dialogue box stayed disabled, so nothing could be typed in it. The box now takes its state from the current game each time it opens (`examples/phaser/game.js`, and the playable copy at honeytongue.dev/phaser/), and the browser checks restart the game both ways and type to him again.
 - **The Phaser example's dialogue keys.** Pressing E or Space to talk to Tolly typed that key into his box, and Enter by the sign opened its box and pressed Leave at once. The key press that opens a box is now cancelled (`event.preventDefault()`) and does nothing else, and the browser checks press these keys as a real keyboard does.
+- **The Phaser example's reply form showed on the sign.** The form's `display: flex` overrode its `hidden` attribute, so "Say something..." appeared when reading the sign and after Tolly had turned his back (disabled, since the restart fix, so nothing could be sent). It's hidden in both cases now, in the site's page and the example's own.
 
 ## 0.1.0-alpha.14 (2026-10-01)
 

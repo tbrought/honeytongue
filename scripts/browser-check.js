@@ -446,6 +446,22 @@ try {
       `Phaser, ${scheme}: the sign's scratched line stands out, with readable contrast`, JSON.stringify(sign));
   }
 
+  // The reply form shows only when Tolly can be answered: not on the sign, and not once he's turned his back.
+  const formShown = () => page.eval(`getComputedStyle(document.getElementById("dialogue-form")).display !== "none"`);
+  await phaserAt(115, 92);
+  await page.eval(`__game.scene.getScene("bridge").interact(); true`);
+  const onSign = await formShown();
+  await page.eval(`(() => { const s = __game.scene.getScene("bridge"); s.closeDialogue(); s.player.setPosition(182, 135); s.interact(); return true; })()`);
+  const toTolly = await formShown();
+  for (let i = 0; i < 5; i++) {
+    await page.eval(`(() => { const i = document.getElementById("dialogue-input"); i.value = "Let me cross, please (${i + 1})."; document.getElementById("dialogue-form").requestSubmit(); return true; })()`);
+    await page.waitFor(`document.querySelectorAll("#dialogue-log p[data-verdict]").length >= ${i + 1}`, { what: "Tolly's answer" });
+  }
+  await page.eval(`(() => { const s = __game.scene.getScene("bridge"); s.closeDialogue(); s.interact(); return true; })()`);
+  const turnedAway = await formShown();
+  check(!onSign && toTolly && !turnedAway, "Phaser: the reply form shows for Tolly, but not on the sign or once he's turned his back",
+    JSON.stringify({ onSign, toTolly, turnedAway }));
+
   // ---- The local playground server ----
   const local = await startPlayground({ port: 0, apiKey: "", mock: true });
   try {

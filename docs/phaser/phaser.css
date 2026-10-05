@@ -17,6 +17,7 @@
 #dialogue-log [data-verdict="convinced"] { color: var(--good); }
 #dialogue-log [data-verdict="offended"] { color: var(--bad); }
 #dialogue-form { display: flex; gap: 0.5rem; margin-top: 0.4rem; }
+#dialogue-form[hidden] { display: none; } /* the display above would otherwise override hidden */
 #dialogue-input { flex: 1; min-width: 0; font: 500 1rem var(--mono); color: var(--bright); background: transparent; border: 0; border-bottom: 1px dashed var(--dim); padding: 0.2rem 0; }
 #dialogue-input:focus { outline: none; border-bottom-color: var(--bright); }
 #dialogue-close { margin-top: 0.4rem; }

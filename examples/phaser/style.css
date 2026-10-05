@@ -11,6 +11,7 @@ main { max-width: 960px; margin: 0 auto; padding: 1rem; }
 #dialogue-log [data-verdict="convinced"] { color: #9bdc8a; }
 #dialogue-log [data-verdict="offended"] { color: #ff8f7a; }
 #dialogue-form { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+#dialogue-form[hidden] { display: none; } /* the display above would otherwise override hidden */
 #dialogue-input { flex: 1; min-width: 0; font: inherit; }
 #dialogue-close { margin-top: 0.5rem; }
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
