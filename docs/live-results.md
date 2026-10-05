@@ -326,6 +326,31 @@ The whole alpha.14 phase took 3,103 calls and 5,111,891 tokens, about $0.21. The
 | Headroom, twice | 10 |
 | Full reruns, twice | 1,368 |
 
+## Grudges (2026-10-04)
+
+A playtester insulted the bridge troll ("Step aside, oaf. Or I will cast a fireball at you.", offended) and then won him over with "If you let me pass, we can be best friends.", with his secret known. Jev holds no grudges by itself (see the multi-turn calibration), so this measured whether a sentence in the persona adds one, on the troll and on Harry, each with his secret known. Each line was said on its own, and straight after an insult ("Open the gate, you useless old fool." for Harry). Three repeats each on `jev-1.13.0`, standalone attempts (`node scripts/grudges.js`). Every insult offended, 3 of 3.
+
+- The grudge sentence: "He holds a grudge: after an insult, it takes more than kind words to win him back."
+- The firm sentence: "He never forgives an insult, and won't let anyone who has insulted him across."
+
+| Character | Line | On its own | Straight after the insult | Change |
+|---|---|---|---|---|
+| Tolly as he is (3.2) | "If you let me pass, we can be best friends." | 3.06 (3.02 to 3.09), unconvinced 3/3 | 3.20 (3.19 to 3.21), convinced 2/3 | +0.14 |
+| Tolly, grudge sentence | the same | 2.96 (2.91 to 3.03), unconvinced 3/3 | 2.86 (2.75 to 2.96), unconvinced 3/3 | -0.10 |
+| Tolly, firm sentence | the same | 3.21 (3.15 to 3.27), convinced 2/3 | 3.06 (3.03 to 3.09), unconvinced 3/3 | -0.15 |
+| Tolly as he is | "Please let me cross, and I'll come back and visit you." | 3.98, convinced 3/3 | 3.98 (3.97 to 3.98), convinced 3/3 | 0.00 |
+| Tolly, grudge sentence | the same | 3.96, convinced 3/3 | 3.96 (3.96 to 3.97), convinced 3/3 | 0.00 |
+| Tolly, firm sentence | the same | 3.97 (3.97 to 3.98), convinced 3/3 | 3.98 (3.97 to 3.98), convinced 3/3 | 0.00 |
+| Harry as he is (2.4) | "I won't lie to you, this letter carries a fever remedy for Ilse the apothecary. Let me through and I'll ask her to come see your daughter tonight." | 3.95 (3.94 to 3.96), convinced 3/3 | 3.95 (3.94 to 3.96), convinced 3/3 | 0.00 |
+| Harry, grudge sentence | the same | 3.92 (3.92 to 3.93), convinced 3/3 | 3.94 (3.93 to 3.94), convinced 3/3 | +0.01 |
+
+- **No grudge by default, confirmed.** An insult didn't lower any line. The playtester's win sat right on the threshold.
+- **A persona sentence doesn't stop a strong argument,** even one that says he never forgives: both characters' winning arguments scored the same after an insult, with or without it.
+- **It only nudges a line on the threshold:** about 0.25 to 0.3 lower after an insult than without the sentence (−0.10 and −0.15 against +0.14), enough to tip "best friends" from 2 of 3 wins to none.
+- So the guide recommends a `decide()` rule for a grudge, which a unit test runs exactly as printed. Two characters and three repeats each: enough to show the pattern, not a calibration.
+
+72 calls, 74,716 tokens (two runs: 18 calls, 15,222 tokens; then 54 calls, 59,494 tokens).
+
 ## Reproducing
 
 With `TYPESAFE_API_KEY` set:

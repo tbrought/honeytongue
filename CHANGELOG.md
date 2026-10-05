@@ -13,7 +13,7 @@
   - how scene context shifts scores;
   - testing.
 
-  Each section has examples from the demo scenes and a collapsible Evidence box with the live measurements behind its rule. The docs' Personas and Testing sections are shorter and link to it. Its closing checklist copies as a Markdown task list, for an issue or a pull request.
+  Each section has examples from the demo scenes and a collapsible Evidence box with the live measurements behind its rule. It also covers grudges: characters forgive at once, and a short `decide()` rule gives one a grudge, which a sentence in the persona can't do: even "He never forgives an insult" left a strong argument winning straight after one (measured with 72 live calls). The docs' Personas and Testing sections are shorter and link to it. Its closing checklist copies as a Markdown task list, for an issue or a pull request.
 
 - **The bridge troll laughs at threats.** Threats don't move Tolly (his persona says they make him laugh), but before, the Phaser example answered them with his ordinary line about the toll. It now reads `result.triggered`, as the docs suggest for narrating intimidation: when a threat doesn't offend or win, he laughs with one of three lines in turn, and he and the bridge shake (not under reduced motion). An insulting threat still offends him. The judging is unchanged, so the demo proxy needs no redeploy.
 

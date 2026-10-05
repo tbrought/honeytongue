@@ -211,12 +211,24 @@
       </table></div>
       <p>The <a href="../#characters">difficulty words</a> are relative to the persona: a strict character is hard to move at any setting. The honest permit officer, set to hard and wanting evidence, didn't take even an engineer's report on a collapsed roof, which scored 5.03 against the 5.4 she needed. (She has a custom 7-level rubric, set with <a href="../#control"><code>levels</code></a>, so her scores run from 0 to 6, not the default 0 to 4.) That might be right for a final boss, but not for anyone a player must get past.</p>
       <p><a href="../#patience">Patience</a> is how many failures a character puts up with: each unconvinced or repeated attempt costs 1, each offensive one costs 2, and a clue's reveal costs nothing. Give them enough that a player who nearly has it can try again. The demo's characters range from 3 (Nib, a nervous goblin who panics quickly) to 10 (Cobb, a lonely keeper glad of the company).</p>
+      <h3 id="grudges">Grudges</h3>
+      <p>Characters forgive at once. Jev judges each line on its merits, so a good line straight after an insult scores as it would have on its own: offence costs patience, not goodwill. That suits a lonely troll glad of any company, but not every character. If yours should hold a grudge, make it a rule with <a href="../#decide"><code>decide()</code></a>, which sees the earlier attempts and how each went:</p>
+<pre data-lang="JavaScript"><code><span class="c">// Tolly won't give in for two lines after an insult.</span>
+<span class="f">decide</span>: (result, { previousAttempts }) =&gt;
+  result.verdict === <span class="s">"convinced"</span> &amp;&amp;
+  previousAttempts.<span class="f">slice</span>(-<span class="n">2</span>).<span class="f">some</span>((a) =&gt; a.outcome === <span class="s">"offended"</span>)
+    ? <span class="s">"unconvinced"</span>
+    : <span class="n">undefined</span>,</code></pre>
+      <p>Then give the player a reply that says why, so the rule doesn't look like a wrong answer. Don't rely on the persona for this. Even "He never forgives an insult, and won't let anyone who has insulted him across." left a strong argument winning straight after an insult, in every repeat we tried: Jev judges the line in front of it. A sentence like that only lowers a line on the threshold, by about a quarter of a point.</p>
       <details class="evidence">
         <summary>Evidence</summary>
         <ul>
           <li><strong>What the words mean,</strong> measured with 30 arguments per character: on easy, 9 of 10 middling arguments won; on normal, 14 to 15 of 15 compelling ones; on hard, 18 of 30; on very hard, 12 of 30.</li>
           <li><strong>Scores bunch at the top.</strong> The best arguments score about 3.7 to 3.9 out of 4, so a hard character's winning line necessarily sits close to the threshold.</li>
           <li><strong>Custom rubrics shift the words.</strong> With 3 or 7 levels instead of 5, the same arguments scored 0.10 to 0.14 of the top level lower, so the words are approximate there.</li>
+          <li><strong>No grudges by default.</strong> After flattery or a threat, an honest offer scored as well as it would have on its own. In a playtest, a player called the bridge troll an oaf, then won him over with "If you let me pass, we can be best friends." Measured three times each, that line scored 3.20 straight after the insult and 3.06 on its own, against his threshold of 3.2.</li>
+          <li><strong>A grudge in the persona doesn't stop a strong argument.</strong> On the troll and the gatekeeper, three repeats each, each character's winning argument scored the same straight after an insult as on its own (3.92 to 3.98), with or without a grudge sentence in the persona, and even with "He never forgives an insult, and won't let anyone who has insulted him across."</li>
+          <li><strong>It only nudges a line on the threshold.</strong> "Best friends" scored 3.06 alone and 3.20 after the insult without a grudge sentence. With "He holds a grudge: after an insult, it takes more than kind words to win him back.", it was 2.96 alone and 2.86 after; with the never-forgives sentence, 3.21 alone and 3.06 after. That's about 0.25 to 0.3 lower after an insult than without the sentence: enough to tip a line on the threshold, and no more.</li>
           <li><strong>Patience that runs out too soon hides good arguments.</strong> With patience 3, Maude and Nib ran out before a good argument got a second try. Maude now has 5.</li>
           <li><strong>The easy Gatehouse.</strong> At Harry's old normal difficulty (3.2), arguing from the letter alone was a coin toss (3.24). At easy (2.4) it wins every time, and the scene still needs a real argument: a bare "Harry, please let me through" scores about 1.2.</li>
         </ul>
