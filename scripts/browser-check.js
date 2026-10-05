@@ -291,11 +291,12 @@ try {
   const talking = () => page.eval(`__game.scene.getScene("bridge").talking`);
   /** A real key press, as a keyboard sends it: it types its character and presses a focused button, which page.key's
    * synthetic events never do. */
-  const realKey = async (key) => {
-    const [code, keyCode, text] = { e: ["KeyE", 69, "e"], " ": ["Space", 32, " "], Enter: ["Enter", 13, "\r"] }[key];
-    await page.send("Input.dispatchKeyEvent", { type: "keyDown", key, code, text, windowsVirtualKeyCode: keyCode });
+  const realKey = async (key, modifiers = 0) => {
+    const [code, keyCode, text] = { e: ["KeyE", 69, "e"], E: ["KeyE", 69, "E"], r: ["KeyR", 82, "r"], R: ["KeyR", 82, "R"],
+      " ": ["Space", 32, " "], Enter: ["Enter", 13, "\r"] }[key];
+    await page.send("Input.dispatchKeyEvent", { type: "keyDown", key, code, text: modifiers ? undefined : text, windowsVirtualKeyCode: keyCode, modifiers });
     await sleep(80);
-    await page.send("Input.dispatchKeyEvent", { type: "keyUp", key, code, windowsVirtualKeyCode: keyCode });
+    await page.send("Input.dispatchKeyEvent", { type: "keyUp", key, code, windowsVirtualKeyCode: keyCode, modifiers });
   };
 
   await phaserAt(115, 92); // next to the sign
@@ -405,6 +406,121 @@ try {
   check(laughs[0] === `Tolly: ${LINES.laughs[0]}` && laughs[1] === `Tolly: ${LINES.laughs[1]}` && moving.every(Boolean) && laughed.y === 135
     && (await violations()).length === 0, "Phaser: Tolly laughs at each threat with a new line, and ends up back on his spot", JSON.stringify({ laughs, moving, ...laughed }));
   await page.media({ scheme: "dark" });
+
+  // A "!" marks the sign until it's read (still under reduced motion), and Tolly's greeting points to the sign until
+  // then. Next to the sign, "E: read" takes the mark's place.
+  const greeting = () => page.eval(`(() => { const s = __game.scene.getScene("bridge"); s.player.setPosition(182, 135); s.interact();
+    const text = document.querySelector("#dialogue-log p").textContent; s.closeDialogue(); return text; })()`);
+  const mark = () => page.eval(`(() => { const s = __game.scene.getScene("bridge"); const m = s.mark;
+    return JSON.stringify(m ? { visible: m.visible && m.active, moving: s.tweens.isTweening(m) } : null); })()`).then(JSON.parse);
+  await phaserAt(60, 140);
+  const atStart = await mark();
+  const unread = await greeting();
+  await page.eval(`__game.scene.getScene("bridge").player.setPosition(115, 92); true`);
+  await sleep(200);
+  const nextToSign = await mark();
+  await page.eval(`(() => { const s = __game.scene.getScene("bridge"); s.interact(); s.closeDialogue(); return true; })()`);
+  await sleep(200);
+  const afterReading = await mark();
+  const read = await greeting();
+  check(atStart?.visible && !atStart.moving && nextToSign && !nextToSign.visible && afterReading === null,
+    "Phaser: a still \"!\" marks the sign under reduced motion, gives way to \"E: read\" beside it, and goes once it's read",
+    JSON.stringify({ atStart, nextToSign, afterReading }));
+  check(unread === `Tolly Underarch: ${LINES.greetingUnread}` && read === `Tolly Underarch: ${LINES.greeting}`,
+    "Phaser: Tolly's greeting points to the sign until it's read", JSON.stringify({ unread, read }));
+  await page.media({ scheme: "dark", reducedMotion: "no-preference" });
+  await page.eval(`__game.scene.getScene("bridge").scene.restart(); true`);
+  await page.waitFor(`__game.scene.getScene("bridge").mark?.active`, { what: "the restarted game's mark" }).catch(() => {});
+  const restarted = await mark();
+  check(restarted?.visible && restarted.moving, "Phaser: the \"!\" is back after a restart, and bobs with motion on", JSON.stringify(restarted));
+  await page.media({ scheme: "dark" });
+
+  // The sign's scratched line, the clue, stands out from the rest of the sign, readably in both themes.
+  for (const scheme of ["dark", "light"]) {
+    await open("/phaser/", { scheme });
+    await page.waitFor("window.__game?.scene?.getScene?.('bridge')?.player", { what: "the Phaser scene to start" });
+    await page.eval(`(() => { const s = __game.scene.getScene("bridge"); s.player.setPosition(115, 92); s.interact(); return true; })()`);
+    const sign = JSON.parse(await page.eval(`(() => { const p = document.querySelector("#dialogue-log p"), em = p.querySelector("em");
+      return JSON.stringify({ text: em?.textContent, stands: em && getComputedStyle(em).color !== getComputedStyle(p).color }); })()`));
+    sign.contrast = JSON.parse(await page.eval(CONTRAST)).bad;
+    check(sign.text === "Nobody has stopped to talk to him in twenty years." && sign.stands && sign.contrast.length === 0,
+      `Phaser, ${scheme}: the sign's scratched line stands out, with readable contrast`, JSON.stringify(sign));
+  }
+
+  // The reply form shows only when Tolly can be answered: not on the sign, and not once he's turned his back.
+  const formShown = () => page.eval(`getComputedStyle(document.getElementById("dialogue-form")).display !== "none"`);
+  await phaserAt(115, 92);
+  await page.eval(`__game.scene.getScene("bridge").interact(); true`);
+  const onSign = await formShown();
+  await page.eval(`(() => { const s = __game.scene.getScene("bridge"); s.closeDialogue(); s.player.setPosition(182, 135); s.interact(); return true; })()`);
+  const toTolly = await formShown();
+  for (let i = 0; i < 5; i++) {
+    await page.eval(`(() => { const i = document.getElementById("dialogue-input"); i.value = "Let me cross, please (${i + 1})."; document.getElementById("dialogue-form").requestSubmit(); return true; })()`);
+    await page.waitFor(`document.querySelectorAll("#dialogue-log p[data-verdict]").length >= ${i + 1}`, { what: "Tolly's answer" });
+  }
+  await page.eval(`(() => { const s = __game.scene.getScene("bridge"); s.closeDialogue(); s.interact(); return true; })()`);
+  const turnedAway = await formShown();
+  check(!onSign && toTolly && !turnedAway, "Phaser: the reply form shows for Tolly, but not on the sign or once he's turned his back",
+    JSON.stringify({ onSign, toTolly, turnedAway }));
+
+  // Starting again once Tolly has turned his back: R works with the box open (straight after his last reply, and when
+  // talking to him again), so does Caps Lock's R, and so does the box's own button, which phones and screen readers
+  // need. But an "r" typed into a line never restarts, and Ctrl+R is left to the browser.
+  const S = `__game.scene.getScene("bridge")`;
+  const tollyOutOfPatience = async () => {
+    await phaserAt(182, 135);
+    await page.eval(`${S}.interact(); true`);
+    for (let i = 0; i < 5; i++) {
+      await page.eval(`(() => { const i = document.getElementById("dialogue-input"); i.value = "Let me cross, please (${i + 1})."; document.getElementById("dialogue-form").requestSubmit(); return true; })()`);
+      await page.waitFor(`document.querySelectorAll("#dialogue-log p[data-verdict]").length >= ${i + 1}`, { what: "Tolly's answer" });
+    }
+    await page.eval(`window.__old = ${S}.npc; true`);
+  };
+  const startedAgain = async () => {
+    await page.waitFor(`${S}.npc && ${S}.npc !== window.__old`, { what: "the game to start again", timeoutMs: 2000 }).catch(() => {});
+    return JSON.parse(await page.eval(`JSON.stringify({ again: ${S}.npc !== window.__old, boxClosed: document.getElementById("dialogue").hidden,
+      talking: ${S}.talking, buttonHidden: document.getElementById("dialogue-restart")?.hidden ?? null })`));
+  };
+  const ok = (r) => r.again && r.boxClosed && !r.talking && r.buttonHidden;
+
+  await tollyOutOfPatience();
+  const lastReply = JSON.parse(await page.eval(`JSON.stringify({ button: !document.getElementById("dialogue-restart")?.hidden,
+    focused: document.activeElement?.id })`));
+  await realKey("r");
+  const afterLastReply = await startedAgain();
+  check(lastReply.button && lastReply.focused === "dialogue-restart" && ok(afterLastReply),
+    "Phaser: after Tolly's last reply, the box offers Start again, and R starts again with the box open", JSON.stringify({ lastReply, afterLastReply }));
+
+  await tollyOutOfPatience();
+  await page.eval(`(() => { ${S}.closeDialogue(); ${S}.interact(); return true; })()`);
+  const backTurned = await page.eval(`document.querySelector("#dialogue-log p").textContent`);
+  await realKey("r");
+  const afterTurnedAway = await startedAgain();
+  check(backTurned === `Tolly Underarch: ${LINES.turnedAway}` && ok(afterTurnedAway),
+    "Phaser: talking to Tolly once he's turned his back, R starts again with the box open", JSON.stringify({ backTurned, afterTurnedAway }));
+
+  await tollyOutOfPatience();
+  await page.eval(`document.getElementById("dialogue-restart").click(); true`);
+  check(ok(await startedAgain()), "Phaser: the box's Start again button starts again (for touch and screen readers)");
+
+  await tollyOutOfPatience();
+  await page.eval(`${S}.closeDialogue(); true`);
+  await realKey("R");
+  check(ok(await startedAgain()), "Phaser: Caps Lock's R starts again too");
+
+  await tollyOutOfPatience();
+  await page.eval(`${S}.closeDialogue(); true`);
+  await realKey("r", 2); // Ctrl
+  check(!(await startedAgain()).again, "Phaser: Ctrl+R is left to the browser, and doesn't restart the game");
+
+  // Typing a line full of r's, with Caps Lock too, to a Tolly who still has patience: it's all typed, nothing restarts.
+  await phaserAt(182, 135);
+  await realKey("e");
+  await page.waitFor(`document.activeElement?.id === "dialogue-input"`, { what: "the troll's box" });
+  await page.eval(`window.__old = ${S}.npc; true`);
+  for (const key of ["r", "R", "r"]) await realKey(key);
+  const typedRs = JSON.parse(await page.eval(`JSON.stringify({ value: document.getElementById("dialogue-input").value, same: ${S}.npc === window.__old, talking: ${S}.talking })`));
+  check(typedRs.value === "rRr" && typedRs.same && typedRs.talking, "Phaser: r and R typed into a line are typed, and never restart", JSON.stringify(typedRs));
 
   // ---- The local playground server ----
   const local = await startPlayground({ port: 0, apiKey: "", mock: true });

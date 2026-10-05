@@ -17,6 +17,8 @@
 
 - **The bridge troll laughs at threats.** Threats don't move Tolly (his persona says they make him laugh), but before, the Phaser example answered them with his ordinary line about the toll. It now reads `result.triggered`, as the docs suggest for narrating intimidation: when a threat doesn't offend or win, he laughs with one of three lines in turn, and he and the bridge shake (not under reduced motion). An insulting threat still offends him. The judging is unchanged, so the demo proxy needs no redeploy.
 
+- **The bridge troll's sign is easier to find.** Reading the sign teaches what Tolly really wants, but players often walked past it. A yellow "!" now marks it until it's read (bobbing, but still under reduced motion), giving way to the "E: read" prompt beside it, and his greeting points to it until then: "Says so on the sign, if you can read." The sign's scratched line, the clue, is in bold and its own colour. All of this is in the game, not the character, so the demo proxy needs no redeploy.
+
 ### Changed
 
 - **The Twine recipe's save and load is tested** (the recipe ships in the package, under `examples/`) in Twine 2.12.0 with SugarCube 2.37.3, with `honeytongue@0.1.0-alpha.14`:
@@ -30,6 +32,8 @@
 
 - **The Phaser example's restart.** After crossing the bridge, or after Tolly ran out of patience, pressing R started a new game, but his dialogue box stayed disabled, so nothing could be typed in it. The box now takes its state from the current game each time it opens (`examples/phaser/game.js`, and the playable copy at honeytongue.dev/phaser/), and the browser checks restart the game both ways and type to him again.
 - **The Phaser example's dialogue keys.** Pressing E or Space to talk to Tolly typed that key into his box, and Enter by the sign opened its box and pressed Leave at once. The key press that opens a box is now cancelled (`event.preventDefault()`) and does nothing else, and the browser checks press these keys as a real keyboard does.
+- **The Phaser example's reply form showed on the sign.** The form's `display: flex` overrode its `hidden` attribute, so "Say something..." appeared when reading the sign and after Tolly had turned his back (disabled, since the restart fix, so nothing could be sent). It's hidden in both cases now, in the site's page and the example's own.
+- **Pressing R didn't start the Phaser game again when Tolly said to.** Once he'd turned his back, the box said "Press R to start again", but the game ignored every key while the box was open, and Caps Lock's R everywhere. Now, once the game is over (crossed, or out of patience), R starts again even with the box open: the text field is disabled then, so an "r" can't be part of a line, and R never restarts while the field takes typing. Ctrl+R is left to the browser. The box also offers a "Start again (R)" button, so phones and screen readers can start again too, where before a phone player had to reload the page.
 
 ## 0.1.0-alpha.14 (2026-10-01)
 

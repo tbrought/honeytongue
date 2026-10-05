@@ -13,12 +13,14 @@
 #dialogue-log { max-height: 8.5rem; overflow-y: auto; font-size: 0.95rem; }
 #dialogue-log p { margin: 0 0 0.35rem; }
 #dialogue-log b { color: var(--name); }
+#dialogue-log em { font-style: normal; font-weight: 600; color: var(--item); } /* the sign's clue */
 #dialogue-log [data-verdict="convinced"] { color: var(--good); }
 #dialogue-log [data-verdict="offended"] { color: var(--bad); }
 #dialogue-form { display: flex; gap: 0.5rem; margin-top: 0.4rem; }
+#dialogue-form[hidden] { display: none; } /* the display above would otherwise override hidden */
 #dialogue-input { flex: 1; min-width: 0; font: 500 1rem var(--mono); color: var(--bright); background: transparent; border: 0; border-bottom: 1px dashed var(--dim); padding: 0.2rem 0; }
 #dialogue-input:focus { outline: none; border-bottom-color: var(--bright); }
-#dialogue-close { margin-top: 0.4rem; }
+#dialogue-close, #dialogue-restart { margin-top: 0.4rem; }
 .key { font: 500 0.85rem var(--mono); color: var(--fg); background: none; border: 1px solid var(--dim); padding: 0.3rem 0.7rem; cursor: pointer; }
 .key:hover { background: var(--fg); color: var(--bg); }
 

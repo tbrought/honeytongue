@@ -19,8 +19,16 @@ const TOP = 1000;                                         // depth for text over
 const FEET = { left: -12, right: 14, top: 6, bottom: 24 };
 const SPRITES = { player: "phaser-demo-player-32.png", troll: "phaser-demo-troll-32.png", sign: "phaser-demo-sign-32.png" };
 
+// What the sign says. The scratched line is the clue (it teaches his secret), so it's emphasised: { em } parts are
+// shown in an <em>, which the page's stylesheet colours.
+export const SIGN = ["TOLL: ONE GOLD CROWN. Scratched underneath: \"", { em: "Nobody has stopped to talk to him in twenty years." }, "\""];
+
 // Tolly's own lines. Honeytongue judges what the player said; the game picks what he says back.
 export const LINES = {
+  // His greeting points to the sign until the player has read it: the sign teaches what he really wants.
+  greeting: "\"Toll's one gold crown. Can't pay? Then you'd best talk.\"",
+  greetingUnread: "\"Toll's one gold crown. Says so on the sign, if you can read. Can't pay? Then you'd best talk.\"",
+  turnedAway: "Tolly has turned his back on you.", // the box offers "Start again (R)" below it
   convinced: "Tolly heaves a sigh and steps aside. \"Go on, then. And come back, mind.\"",
   offended: "Tolly's face darkens. \"Say that again and you'll swim.\"",
   outOfPatience: "Tolly turns his back on you. The talking's over.",
@@ -52,6 +60,7 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
   const log = document.getElementById("dialogue-log");
   const form = document.getElementById("dialogue-form");
   const input = document.getElementById("dialogue-input");
+  const restart = document.getElementById("dialogue-restart");
 
   class Bridge extends Phaser.Scene {
     preload() {
@@ -83,6 +92,12 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
       this.player = this.add.image(60, 140, "player").setScale(SCALE);
       this.prompt = this.add.text(0, 0, "", { fontFamily: "VT323, monospace", fontSize: "16px", color: "#ffffff", backgroundColor: "#000000aa" })
         .setPadding(3, 1).setResolution(4).setVisible(false).setDepth(TOP);
+      // A "!" over the sign until it's read, as games mark something worth a look. It bobs, except under reduced motion.
+      this.mark = this.add.text(this.sign.x, this.sign.y - 48, "!", { fontFamily: "VT323, monospace", fontSize: "38px",
+        color: "#f2b34d", stroke: "#3a2a14", strokeThickness: 5 }).setOrigin(0.5).setResolution(4).setDepth(TOP - 1);
+      if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        this.tweens.add({ targets: this.mark, y: this.mark.y - 4, duration: 450, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+      }
 
       // Arrow keys or WASD to walk, E, Space, or Enter to read or talk. No key capture, so typing in the box works.
       this.keys = this.input.keyboard.addKeys("W,A,S,D,UP,DOWN,LEFT,RIGHT,E,SPACE,ENTER,R", false);
@@ -95,11 +110,20 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
       this.input.keyboard.on("keydown", (event) => {
         if (handled.has(event)) return;
         handled.add(event);
+        if (event.ctrlKey || event.metaKey || event.altKey) return; // the browser's shortcuts, such as Ctrl+R
+        const key = event.key.length === 1 ? event.key.toLowerCase() : event.key; // so Caps Lock's E and R work too
+        // R starts again once the game is over, even with the box open: the text field is disabled then, so an "r"
+        // can't be part of a line. And never while the field has focus and takes typing, whatever the game's state.
+        const typing = event.target === input && !input.disabled;
+        if (key === "r" && this.over() && !typing) {
+          event.preventDefault();
+          this.startAgain();
+          return;
+        }
         if (this.talking) return;
         // A press that opens the box moves focus into it while the browser is still handling that press, so cancel
         // its default action: otherwise E or Space would type into the box, and Enter would press its Leave button.
-        if (["e", " ", "Enter"].includes(event.key) && this.interact()) event.preventDefault();
-        if (event.key === "r" && (this.ended || this.npc.outOfPatience)) this.scene.restart();
+        if (["e", " ", "Enter"].includes(key) && this.interact()) event.preventDefault();
       });
       // On a phone, tap where to walk, or tap the sign or the troll when you're next to them.
       this.input.on("pointerdown", (pointer) => {
@@ -110,6 +134,19 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
       });
       form.onsubmit = (event) => { event.preventDefault(); this.say(input.value); };
       document.getElementById("dialogue-close").onclick = () => this.closeDialogue();
+      restart.onclick = () => this.startAgain(); // for touch and screen readers, which have no R
+    }
+
+    /** Is the game over: crossed, or Tolly out of patience? Then R (or the box's button) starts again. */
+    over() {
+      return this.ended || this.npc.outOfPatience;
+    }
+
+    /** A new game. The dialogue box is the page's, not the scene's, so close and reset it first. */
+    startAgain() {
+      this.closeDialogue();
+      restart.hidden = true;
+      this.scene.restart();
     }
 
     /** The sign or the troll, if the player is close enough to use them. */
@@ -140,6 +177,7 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
       this.player.setDepth(this.player.y + FEET.bottom);
 
       const near = this.nearby();
+      this.mark?.setVisible(near?.thing !== "sign"); // next to the sign, "E: read" takes its place
       this.prompt.setVisible(Boolean(near));
       if (near) this.prompt.setText(`E: ${near.what}`).setPosition(this.player.x - 16, Math.max(0, this.player.y - 54));
       if (this.player.x > 430) this.win();
@@ -158,9 +196,12 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
       if (near?.thing === "sign") {
         // Reading the sign teaches the player the troll's secret: now arguments that use it can count.
         this.npc.learn("lonely");
-        this.openDialogue("Sign", "TOLL: ONE GOLD CROWN. Scratched underneath: \"Nobody has stopped to talk to him in twenty years.\"", false);
+        this.mark?.destroy();
+        this.mark = null;
+        this.openDialogue("Sign", SIGN, false);
       } else if (near?.thing === "troll") {
-        this.openDialogue("Tolly Underarch", this.npc.outOfPatience ? "Tolly has turned his back on you. (Press R to start again.)" : "\"Toll's one gold crown. Can't pay? Then you'd best talk.\"", !this.npc.outOfPatience);
+        const greeting = this.npc.outOfPatience ? LINES.turnedAway : this.npc.knows.has("lonely") ? LINES.greeting : LINES.greetingUnread;
+        this.openDialogue("Tolly Underarch", greeting, !this.npc.outOfPatience, this.npc.outOfPatience);
       }
       return Boolean(near);
     }
@@ -181,7 +222,9 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
         this.addLine("", `(Couldn't reach the judge: ${err.message})`);
       } finally {
         input.disabled = this.npc.outOfPatience || this.passed;
+        restart.hidden = !this.npc.outOfPatience; // his last reply: offer to start again, and focus it
         if (!input.disabled) input.focus();
+        else if (!restart.hidden) restart.focus();
       }
     }
 
@@ -211,7 +254,7 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
 
     // ---- The dialogue box: plain HTML over the game, so typing and screen readers just work ----
 
-    openDialogue(speaker, text, canReply) {
+    openDialogue(speaker, text, canReply, canRestart = false) {
       this.talking = true;  // while the box is open, the scene ignores keys, so typing never moves the player
       this.prompt.setVisible(false);
       log.replaceChildren();
@@ -219,8 +262,9 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
       form.hidden = !canReply;
       // The box is the page's, not the scene's, so it outlives a restart (R): set it from this game every time.
       input.disabled = !canReply;
+      restart.hidden = !canRestart;
       box.hidden = false;
-      (canReply ? input : document.getElementById("dialogue-close")).focus();
+      (canReply ? input : canRestart ? restart : document.getElementById("dialogue-close")).focus();
     }
 
     closeDialogue() {
@@ -228,11 +272,16 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
       this.talking = false;
     }
 
-    /** One line in the box. Text only, never HTML: what players type can't become markup. */
+    /**
+     * One line in the box: a string, or a list of strings and { em } parts to emphasise. Text only, never HTML: what
+     * players type can't become markup.
+     */
     addLine(who, text, verdict) {
       const p = document.createElement("p");
       if (who) p.append(Object.assign(document.createElement("b"), { textContent: `${who}: ` }));
-      p.append(text);
+      for (const part of [text].flat()) {
+        p.append(typeof part === "string" ? part : Object.assign(document.createElement("em"), { textContent: part.em }));
+      }
       if (verdict) p.dataset.verdict = verdict;
       log.append(p);
       log.scrollTop = log.scrollHeight;
