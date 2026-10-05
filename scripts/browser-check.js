@@ -434,6 +434,18 @@ try {
   check(restarted?.visible && restarted.moving, "Phaser: the \"!\" is back after a restart, and bobs with motion on", JSON.stringify(restarted));
   await page.media({ scheme: "dark" });
 
+  // The sign's scratched line, the clue, stands out from the rest of the sign, readably in both themes.
+  for (const scheme of ["dark", "light"]) {
+    await open("/phaser/", { scheme });
+    await page.waitFor("window.__game?.scene?.getScene?.('bridge')?.player", { what: "the Phaser scene to start" });
+    await page.eval(`(() => { const s = __game.scene.getScene("bridge"); s.player.setPosition(115, 92); s.interact(); return true; })()`);
+    const sign = JSON.parse(await page.eval(`(() => { const p = document.querySelector("#dialogue-log p"), em = p.querySelector("em");
+      return JSON.stringify({ text: em?.textContent, stands: em && getComputedStyle(em).color !== getComputedStyle(p).color }); })()`));
+    sign.contrast = JSON.parse(await page.eval(CONTRAST)).bad;
+    check(sign.text === "Nobody has stopped to talk to him in twenty years." && sign.stands && sign.contrast.length === 0,
+      `Phaser, ${scheme}: the sign's scratched line stands out, with readable contrast`, JSON.stringify(sign));
+  }
+
   // ---- The local playground server ----
   const local = await startPlayground({ port: 0, apiKey: "", mock: true });
   try {

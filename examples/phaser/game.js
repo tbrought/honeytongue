@@ -19,6 +19,10 @@ const TOP = 1000;                                         // depth for text over
 const FEET = { left: -12, right: 14, top: 6, bottom: 24 };
 const SPRITES = { player: "phaser-demo-player-32.png", troll: "phaser-demo-troll-32.png", sign: "phaser-demo-sign-32.png" };
 
+// What the sign says. The scratched line is the clue (it teaches his secret), so it's emphasised: { em } parts are
+// shown in an <em>, which the page's stylesheet colours.
+export const SIGN = ["TOLL: ONE GOLD CROWN. Scratched underneath: \"", { em: "Nobody has stopped to talk to him in twenty years." }, "\""];
+
 // Tolly's own lines. Honeytongue judges what the player said; the game picks what he says back.
 export const LINES = {
   // His greeting points to the sign until the player has read it: the sign teaches what he really wants.
@@ -171,7 +175,7 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
         this.npc.learn("lonely");
         this.mark?.destroy();
         this.mark = null;
-        this.openDialogue("Sign", "TOLL: ONE GOLD CROWN. Scratched underneath: \"Nobody has stopped to talk to him in twenty years.\"", false);
+        this.openDialogue("Sign", SIGN, false);
       } else if (near?.thing === "troll") {
         const greeting = this.npc.outOfPatience ? LINES.turnedAway : this.npc.knows.has("lonely") ? LINES.greeting : LINES.greetingUnread;
         this.openDialogue("Tolly Underarch", greeting, !this.npc.outOfPatience);
@@ -242,11 +246,16 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
       this.talking = false;
     }
 
-    /** One line in the box. Text only, never HTML: what players type can't become markup. */
+    /**
+     * One line in the box: a string, or a list of strings and { em } parts to emphasise. Text only, never HTML: what
+     * players type can't become markup.
+     */
     addLine(who, text, verdict) {
       const p = document.createElement("p");
       if (who) p.append(Object.assign(document.createElement("b"), { textContent: `${who}: ` }));
-      p.append(text);
+      for (const part of [text].flat()) {
+        p.append(typeof part === "string" ? part : Object.assign(document.createElement("em"), { textContent: part.em }));
+      }
       if (verdict) p.dataset.verdict = verdict;
       log.append(p);
       log.scrollTop = log.scrollHeight;

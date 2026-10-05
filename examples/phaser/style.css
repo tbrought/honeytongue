@@ -7,6 +7,7 @@ main { max-width: 960px; margin: 0 auto; padding: 1rem; }
 #dialogue { position: absolute; left: 4%; right: 4%; bottom: 4%; background: rgb(0 0 0 / 0.85); border: 2px solid #f2b34d; padding: 0.75rem; }
 #dialogue-log { max-height: 8.5rem; overflow-y: auto; }
 #dialogue-log p { margin: 0 0 0.4rem; }
+#dialogue-log em { font-style: normal; font-weight: 700; color: #9fc3ff; } /* the sign's clue */
 #dialogue-log [data-verdict="convinced"] { color: #9bdc8a; }
 #dialogue-log [data-verdict="offended"] { color: #ff8f7a; }
 #dialogue-form { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
