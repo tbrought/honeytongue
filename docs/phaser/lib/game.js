@@ -21,6 +21,10 @@ const SPRITES = { player: "phaser-demo-player-32.png", troll: "phaser-demo-troll
 
 // Tolly's own lines. Honeytongue judges what the player said; the game picks what he says back.
 export const LINES = {
+  // His greeting points to the sign until the player has read it: the sign teaches what he really wants.
+  greeting: "\"Toll's one gold crown. Can't pay? Then you'd best talk.\"",
+  greetingUnread: "\"Toll's one gold crown. Says so on the sign, if you can read. Can't pay? Then you'd best talk.\"",
+  turnedAway: "Tolly has turned his back on you. (Press R to start again.)",
   convinced: "Tolly heaves a sigh and steps aside. \"Go on, then. And come back, mind.\"",
   offended: "Tolly's face darkens. \"Say that again and you'll swim.\"",
   outOfPatience: "Tolly turns his back on you. The talking's over.",
@@ -83,6 +87,12 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
       this.player = this.add.image(60, 140, "player").setScale(SCALE);
       this.prompt = this.add.text(0, 0, "", { fontFamily: "VT323, monospace", fontSize: "16px", color: "#ffffff", backgroundColor: "#000000aa" })
         .setPadding(3, 1).setResolution(4).setVisible(false).setDepth(TOP);
+      // A "!" over the sign until it's read, as games mark something worth a look. It bobs, except under reduced motion.
+      this.mark = this.add.text(this.sign.x, this.sign.y - 48, "!", { fontFamily: "VT323, monospace", fontSize: "38px",
+        color: "#f2b34d", stroke: "#3a2a14", strokeThickness: 5 }).setOrigin(0.5).setResolution(4).setDepth(TOP - 1);
+      if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        this.tweens.add({ targets: this.mark, y: this.mark.y - 4, duration: 450, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+      }
 
       // Arrow keys or WASD to walk, E, Space, or Enter to read or talk. No key capture, so typing in the box works.
       this.keys = this.input.keyboard.addKeys("W,A,S,D,UP,DOWN,LEFT,RIGHT,E,SPACE,ENTER,R", false);
@@ -140,6 +150,7 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
       this.player.setDepth(this.player.y + FEET.bottom);
 
       const near = this.nearby();
+      this.mark?.setVisible(near?.thing !== "sign"); // next to the sign, "E: read" takes its place
       this.prompt.setVisible(Boolean(near));
       if (near) this.prompt.setText(`E: ${near.what}`).setPosition(this.player.x - 16, Math.max(0, this.player.y - 54));
       if (this.player.x > 430) this.win();
@@ -158,9 +169,12 @@ export function startGame(Phaser, { parent, createNpc, assets = "assets/" }) {
       if (near?.thing === "sign") {
         // Reading the sign teaches the player the troll's secret: now arguments that use it can count.
         this.npc.learn("lonely");
+        this.mark?.destroy();
+        this.mark = null;
         this.openDialogue("Sign", "TOLL: ONE GOLD CROWN. Scratched underneath: \"Nobody has stopped to talk to him in twenty years.\"", false);
       } else if (near?.thing === "troll") {
-        this.openDialogue("Tolly Underarch", this.npc.outOfPatience ? "Tolly has turned his back on you. (Press R to start again.)" : "\"Toll's one gold crown. Can't pay? Then you'd best talk.\"", !this.npc.outOfPatience);
+        const greeting = this.npc.outOfPatience ? LINES.turnedAway : this.npc.knows.has("lonely") ? LINES.greeting : LINES.greetingUnread;
+        this.openDialogue("Tolly Underarch", greeting, !this.npc.outOfPatience);
       }
       return Boolean(near);
     }

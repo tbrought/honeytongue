@@ -406,6 +406,34 @@ try {
     && (await violations()).length === 0, "Phaser: Tolly laughs at each threat with a new line, and ends up back on his spot", JSON.stringify({ laughs, moving, ...laughed }));
   await page.media({ scheme: "dark" });
 
+  // A "!" marks the sign until it's read (still under reduced motion), and Tolly's greeting points to the sign until
+  // then. Next to the sign, "E: read" takes the mark's place.
+  const greeting = () => page.eval(`(() => { const s = __game.scene.getScene("bridge"); s.player.setPosition(182, 135); s.interact();
+    const text = document.querySelector("#dialogue-log p").textContent; s.closeDialogue(); return text; })()`);
+  const mark = () => page.eval(`(() => { const s = __game.scene.getScene("bridge"); const m = s.mark;
+    return JSON.stringify(m ? { visible: m.visible && m.active, moving: s.tweens.isTweening(m) } : null); })()`).then(JSON.parse);
+  await phaserAt(60, 140);
+  const atStart = await mark();
+  const unread = await greeting();
+  await page.eval(`__game.scene.getScene("bridge").player.setPosition(115, 92); true`);
+  await sleep(200);
+  const nextToSign = await mark();
+  await page.eval(`(() => { const s = __game.scene.getScene("bridge"); s.interact(); s.closeDialogue(); return true; })()`);
+  await sleep(200);
+  const afterReading = await mark();
+  const read = await greeting();
+  check(atStart?.visible && !atStart.moving && nextToSign && !nextToSign.visible && afterReading === null,
+    "Phaser: a still \"!\" marks the sign under reduced motion, gives way to \"E: read\" beside it, and goes once it's read",
+    JSON.stringify({ atStart, nextToSign, afterReading }));
+  check(unread === `Tolly Underarch: ${LINES.greetingUnread}` && read === `Tolly Underarch: ${LINES.greeting}`,
+    "Phaser: Tolly's greeting points to the sign until it's read", JSON.stringify({ unread, read }));
+  await page.media({ scheme: "dark", reducedMotion: "no-preference" });
+  await page.eval(`__game.scene.getScene("bridge").scene.restart(); true`);
+  await page.waitFor(`__game.scene.getScene("bridge").mark?.active`, { what: "the restarted game's mark" }).catch(() => {});
+  const restarted = await mark();
+  check(restarted?.visible && restarted.moving, "Phaser: the \"!\" is back after a restart, and bobs with motion on", JSON.stringify(restarted));
+  await page.media({ scheme: "dark" });
+
   // ---- The local playground server ----
   const local = await startPlayground({ port: 0, apiKey: "", mock: true });
   try {

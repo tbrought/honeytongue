@@ -17,6 +17,8 @@
 
 - **The bridge troll laughs at threats.** Threats don't move Tolly (his persona says they make him laugh), but before, the Phaser example answered them with his ordinary line about the toll. It now reads `result.triggered`, as the docs suggest for narrating intimidation: when a threat doesn't offend or win, he laughs with one of three lines in turn, and he and the bridge shake (not under reduced motion). An insulting threat still offends him. The judging is unchanged, so the demo proxy needs no redeploy.
 
+- **The bridge troll's sign is easier to find.** Reading the sign teaches what Tolly really wants, but players often walked past it. A yellow "!" now marks it until it's read (bobbing, but still under reduced motion), giving way to the "E: read" prompt beside it, and his greeting points to it until then: "Says so on the sign, if you can read." Both are in the game, not the character, so the demo proxy needs no redeploy.
+
 ### Changed
 
 - **The Twine recipe's save and load is tested** (the recipe ships in the package, under `examples/`) in Twine 2.12.0 with SugarCube 2.37.3, with `honeytongue@0.1.0-alpha.14`:

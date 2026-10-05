@@ -445,7 +445,7 @@ loaded.<span class="f">restore</span>(JSON.<span class="f">parse</span>(localSto
 <span class="k">&lt;/script</span>&gt;</code></pre>
       <ul class="points">
         <li><strong>The dialogue box is plain HTML over the canvas,</strong> so it gets the browser's own text input, phone keyboards, and screen reader support, as any form does. The example shows its text as text, never as HTML.</li>
-        <li><strong>The world teaches secrets.</strong> Reading the sign calls <code>troll.learn("lonely")</code>, and from then on an argument that uses it can win.</li>
+        <li><strong>The world teaches secrets.</strong> Reading the sign calls <code>troll.learn("lonely")</code>, and from then on an argument that uses it can win. A "!" over the sign and the troll's greeting point players to it until they've read it.</li>
         <li><strong>Tells give the game more to react to.</strong> Threats don't move the troll, since his persona says they make him laugh, but <code>result.triggered</code> still names them, so the game has him laugh, and the bridge shake, instead of quoting the toll. See <a href="#intimidation">Threats and insults</a>.</li>
         <li><strong>Spoken input</strong> works the same way, once your game turns speech into text. See <a href="#spoken">how spoken lines score</a>.</li>
         <li><strong>Engines outside JavaScript</strong> (Unity, Godot, Unreal, Ren'Py) aren't supported yet; a plain HTTP endpoint for them is on the roadmap.</li>
