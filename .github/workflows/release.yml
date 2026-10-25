@@ -29,9 +29,12 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      # check-latest: the newest patch of the requested line, not the copy cached on the runner, which can lag
+      # behind a security release (such as Node's for CVE-2026-111497, in October 2026).
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
+          check-latest: true
           cache: npm
       - name: The tag matches package.json, and is on main
         run: |
@@ -83,6 +86,7 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
+          check-latest: true
           registry-url: https://registry.npmjs.org
       # Staged publishing needs npm 11.15.0 or later (trusted publishing, 11.5.1).
       - run: npm install -g npm@11.20.0
