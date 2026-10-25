@@ -35,6 +35,11 @@
 - **The Phaser example's reply form showed on the sign.** The form's `display: flex` overrode its `hidden` attribute, so "Say something..." appeared when reading the sign and after Tolly had turned his back (disabled, since the restart fix, so nothing could be sent). It's hidden in both cases now, in the site's page and the example's own.
 - **Pressing R didn't start the Phaser game again when Tolly said to.** Once he'd turned his back, the box said "Press R to start again", but the game ignored every key while the box was open, and Caps Lock's R everywhere. Now, once the game is over (crossed, or out of patience), R starts again even with the box open: the text field is disabled then, so an "r" can't be part of a line, and R never restarts while the field takes typing. Ctrl+R is left to the browser. The box also offers a "Start again (R)" button, so phones and screen readers can start again too, where before a phone player had to reload the page.
 
+### Security
+
+- **Node2Shell (CVE-2026-111497) and PHP2Shell.** Honeytongue isn't directly affected: it never decompresses data, and contains no PHP. Its one route to the Node.js Brotli bug is Node's built-in `fetch()`, which decompresses TypeSafe's replies, so it would take a compromised API. `SECURITY.md` and the docs' Node servers section now recommend Node.js 22.23.4, 24.22.1, 26.12.1, or later, since anything else in an app on an older Node.js can reach the bug. The minimum supported Node.js stays 22.13.
+- **CI and the release workflow take the newest Node.js patch release** (`check-latest: true`), not a copy cached on the runner, which can lag behind a security release. A test keeps every workflow's Node setup that way. The test job on Node.js 22.13.0, the oldest supported, stays: it only installs TypeScript and runs the tests on the mock.
+
 ## 0.1.0-alpha.14 (2026-10-01)
 
 ### Added

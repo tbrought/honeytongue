@@ -11,3 +11,9 @@ Examples of what counts: a way to make the proxy (`createProxyHandler`) forward 
 ## Supported versions
 
 Honeytongue is in alpha. Fixes go into the newest release only, so please upgrade before reporting.
+
+## Keep Node.js up to date
+
+Honeytongue has no dependencies, so on a server it runs on whatever Node.js you give it, and the security of that matters more than any package version. Run the newest patch release of a supported Node.js line, and at least Node.js 22.23.4, 24.22.1, or 26.12.1: those fix CVE-2026-111497 ("Node2Shell", a Brotli decompression bug that can allow remote code execution) and several TLS hostname-check bypasses, released in October 2026.
+
+Honeytongue itself never decompresses data. On an older Node.js, its only exposure is Node's built-in `fetch()`, which decompresses TypeSafe's replies to the proxy and `createJevClient`, so it would take a compromised API to reach the bug that way. But an app on an older Node.js is exposed through other routes, such as Express 5 decompressing Brotli request bodies, whatever Honeytongue does. Honeytongue contains no PHP, so PHP2Shell (CVE-2026-109618 and CVE-2026-109619) doesn't apply to it.
